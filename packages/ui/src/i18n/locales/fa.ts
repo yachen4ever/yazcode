@@ -3299,6 +3299,8 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.reorderProvider": "برای تغییر ترتیب فراهم‌کننده بکشید",
   "settings.modelProvider.reorderModel": "برای تغییر ترتیب مدل بکشید",
   "settings.modelProvider.empty": "هنوز فراهم‌کننده مدل سفارشی وجود ندارد",
+  "settings.modelProvider.emptyHint":
+    'برای ایجاد از قالب‌های آماده روی "افزودن ارائه‌دهنده" بزنید، یا یک ارائه‌دهنده سفارشی بسازید و کلید API را وارد کنید.',
   "settings.modelProvider.deleteConfirmDescription":
     "این کار پیکربندی فراهم‌کننده سفارشی را حذف می‌کند. ویرایش‌های مرتبط در صفحه تنظیمات فعلی به‌طور خودکار بازگردانده نمی‌شوند.",
   "settings.modelProvider.deleteConfirmAction": "حذف فراهم‌کننده",

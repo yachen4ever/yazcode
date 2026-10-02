@@ -3353,6 +3353,8 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.reorderProvider": "Drag to reorder provider",
   "settings.modelProvider.reorderModel": "Drag to reorder model",
   "settings.modelProvider.empty": "No custom model providers yet",
+  "settings.modelProvider.emptyHint":
+    'Click "Add provider" to create one from a preset template, or create a custom provider and fill in its API key.',
   "settings.modelProvider.deleteConfirm": 'Delete "{name}"?',
   "settings.modelProvider.deleteConfirmTitle": 'Delete provider "{name}"?',
   "settings.modelProvider.deleteConfirmDescription":
