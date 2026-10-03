@@ -1,12 +1,12 @@
-const packageDirName = "zcodium";
+const packageDirName = "yazcode";
 
 export function installScriptSource(baseUrl) {
   return `#!/usr/bin/env sh
 set -eu
 
 BASE_URL="\${ZCODE_DIST_BASE_URL:-${baseUrl}}"
-INSTALL_DIR="\${ZCODIUM_DIST_HOME:-\${ZCODE_DIST_HOME:-$HOME/.zcodium/runtime}}"
-BIN_DIR="\${ZCODIUM_DIST_BIN_DIR:-\${ZCODE_DIST_BIN_DIR:-$HOME/.local/bin}"
+INSTALL_DIR="\${YAZCODE_DIST_HOME:-\${ZCODE_DIST_HOME:-$HOME/.yazcode/runtime}}"
+BIN_DIR="\${YAZCODE_DIST_BIN_DIR:-\${ZCODE_DIST_BIN_DIR:-$HOME/.local/bin}"
 
 need_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -42,14 +42,14 @@ mv "$TARGET.new/${packageDirName}" "$TARGET"
 rm -rf "$TARGET.new"
 ln -sfn "$TARGET" "$INSTALL_DIR/current"
 
-cat > "$BIN_DIR/zcodium" <<SH
+cat > "$BIN_DIR/yazcode" <<SH
 #!/usr/bin/env sh
 exec node "$INSTALL_DIR/current/bin/zcode.mjs" "\\$@"
 SH
-chmod +x "$BIN_DIR/zcodium"
+chmod +x "$BIN_DIR/yazcode"
 
-echo "ZCodium $VERSION installed."
-echo "Run: zcodium (TUI) or zcodium --web (Web)"
+echo "yazcode $VERSION installed."
+echo "Run: yazcode (TUI) or yazcode --web (Web)"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) echo "Note: $BIN_DIR is not in PATH." ;;

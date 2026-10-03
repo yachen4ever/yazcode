@@ -220,7 +220,7 @@ export function createNodeLoggerFactory(options: NodeLoggerFactoryOptions = {}):
 }
 
 export function getDefaultLogDir(): string {
-  return join(homedir(), ".zcodium", "cli", "log");
+  return join(homedir(), ".yazcode", "cli", "log");
 }
 
 function getDefaultMinLevel(env: NodeJS.ProcessEnv | undefined): LogLevel {

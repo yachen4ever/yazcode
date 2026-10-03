@@ -14,7 +14,7 @@ const MESSAGES: Record<
   Omit<CuaPermissionPanelMessages, "permissionLabel"> & Record<CuaPermissionKind, string>
 > = {
   "zh-CN": {
-    documentTitle: "ZCodium Computer Use 权限",
+    documentTitle: "yazcode Computer Use 权限",
     dragTitle: "拖动我到上面的权限列表",
     hintPrefix: "把左边的图标拖进上方的",
     hintSuffix: "列表",
@@ -23,7 +23,7 @@ const MESSAGES: Record<
     screen_recording: "屏幕录制",
   },
   "en-US": {
-    documentTitle: "ZCodium Computer Use Permissions",
+    documentTitle: "yazcode Computer Use Permissions",
     dragTitle: "Drag me to the permission list above",
     hintPrefix: "Drag the icon on the left into the ",
     hintSuffix: " list above",
@@ -32,7 +32,7 @@ const MESSAGES: Record<
     screen_recording: "Screen Recording",
   },
   "fa-IR": {
-    documentTitle: "مجوزهای Computer Use در ZCodium",
+    documentTitle: "مجوزهای Computer Use در yazcode",
     dragTitle: "مرا به فهرست مجوزهای بالا بکشید",
     hintPrefix: "نماد سمت چپ را به ",
     hintSuffix: " فهرست بالا بکشید",

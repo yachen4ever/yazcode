@@ -1,8 +1,8 @@
-/* oxlint-disable eslint(max-lines) -- 桥接协议契约单文件导出，便于 ZCodium 与 AstrBot 插件共用同一份 schema。 */
+/* oxlint-disable eslint(max-lines) -- 桥接协议契约单文件导出，便于 yazcode 与 AstrBot 插件共用同一份 schema。 */
 // Bots ↔ AstrBot 桥接协议 v2（见 .agents/specs/bots-astrbot-bridge.md）。
 //
 // 对齐官方 ZCode 的 bot 实现：
-// - ZCodium 集中解析用户输入（平台适配器只提供文本 / 把按钮翻译成同一条文本命令）。
+// - yazcode 集中解析用户输入（平台适配器只提供文本 / 把按钮翻译成同一条文本命令）。
 // - 交互用官方同款 `selection` 抽象：canonical 文本 + 结构化 options/action/token。
 // - 纯文本平台直接打印 canonical 文本；结构化命令保留给程序化客户端。
 // 本文件只描述 wire 契约，不做 IO。
@@ -15,7 +15,7 @@ export const BOTS_BRIDGE_PATH = "/bots/bridge/v2" as const;
 const nonEmpty = z.string().trim().min(1);
 const timestampMs = z.number().int().nonnegative();
 
-/** ZCodium 侧固定为 `astrbot`；插件用 id 前缀自行隔离真实平台，只做透传。 */
+/** yazcode 侧固定为 `astrbot`；插件用 id 前缀自行隔离真实平台，只做透传。 */
 export const botsBridgeChannelSchema = z.string().trim().min(1);
 export type BotsBridgeChannel = z.infer<typeof botsBridgeChannelSchema>;
 
@@ -125,7 +125,7 @@ export type BotsBridgeDeliveryPayload = z.infer<typeof botsBridgeDeliveryPayload
 // ── command ───────────────────────────────────────────────────
 
 export const botsBridgeCommandSchema = z.discriminatedUnion("type", [
-  // 用户文本原样透传，由 ZCodium 集中解析（/new、/permission、自由输入等）。
+  // 用户文本原样透传，由 yazcode 集中解析（/new、/permission、自由输入等）。
   z.object({ type: z.literal("prompt"), text: z.string() }).strict(),
   z.object({ type: z.literal("bind"), code: nonEmpty }).strict(),
   z.object({ type: z.literal("unbind") }).strict(),

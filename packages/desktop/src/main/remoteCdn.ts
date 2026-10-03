@@ -1,7 +1,7 @@
 import { isOfficialServiceEnabled, ZCODE_VERSION, type ZCodeEnv } from "@zcode/shared";
 
 declare const __ZCODE_CDN_BASE_URL__: string | undefined;
-declare const __ZCODIUM_REMOTE_ASSET_CDN_BASE_URL__: string | undefined;
+declare const __YAZCODE_REMOTE_ASSET_CDN_BASE_URL__: string | undefined;
 const DEFAULT_CDN_BASE_URL = "";
 
 export interface ResolveRemoteCdnOptions {
@@ -24,9 +24,9 @@ function normalizeBaseUrl(value: string): string {
 
 function readBundledRemoteAssetBaseUrl(): string {
   // 发布构建注入本仓库该 tag 的 GitHub Release 资产地址；dev/本地构建为空串。
-  return typeof __ZCODIUM_REMOTE_ASSET_CDN_BASE_URL__ === "undefined"
+  return typeof __YAZCODE_REMOTE_ASSET_CDN_BASE_URL__ === "undefined"
     ? ""
-    : __ZCODIUM_REMOTE_ASSET_CDN_BASE_URL__.trim();
+    : __YAZCODE_REMOTE_ASSET_CDN_BASE_URL__.trim();
 }
 
 export function resolveRemoteCdnBaseUrls(options: ResolveRemoteCdnOptions = {}): string[] {

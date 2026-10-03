@@ -28,7 +28,7 @@
 - `update()` 内部不经过 `get()`，因此“先投影 patch、再读盘合并写回”不会把开关覆盖回旧值。
 - `get()` 是幂等投影：重复读取同一设置不改变结果，也不产生额外写盘。
 - main 不直接采用 renderer 的 patch 值，而是重读落盘后的设置再投影，避免部分 patch 把其它已打开开关归一为关闭。
-- CLI/headless 没有设置文件读写入口，仍由 `ZCODIUM_ENABLE_OFFICIAL_*` 环境变量投影。
+- CLI/headless 没有设置文件读写入口，仍由 `YAZCODE_ENABLE_OFFICIAL_*` 环境变量投影。
 - 读取失败、字段缺失或 schema 校验失败时按全关投影（fail-closed），保持审计版默认断连语义。
 
 ## Desktop → Agent 的开关投影
@@ -44,16 +44,16 @@ Host spawn agent（每次 spawn 都读当前设置）
   └─ createZCodeApp 保留同一投影（幂等，覆盖不经协议入口的调用方）
 ```
 
-- **必须写完整键集（含关闭=0）**：用户 shell 里可能残留 `ZCODIUM_ENABLE_OFFICIAL_*=1`；Desktop 的设置是唯一事实源，关闭项要显式覆盖为 `0`，不能依赖“缺键=关闭”。
+- **必须写完整键集（含关闭=0）**：用户 shell 里可能残留 `YAZCODE_ENABLE_OFFICIAL_*=1`；Desktop 的设置是唯一事实源，关闭项要显式覆盖为 `0`，不能依赖“缺键=关闭”。
 - **协议入口必须投影**：插件市场管理等协议请求不经过 `createZCodeApp`；只在 app 创建时投影会让这些请求长期停在默认全关（表现为“打开插件市场开关没反应”）。
 - **生效时机**：env 在 agent spawn 时读取，设置页切换开关后**重启应用或下一次 agent 启动**生效；设置页文案提示需重启应用。已运行的 agent 不因设置变化而重启。
-- CLI/headless 不受此投影影响，继续由用户手动的 `ZCODIUM_ENABLE_OFFICIAL_*` 控制。
+- CLI/headless 不受此投影影响，继续由用户手动的 `YAZCODE_ENABLE_OFFICIAL_*` 控制。
 - `buildOfficialServiceEnvPatch` 是 env 映射的单一实现，与 `readOfficialServiceSwitchesFromEnv` 共用键映射，禁止在两处手写键名。
 
 ## 功能来源与开关
 
 - **marketplace**：开关关闭时默认插件市场集合不包含官方 CDN 来源（`https://cdn-zcode.z.ai/zcode/official-plugin/marketplace.json`），插件市场只保留本地内置插件与个人来源；开关开启（且 agent env 投影为 1）时默认集合包含官方来源，插件市场可刷新并安装官方插件。
-- **marketplace 与远程资源源**：`resolveRemoteCdnBaseUrls` 的解析优先级为：用户显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` > 发布构建内置的自有源（`ZCODIUM_REMOTE_ASSET_CDN_BASE_URL`，指向本仓库 GitHub Release 资产） > 官方 CDN（仅此路径受 marketplace 开关把关：开关关闭时对默认源返回空）。前两者是用户/自有分发配置，先于开关判断并按原值返回，不经过官方服务开关与官方出口策略；远端连接因此不再要求用户打开插件市场开关或配置环境变量。
+- **marketplace 与远程资源源**：`resolveRemoteCdnBaseUrls` 的解析优先级为：用户显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` > 发布构建内置的自有源（`YAZCODE_REMOTE_ASSET_CDN_BASE_URL`，指向本仓库 GitHub Release 资产） > 官方 CDN（仅此路径受 marketplace 开关把关：开关关闭时对默认源返回空）。前两者是用户/自有分发配置，先于开关判断并按原值返回，不经过官方服务开关与官方出口策略；远端连接因此不再要求用户打开插件市场开关或配置环境变量。
 - 官方市场的网络出口由 agent HTTP 适配器的 `assertOfficialPlatformAccessible` 按 agent 进程开关裁决：关闭时刷新/下载在请求前拒绝。
 - **关闭时的展示投影**：Host 的插件 overview 在开关关闭时将官方市场与官方候选插件从公开投影中过滤，并注入 `officialMarketplaceEnabled: false`；插件市场“公开”分段因此为空，展示引导文案（去 设置 → Z.AI 服务 打开“Z.AI 插件市场与 CDN”）。已安装插件列表不过滤，用户仍可管理本地已安装的插件。
 - 本地市场记录与缓存不主动删除：重新打开开关后（Host 过滤即时解除）公开分段恢复可见；无需重启应用。
@@ -79,7 +79,7 @@ Host spawn agent（每次 spawn 都读当前设置）
 2. 新进程（模拟 Host/Server 重启）只调用 `settingService.get()`，进程策略即恢复磁盘值：已开启服务 `assertOfficialServiceAvailable` 放行、`shouldBlockOfficialPlatformUrl` 不再拦截对应域名；未开启服务仍拒绝。
 3. `update()` 到落盘出现在同一条写队列内，重复 `get()` 幂等。
 4. main 的 webRequest 策略随设置变更即时刷新：当前会话内 renderer 对官方域名的请求立即放行/拦截，不依赖重启；其它窗口的 Host 通过 `SettingsChanged` 广播重新读取设置。
-5. 真实业务入口：关闭时 `clientConfigService` / `offPeakServerClient` / `FeedbackHttpClient` 在凭证与网络前拒绝且不发起请求，`resolveRemoteCdnBaseUrls` 对默认官方源返回空；打开后分别真的拉取客户端配置、发出取号请求、发出反馈请求并出现 CDN 下载源。显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` 与构建内置的 `ZCODIUM_REMOTE_ASSET_CDN_BASE_URL` 在开关关闭时仍返回对应自建源、开关打开时保持原值，不被开关改写；显式覆盖优先于内置源。
+5. 真实业务入口：关闭时 `clientConfigService` / `offPeakServerClient` / `FeedbackHttpClient` 在凭证与网络前拒绝且不发起请求，`resolveRemoteCdnBaseUrls` 对默认官方源返回空；打开后分别真的拉取客户端配置、发出取号请求、发出反馈请求并出现 CDN 下载源。显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` 与构建内置的 `YAZCODE_REMOTE_ASSET_CDN_BASE_URL` 在开关关闭时仍返回对应自建源、开关打开时保持原值，不被开关改写；显式覆盖优先于内置源。
 6. Desktop → Agent 投影：`buildOfficialServiceEnvPatch` 输出完整 7 键（开=1/关=0）；开关关闭时覆盖 shell 残留的 `=1`；开关打开时 agent 的默认市场集合包含官方来源，关闭时不含。
 7. account 浏览器登录：模型设置页提供“通过浏览器登录”；全新用户首次启动只看到 API Key 表单且可跳过，不出现 OAuth 入口、不自动登录。
 8. marketplace 关闭态：Host overview 过滤官方市场与官方候选插件并注入 `officialMarketplaceEnabled=false`；“公开”分段为空并展示开关引导文案；已安装列表保留；打开/关闭切换即时生效（Host 实时开关），无需重启。

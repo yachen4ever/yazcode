@@ -15,7 +15,7 @@ import { installScriptSource } from "./zcode-distribution/installer.mjs";
 const root = resolve(import.meta.dirname, "..");
 const defaultOutDir = resolve(root, "dist", "zcode");
 const defaultBaseUrl = (await loadEndpointEnv()).ZCODE_DIST_BASE_URL?.trim() || "";
-const packageDirName = "zcodium";
+const packageDirName = "yazcode";
 const usage = `Usage:
   pnpm build:zcode
   node scripts/build-zcode.mjs --skip-build
@@ -280,7 +280,7 @@ async function main() {
       {
         baseUrl: options.baseUrl,
         createdAt: new Date().toISOString(),
-        name: "zcodium",
+        name: "yazcode",
         sha256,
         tarball: tarballName,
         version,

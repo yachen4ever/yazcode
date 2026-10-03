@@ -426,7 +426,7 @@ function getWorkspaceZcodeSkillRoot(workspacePath: string): string {
 }
 
 function getUserZcodeSkillRoot(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "skills");
+  return join(resolveUserHomeDir(), ".yazcode", "skills");
 }
 
 function getWorkspaceZcodeCommandRoot(workspacePath: string): string {
@@ -434,7 +434,7 @@ function getWorkspaceZcodeCommandRoot(workspacePath: string): string {
 }
 
 function getUserZcodeCommandRoot(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "commands");
+  return join(resolveUserHomeDir(), ".yazcode", "commands");
 }
 
 function getWorkspaceZcodePluginRoot(workspacePath: string): string {
@@ -442,11 +442,11 @@ function getWorkspaceZcodePluginRoot(workspacePath: string): string {
 }
 
 function getUserZcodePluginRoot(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "plugins");
+  return join(resolveUserHomeDir(), ".yazcode", "plugins");
 }
 
 function getUserZcodeCliConfigPath(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "cli", "config.json");
+  return join(resolveUserHomeDir(), ".yazcode", "cli", "config.json");
 }
 
 function getWorkspaceZcodeConfigPath(workspacePath: string): string {
@@ -458,7 +458,7 @@ function getClaudeUserAgentsFileSourcePath(): string {
 }
 
 function getUserZcodeAgentsFilePath(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "AGENTS.md");
+  return join(resolveUserHomeDir(), ".yazcode", "AGENTS.md");
 }
 
 function resolveTargetRootForScope(

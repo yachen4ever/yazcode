@@ -1,6 +1,6 @@
 import {
   DesktopCommandIds,
-  ZCODIUM_ISSUES_URL,
+  YAZCODE_ISSUES_URL,
   TID_WORKSPACE_HELP_MENU_RESOURCE_MANAGER,
   TID_WORKSPACE_HELP_MENU_TRIGGER,
 } from "@zcode/shared";
@@ -51,7 +51,7 @@ export function WorkspaceHelpMenuButton({
   });
   const handleOpenFeatureRequest = () => {
     // 审计版：功能建议直接指向本仓库 Issues。
-    void platform.openExternal(ZCODIUM_ISSUES_URL);
+    void platform.openExternal(YAZCODE_ISSUES_URL);
   };
   const handleOpenCommunity = () => {
     void platform.openCommunity();

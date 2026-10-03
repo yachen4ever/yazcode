@@ -7,7 +7,7 @@ const COMMANDS_DIR = "commands";
 const GIT_MARKER = ".git";
 const HOME_PREFIX = "~/";
 const PRIORITY_STEP = 10;
-const USER_ZCODE_DIR = ".zcodium";
+const USER_ZCODE_DIR = ".yazcode";
 const PROJECT_ZCODE_DIR = ".zcode";
 const AGENTS_DIR = ".agents";
 

@@ -75,12 +75,12 @@ export async function prepareCliProviderRuntimeEnv(
       sea: options.sea ?? getSeaProviderConfigAssets(),
     }));
   const personalFilePath =
-    explicitPersonal ?? join(dataBaseDir, ".zcodium", "v2", PERSONAL_PROVIDER_CONFIG_FILE_NAME);
+    explicitPersonal ?? join(dataBaseDir, ".yazcode", "v2", PERSONAL_PROVIDER_CONFIG_FILE_NAME);
   const appVersion = options.appVersion ?? ZCODE_VERSION;
   const platform = options.platform ?? resolveZCodeBuiltinClientPlatform();
   const zcodeEndpointOrigin = resolveRuntimeZCodeEndpointOrigin(options.env);
   const cachePaths = resolveZCodeBuiltinCachePaths({
-    environmentConfigRoot: join(dataBaseDir, ".zcodium", "v2"),
+    environmentConfigRoot: join(dataBaseDir, ".yazcode", "v2"),
     platform,
     appVersion,
     zcodeEndpointOrigin,
@@ -139,7 +139,7 @@ async function resolveBundledZCodeBuiltinProviderConfig(input: {
   if (input.sea?.isSea()) {
     const content = input.sea.getAsset(SEA_ZCODE_BUILTIN_PROVIDER_CONFIG_ASSET_KEY, "utf8");
     return materializeZCodeBuiltinProviderConfig({
-      environmentConfigRoot: join(input.dataBaseDir, ".zcodium", "v2"),
+      environmentConfigRoot: join(input.dataBaseDir, ".yazcode", "v2"),
       content,
     });
   }

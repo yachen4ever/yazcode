@@ -288,8 +288,8 @@ if (mode === "baseline") {
     ...ALL_OFF,
     marketplace: true,
   });
-  result.openedMarketplaceEnv = openedPatch.ZCODIUM_ENABLE_OFFICIAL_MARKETPLACE;
-  result.openedAccountEnv = openedPatch.ZCODIUM_ENABLE_OFFICIAL_ACCOUNT;
+  result.openedMarketplaceEnv = openedPatch.YAZCODE_ENABLE_OFFICIAL_MARKETPLACE;
+  result.openedAccountEnv = openedPatch.YAZCODE_ENABLE_OFFICIAL_ACCOUNT;
   const defaults = resolveDefaultPluginMarketplaces();
   result.openedDefaults = defaults.length;
   result.openedDefaultSource = defaults[0]?.source ?? null;
@@ -374,7 +374,7 @@ if (mode === "baseline") {
   result.closedRecords = closedRecords.length;
   result.closedHasOfficial = closedRecords.some((record) => record.id === "zcode-plugins-official");
 
-  process.env.ZCODIUM_ENABLE_OFFICIAL_MARKETPLACE = "1";
+  process.env.YAZCODE_ENABLE_OFFICIAL_MARKETPLACE = "1";
   policy.setOfficialServiceSwitches(policy.readOfficialServiceSwitchesFromEnv(process.env));
   ensureDefaultPluginMarketplaces(storageRoot);
   const openedRecords = loadKnownMarketplacesSync(storageRoot);

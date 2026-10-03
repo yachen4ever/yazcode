@@ -14,7 +14,7 @@ import type { BindCodeState } from "./shared.js";
  * 这里只负责展示桥接运行时文件 + 插件入口，并复用官方绑定/解绑流程。
  */
 const ASTRBOT_BRIDGE_RUNTIME_FILE = ".zcode/v2/bots-bridge.runtime.v2.json";
-export const ASTRBOT_PLUGIN_URL = "https://github.com/axiom-desu/astrbot-zcodium-plugin";
+export const ASTRBOT_PLUGIN_URL = "https://github.com/axiom-desu/astrbot-yazcode-plugin";
 
 export function AstrBotSettingsCard({
   bot,

@@ -1,9 +1,4 @@
 import type { ZCodeEnv } from "./env.js";
-import {
-  emitLegacyEnvDeprecation,
-  readExternalEnvVar,
-  RENAMED_EXTERNAL_ENV_KEYS,
-} from "./env-names.js";
 
 export const DEFAULT_ZCODE_ENDPOINT_ORIGIN = "https://zcode.z.ai";
 export const DEFAULT_BIGMODEL_API_ORIGIN = "https://bigmodel.cn";
@@ -25,10 +20,10 @@ export function pickProductEndpointEnv(
     "ZAI_OAUTH_CLIENT_ID",
     "ZAI_OAUTH_APP_ID",
   ];
-  // P1a 改名兼容：用户若设置 ZCODIUM_ 新名，映射回内部旧名键继续流转。
+  // P1a 改名兼容：用户若设置 YAZCODE_ 新名，映射回内部旧名键继续流转。
   return Object.fromEntries(
     keys.flatMap((key) => {
-      const renamedKey = `ZCODIUM_${key.slice("ZCODE_".length)}`;
+      const renamedKey = `YAZCODE_${key.slice("ZCODE_".length)}`;
       const value = env[renamedKey]?.trim() || env[key]?.trim();
       return value ? [[key, value]] : [];
     }),
@@ -92,11 +87,11 @@ function readRuntimeEnvValue(
 ): string | undefined {
   const value = env[key]?.trim();
   if (value) return value;
-  // P1a 改名兼容：ZCODIUM_ 新名优先级等于旧名，读到旧名时由 env-names 记弃用提示。
-  if (key.startsWith("ZCODE_")) {
-    return readExternalEnvVar(env, key as keyof typeof RENAMED_EXTERNAL_ENV_KEYS & string);
-  }
-  return undefined;
+  // P1a 改名兼容：本文件会被 node 原生 ESM 链加载（vite config 等），
+  // 不能相对导入 .ts helper，前缀兼容在此内联（ZCODIUM_ 过渡 / YAZCODE_ 新名）。
+  const stem = key.startsWith("ZCODE_") ? key.slice("ZCODE_".length) : null;
+  if (!stem) return undefined;
+  return env[`ZCODIUM_${stem}`]?.trim() || env[`YAZCODE_${stem}`]?.trim() || undefined;
 }
 
 export function normalizeZCodeEndpointOrigin(value: string): string {

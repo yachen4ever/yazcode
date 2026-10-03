@@ -739,7 +739,9 @@ function applyUpdateProvider(options: InitAutoUpdaterOptions): void {
       channel: "latest",
       useMultipleRangeRequest: false,
     });
-    logger.info(`[auto-update] generic provider (custom feed) url=${redactUpdateFeedUrlForLog(customUrl)}`);
+    logger.info(
+      `[auto-update] generic provider (custom feed) url=${redactUpdateFeedUrlForLog(customUrl)}`,
+    );
     return;
   }
   // 我们所有发布（audit.x）都是 GitHub Pre-release：generic 的 /releases/latest 会 404。
@@ -748,7 +750,7 @@ function applyUpdateProvider(options: InitAutoUpdaterOptions): void {
   autoUpdater.setFeedURL({
     provider: "github",
     owner: "ZCodium-project",
-    repo: "ZCodium",
+    repo: "yazcode",
   });
   logger.info("[auto-update] github provider applied (prereleases allowed)");
 }

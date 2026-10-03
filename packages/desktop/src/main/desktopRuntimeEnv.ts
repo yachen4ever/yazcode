@@ -61,10 +61,10 @@ function isTruthyRuntimeEnvOverride(name: string): boolean {
 export const runtimeApplicationName =
   readRuntimeEnvOverride("ZCODE_DESKTOP_APPLICATION_NAME") ??
   (isLocalDevelopmentRuntime
-    ? "ZCodium Dev"
+    ? "yazcode Dev"
     : isPreviewPackagedRuntime
-      ? "ZCodium Preview"
-      : "ZCodium");
+      ? "yazcode Preview"
+      : "yazcode");
 // Electron 的 app.getPath("home") 不一定跟随测试进程里的 HOME 覆盖。
 // e2e 默认工作区依赖 home 路径，因此提供显式覆盖，避免测试写到开发者真实 ~/ZCodeProject。
 export const runtimeHomePath = readRuntimeEnvOverride("ZCODE_DESKTOP_HOME_DIR");
@@ -497,7 +497,7 @@ export function buildHostProcessEnv(hostProcessLocalEnv: Record<string, string>)
             )
           ? rawInheritedEnv.ZCODE_CUA_BUNDLED_HELPER_APP_PATH?.trim() ||
             join(
-              rawInheritedEnv.ZCODE_HOME?.trim() || join(homedir(), ".zcodium"),
+              rawInheritedEnv.ZCODE_HOME?.trim() || join(homedir(), ".yazcode"),
               "computer-use",
               "dev",
               DEV_HELPER_APP_NAME,
@@ -540,7 +540,7 @@ export function buildHostProcessEnv(hostProcessLocalEnv: Record<string, string>)
     // 这里从 main 进程显式下发，agent 子进程继承 host env 后即可稳定写入请求 header。
     [ZCODE_APP_VERSION_ENV]: ZCODE_VERSION,
     ...(dataBaseDir !== homedir()
-      ? { ZCODIUM_DATA_BASE_DIR: dataBaseDir, ZCODE_DATA_BASE_DIR: dataBaseDir }
+      ? { YAZCODE_DATA_BASE_DIR: dataBaseDir, ZCODE_DATA_BASE_DIR: dataBaseDir }
       : {}),
     ...(windowsAppInstallDir ? { [ZCODE_WINDOWS_APP_INSTALL_DIR_ENV]: windowsAppInstallDir } : {}),
     ...(bundledCuaHelperAppPath

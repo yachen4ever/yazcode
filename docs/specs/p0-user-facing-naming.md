@@ -1,4 +1,4 @@
-# Spec：P0 用户可见命名统一（zcode → zcodium）
+# Spec：P0 用户可见命名统一（zcode → yazcode）
 
 ## 范围（P0）
 
@@ -6,16 +6,16 @@
 `ZCODE_*` 变量、产物文件名（`dist/zcode.cjs`）与项目级 `.zcode` 目录属于
 P1a/P2，本 PR 不动。
 
-1. **bin 命令**：`package.json#bin.zcode` → `bin.zcodium`（仍指向
-   `./dist/zcode.cjs`）；`CLI_COMMAND_NAME` → `"zcodium"`（进程标题）。
+1. **bin 命令**：`package.json#bin.zcode` → `bin.yazcode`（仍指向
+   `./dist/zcode.cjs`）；`CLI_COMMAND_NAME` → `"yazcode"`（进程标题）。
    上游 README 中引用的 `dist/ln`（半途改名、与产物不符）一并修正。
-2. **deep link 协议**：`zcode://` → `zcodium://`。覆盖桌面协议注册
+2. **deep link 协议**：`zcode://` → `yazcode://`。覆盖桌面协议注册
    （`setAsDefaultProtocolClient`）、Linux `.desktop` 注册、macOS finder
    工作流、OAuth redirectUri（dormant，随账号体系）与全部引用。
-3. **i18n 用户可见文案**：产品名 "ZCode" → "ZCodium"；数据目录提示中
-   过时的 `.zcode/v2` 修正为 `.zcodium/v2`（#13 遗留）。key 名、
+3. **i18n 用户可见文案**：产品名 "ZCode" → "yazcode"；数据目录提示中
+   过时的 `.zcode/v2` 修正为 `.yazcode/v2`（#13 遗留）。key 名、
    `.zcodeignore`（项目级文件）、Z.AI dormant 文案不动。
-4. **README / 文档**：产品名与命令统一为 zcodium；GitHub 链接保持上游
+4. **README / 文档**：产品名与命令统一为 yazcode；GitHub 链接保持上游
    ZCodium-project 不变。
 
 ## 兼容性
@@ -25,7 +25,7 @@ P1a/P2，本 PR 不动。
 
 ## 验收
 
-1. `npx zcodium --help` 经 bin 正常入口可用（bin 指向产物成功）。
-2. 桌面应用注册 `zcodium://` 协议；deep link 打开工作区/导入流程正常。
+1. `npx yazcode --help` 经 bin 正常入口可用（bin 指向产物成功）。
+2. 桌面应用注册 `yazcode://` 协议；deep link 打开工作区/导入流程正常。
 3. 界面文案不再出现 "ZCode"（dormant 的 Z.AI 服务页除外）。
 4. typecheck / lint / 测试全绿。

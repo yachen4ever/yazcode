@@ -158,9 +158,9 @@ export default defineConfig(({ mode }) => {
   const zcodeEndpointOrigin = resolveZCodeEndpointOrigin({
     env: zcodeEnv,
     envBaseOrigin:
-      env.ZCODIUM_BASE_URL ??
+      env.YAZCODE_BASE_URL ??
       env.ZCODE_BASE_URL ??
-      env.ZCODIUM_ENDPOINT_ORIGIN ??
+      env.YAZCODE_ENDPOINT_ORIGIN ??
       env.ZCODE_ENDPOINT_ORIGIN,
   });
   const codingPlanWebviewOrigin =

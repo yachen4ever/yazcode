@@ -64,7 +64,7 @@ test("runtime official URL literals are restricted to identity and user-opened l
 test("audit policy is unconditional and distinguishes platform from model providers", async () => {
   const policy = await load("packages/shared/src/officialPlatformPolicy.ts");
   assert.equal(policy.isOfficialPlatformEnabled(), false);
-  assert.throws(() => policy.assertOfficialPlatformAvailable(), /ZCodium/);
+  assert.throws(() => policy.assertOfficialPlatformAvailable(), /yazcode/);
   for (const host of ["zcode.z.ai", "cdn-zcode.z.ai", "test.zcode.z.ai", "ZCODE.Z.AI."]) {
     assert.throws(() => policy.assertNoOfficialPlatformUrl(`https://${host}/api/v1`));
   }
@@ -98,7 +98,7 @@ test("user model requests keep URL, credentials and body without the official ga
   });
   assert.equal((await fetch(input)).status, 200);
   assert.equal(calls, 1);
-  await assert.rejects(fetch("https://zcode.z.ai/api/v1/zcode-plan"), /ZCodium/);
+  await assert.rejects(fetch("https://zcode.z.ai/api/v1/zcode-plan"), /yazcode/);
   assert.equal(calls, 1);
 });
 test("client config is local and cannot invoke injected network or endpoint resolver", async () => {
@@ -130,8 +130,8 @@ test("CLI OAuth cannot call even an injected HTTP client", async () => {
     baseUrl: "https://example.com",
     httpClient: { request: () => assert.fail("must not request") },
   });
-  await assert.rejects(client.init({ pollToken: "test" }), /ZCodium/);
-  await assert.rejects(client.poll({ pollToken: "test", flowId: "test" }), /ZCodium/);
+  await assert.rejects(client.init({ pollToken: "test" }), /yazcode/);
+  await assert.rejects(client.poll({ pollToken: "test", flowId: "test" }), /yazcode/);
 });
 
 test("Electron policy cancels cached resources and redirects in every created session", async () => {
@@ -261,7 +261,7 @@ test("all platform service boundaries guard before touching credentials, state o
       )(policy.assertOfficialPlatformAvailable, policy.isOfficialPlatformEnabled, () => ({
         ok: false,
       }));
-      if (expected === "reject") await assert.rejects(run(), /ZCodium/, `${file}: ${name}`);
+      if (expected === "reject") await assert.rejects(run(), /yazcode/, `${file}: ${name}`);
       else assert.deepEqual(await run(), expected, `${file}: ${name}`);
     }
   }
@@ -284,7 +284,7 @@ test("historical built-in platform model endpoints cannot escape the model trans
   }
   visit(config);
   assert.ok(urls.length > 0);
-  for (const url of urls) await assert.rejects(fetch(url), /ZCodium/);
+  for (const url of urls) await assert.rejects(fetch(url), /yazcode/);
 });
 
 test("Node API blocks official endpoints before resolving settings or calling fetch", async () => {
@@ -304,5 +304,5 @@ test("Node API blocks official endpoints before resolving settings or calling fe
     resolveZCodeEndpointOrigin: unexpected,
     fetchImpl: unexpected,
   });
-  await assert.rejects(client.request("https://zcode.z.ai/api/v1/client/configs"), /ZCodium/);
+  await assert.rejects(client.request("https://zcode.z.ai/api/v1/client/configs"), /yazcode/);
 });

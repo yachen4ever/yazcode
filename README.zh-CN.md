@@ -1,7 +1,7 @@
-# ZCodium
+# yazcode
 
 <div align="center">
-  <img src="public/logo/open-audit.svg" alt="ZCodium" width="96" height="96" />
+  <img src="public/logo/open-audit.svg" alt="yazcode" width="96" height="96" />
   <p><strong>ZCode 开源代码的独立审计版本</strong></p>
 </div>
 <p align="center">
@@ -9,15 +9,15 @@
   <a href="https://zcodium-project.github.io/">项目网站</a>
 </p>
 
-> 本仓库 fork 自智谱 2026 年 9 月 21 日开源的 [zai-org/ZCode](https://github.com/zai-org/ZCode)。名字沿用 Chrome → Chromium、VS Code → VSCodium 的变形逻辑：**ZCode → ZCodium**。所有结论以代码和可复现的验证为准。
+> 本仓库 fork 自智谱 2026 年 9 月 21 日开源的 [zai-org/ZCode](https://github.com/zai-org/ZCode)。名字沿用 Chrome → Chromium、VS Code → VSCodium 的变形逻辑：**ZCode → yazcode**。所有结论以代码和可复现的验证为准。
 
 <div align="center">
-  <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="ZCodium 桌面端：任务完成后的改动摘要与后续输入" width="860" />
+  <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="yazcode 桌面端：任务完成后的改动摘要与后续输入" width="860" />
 </div>
 
 ## 功能介绍
 
-ZCodium 保留了产品本身——桌面端、浏览器端和终端三端的 AI 编程工作区——并从公开源码重新构建：监控与遥测全部移除，官方服务默认关闭。
+yazcode 保留了产品本身——桌面端、浏览器端和终端三端的 AI 编程工作区——并从公开源码重新构建：监控与遥测全部移除，官方服务默认关闭。
 
 - **一个 Agent，三种界面**：Electron 桌面端、浏览器工作区和 `zcode` 终端 TUI 共用同一个 Agent 运行时与会话；还可以通过 SSH 连接远程主机，或者用手机浏览器远控桌面端同一个 Agent。
 - **会规划、会改、会跑、会验证**：文件改动用 diff 呈现，终端命令带上下文，改完自己跑命令和测试复核；内置浏览器插件可驱动真实浏览器完成网页任务。
@@ -27,13 +27,13 @@ ZCodium 保留了产品本身——桌面端、浏览器端和终端三端的 AI
 - **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义的端点（Chat Completions / Responses / Anthropic Messages）。
 
 <div align="center">
-  <img src="https://zcodium-project.github.io/shots/review-flow.png" alt="ZCodium 在修改文件前弹出权限确认：仅本次允许 / 本项目内一直允许 / 完全放行 / 拒绝" width="860" />
+  <img src="https://zcodium-project.github.io/shots/review-flow.png" alt="yazcode 在修改文件前弹出权限确认：仅本次允许 / 本项目内一直允许 / 完全放行 / 拒绝" width="860" />
   <p><em>审批优先：改文件、跑命令、调工具之前，Agent 会先停下来征求许可。</em></p>
 </div>
 
 ## 和官方版本的对比
 
-| 对比项       | ZCodium（本仓库）                                          | 官方客户端（闭源）               | 官方开源版                 |
+| 对比项       | yazcode（本仓库）                                          | 官方客户端（闭源）               | 官方开源版                 |
 | ------------ | ---------------------------------------------------------- | -------------------------------- | -------------------------- |
 | 监控与遥测   | **全部移除**（约 2.6 万行），并加防回归检查                | 全套默认开启，开关管不到打包上传 | 与闭源版相同               |
 | 仓库上传逻辑 | 已移除                                                     | 有（直到 2026-09-18 被曝光）     | 已移除（自 2026-09-21 起） |
@@ -41,7 +41,7 @@ ZCodium 保留了产品本身——桌面端、浏览器端和终端三端的 AI
 | 构建透明度   | **GitHub Actions 从仓库源码透明构建**，产物随 Release 发布 | 官方二进制，构建不可复现         | 不提供公开构建             |
 | Issue 与共建 | **开放**（Issue 与 Discussions），欢迎共建讨论             | 不开放                           | 关闭                       |
 
-## ZCodium 比 ZCode 官方改了什么
+## yazcode 比 ZCode 官方改了什么
 
 相比上游开源版本：
 
@@ -100,35 +100,35 @@ ZCodium 保留了产品本身——桌面端、浏览器端和终端三端的 AI
 
 ### macOS（.dmg）
 
-1. 按机型下载 `ZCodium-*-mac-arm64.dmg`（Apple Silicon）或 `ZCodium-*-mac-x64.dmg`（Intel），打开后把 ZCodium 拖进“应用程序”。
+1. 按机型下载 `yazcode-*-mac-arm64.dmg`（Apple Silicon）或 `yazcode-*-mac-x64.dmg`（Intel），打开后把 yazcode 拖进“应用程序”。
 2. 因为没有 ZCode 官方签名，Gatekeeper 会提示“无法验证开发者”或“已损坏”。**先把应用拖进「应用程序」，再执行**下面命令（提示输入密码时输入开机密码，输入过程屏幕上不显示任何字符）：
 
    ```bash
    # 命令行放行并启动（命令会立即退出，不会占用终端）：
-   sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/ZCodium.app" && open -a "ZCodium"
+   sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/yazcode.app" && open -a "yazcode"
    ```
 
    命令使用 `/usr/bin/xattr` 绝对路径，避免 PATH 里其他同名工具（例如 Python 的 xattr）报 “option -r not recognized”。也可以右键（Control-点击）应用 → 选择“打开” → 弹窗里再点“打开”。之后就能正常双击启动了。
 
 ### Windows（.exe）
 
-1. 下载 `ZCodium-*-win-x64.exe`，双击运行。
+1. 下载 `yazcode-*-win-x64.exe`，双击运行。
 2. 安装包没有 ZCode 官方签名，Windows SmartScreen 会弹出“Windows 已保护你的电脑”的警告。点击“**更多信息**” → “**仍要运行**”，按提示完成安装即可。
 
-   这是预期提示，不是文件损坏；介意的话可以先按 Release 页的 `sha256.txt` 校验安装包，例如 `certutil -hashfile ZCodium-<version>-win-x64.exe SHA256`，与文件中同名行比对一致即可。
+   这是预期提示，不是文件损坏；介意的话可以先按 Release 页的 `sha256.txt` 校验安装包，例如 `certutil -hashfile yazcode-<version>-win-x64.exe SHA256`，与文件中同名行比对一致即可。
 
 ### Linux（.AppImage）
 
-请按 CPU 架构选择对应安装包：`ZCodium-*-linux-x86_64.AppImage`（Intel / AMD）或 `ZCodium-*-linux-arm64.AppImage`（arm64 / aarch64）。
+请按 CPU 架构选择对应安装包：`yazcode-*-linux-x86_64.AppImage`（Intel / AMD）或 `yazcode-*-linux-arm64.AppImage`（arm64 / aarch64）。
 
 ```bash
 # x86_64（Intel / AMD）
-chmod +x ZCodium-*-linux-x86_64.AppImage
-./ZCodium-*-linux-x86_64.AppImage
+chmod +x yazcode-*-linux-x86_64.AppImage
+./yazcode-*-linux-x86_64.AppImage
 
 # arm64（aarch64）
-chmod +x ZCodium-*-linux-arm64.AppImage
-./ZCodium-*-linux-arm64.AppImage
+chmod +x yazcode-*-linux-arm64.AppImage
+./yazcode-*-linux-arm64.AppImage
 ```
 
 ### CLI 发行包（.tar.gz）
@@ -136,8 +136,8 @@ chmod +x ZCodium-*-linux-arm64.AppImage
 CLI 发行包是免安装的独立运行包（TUI + Web + Agent 三合一），需要 Node.js 24；安装脚本和运行时代码都可以在本仓库复核：
 
 ```bash
-tar -xzf zcodium-*.tar.gz
-cd zcodium
+tar -xzf yazcode-*.tar.gz
+cd yazcode
 ./install.sh        # 安装 zcode 命令（默认到 ~/.zcode/runtime，并在 ~/.local/bin 建立入口）
 zcode --help        # 或直接运行：node bin/zcode.mjs --help
 ```
@@ -161,7 +161,7 @@ zcode --help        # 或直接运行：node bin/zcode.mjs --help
 
 本仓库为开源社区驱动，与任何现有商业公司无关。文中事实均来自公开报道与独立代码审计，并已注明出处。如相关方认为内容有误，欢迎通过 Issue 提交更正。
 
-[社区的其他类似发行版：ZCodium](https://github.com/axiom-desu/ZCodium)
+[社区的其他类似发行版：yazcode](https://github.com/axiom-desu/yazcode)
 
 ---
 
@@ -311,10 +311,10 @@ pnpm bundle:desktop -- --help
 
 默认目标为 macOS arm64，默认输出目录为 `packages/desktop/dist/`。`--os` 支持 `mac`、`win`、`linux`，`--arch` 支持 `x64`、`arm64`；实际打包与签名需要目标平台对应的工具和配置。
 
-安装：双击打开产物 DMG，将 ZCodium 拖入"应用程序"。本地构建未签名，首次打开若被 macOS 拦截，执行：
+安装：双击打开产物 DMG，将 yazcode 拖入"应用程序"。本地构建未签名，首次打开若被 macOS 拦截，执行：
 
 ```bash
-sudo /usr/bin/xattr -rd com.apple.quarantine /Applications/ZCodium.app && open -a "ZCodium"
+sudo /usr/bin/xattr -rd com.apple.quarantine /Applications/yazcode.app && open -a "yazcode"
 ```
 
 ### ZCode 命令行版

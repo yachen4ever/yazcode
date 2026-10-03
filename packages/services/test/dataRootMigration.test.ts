@@ -13,10 +13,10 @@ async function loadPaths() {
 }
 
 function makeBase() {
-  return mkdtempSync(join(tmpdir(), "zcodium-migrate-"));
+  return mkdtempSync(join(tmpdir(), "yazcode-migrate-"));
 }
 
-test("旧根存在时整体复制到 .zcodium，旧根保留并写入标记", async () => {
+test("旧根存在时整体复制到 .yazcode，旧根保留并写入标记", async () => {
   const { setDataBaseDir, migrateLegacyZCodeDataRoot, getZCodeDataRootDir } = await loadPaths();
   const base = makeBase();
   try {
@@ -28,12 +28,12 @@ test("旧根存在时整体复制到 .zcodium，旧根保留并写入标记", as
     setDataBaseDir(base);
     migrateLegacyZCodeDataRoot();
     const nextRoot = getZCodeDataRootDir();
-    assert.equal(nextRoot, join(base, ".zcodium"));
+    assert.equal(nextRoot, join(base, ".yazcode"));
     assert.equal(readFileSync(join(nextRoot, "v2", "setting.json"), "utf8"), '{"marker":"legacy"}');
     assert.equal(readFileSync(join(nextRoot, "cli", "db", "db.sqlite"), "utf8"), "db-bytes");
     // 复制而非移动：官方 ZCode 客户端可能仍依赖旧根。
     assert.equal(existsSync(join(legacy, "v2", "setting.json")), true);
-    assert.equal(existsSync(join(legacy, ".migrated-to-zcodium")), true);
+    assert.equal(existsSync(join(legacy, ".migrated-to-yazcode")), true);
   } finally {
     rmSync(base, { recursive: true, force: true });
   }
@@ -50,7 +50,7 @@ test("用户删除新根视为重置：标记生效，不再重新灌入", async
     migrateLegacyZCodeDataRoot();
     rmSync(getZCodeDataRootDir(), { recursive: true, force: true });
     migrateLegacyZCodeDataRoot();
-    assert.equal(existsSync(join(base, ".zcodium")), false);
+    assert.equal(existsSync(join(base, ".yazcode")), false);
   } finally {
     rmSync(base, { recursive: true, force: true });
   }
@@ -62,15 +62,15 @@ test("无旧根或新根已存在时为 no-op", async () => {
   try {
     setDataBaseDir(base);
     migrateLegacyZCodeDataRoot();
-    assert.equal(existsSync(join(base, ".zcodium")), false);
+    assert.equal(existsSync(join(base, ".yazcode")), false);
     // 新根已存在时不被覆盖。
-    mkdirSync(join(base, ".zcodium"), { recursive: true });
-    writeFileSync(join(base, ".zcodium", "keep"), "keep");
+    mkdirSync(join(base, ".yazcode"), { recursive: true });
+    writeFileSync(join(base, ".yazcode", "keep"), "keep");
     mkdirSync(join(base, ".zcode"), { recursive: true });
     writeFileSync(join(base, ".zcode", "legacy"), "legacy");
     migrateLegacyZCodeDataRoot();
-    assert.equal(existsSync(join(base, ".zcodium", "legacy")), false);
-    assert.equal(readFileSync(join(base, ".zcodium", "keep"), "utf8"), "keep");
+    assert.equal(existsSync(join(base, ".yazcode", "legacy")), false);
+    assert.equal(readFileSync(join(base, ".yazcode", "keep"), "utf8"), "keep");
   } finally {
     rmSync(base, { recursive: true, force: true });
   }

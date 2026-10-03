@@ -8,7 +8,7 @@ import {
 } from "@zcode/services/node";
 
 function resolveBootstrapSettingsFile(homePath: string = homedir()): string {
-  return join(homePath, ".zcodium", "v2", "setting.json");
+  return join(homePath, ".yazcode", "v2", "setting.json");
 }
 
 function extractBootstrapDataBaseDir(rawValue: unknown): string | null {
@@ -54,7 +54,7 @@ export function applyEarlyDataBaseDirBootstrap(): string | null {
     // 启动早期就把 dataBaseDir 注入进来，避免 logger / crashReporter 先按默认 HOME 建目录，
     // 导致后续再切换到自定义目录时，日志和 crash dump 落在两套路径里。
     setDataBaseDir(dataBaseDir);
-    // 自定义数据目录是另一个 base：其内部的 .zcode 旧根同样需要迁移到 .zcodium。
+    // 自定义数据目录是另一个 base：其内部的 .zcode 旧根同样需要迁移到 .yazcode。
     migrateLegacyZCodeDataRoot();
   }
   return dataBaseDir;

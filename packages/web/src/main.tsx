@@ -81,7 +81,7 @@ function isWebOAuthCallback(params: URLSearchParams): boolean {
 }
 
 function renderWebAuthCallbackPage(): void {
-  document.title = "ZCodium - Sign In";
+  document.title = "yazcode - Sign In";
   const callbackState = parseOAuthState(
     new URLSearchParams(window.location.search).get("state") ?? "",
   );
@@ -327,7 +327,7 @@ function WebBootstrapErrorScreen({ message }: { message: string }) {
 }
 
 function renderWebBootstrapError(error: unknown): void {
-  document.title = "ZCodium - Web";
+  document.title = "yazcode - Web";
   root.render(
     <WebBootstrapErrorScreen message={error instanceof Error ? error.message : String(error)} />,
   );
@@ -353,7 +353,7 @@ async function bootstrapWebApp() {
       onClose: () => {},
     });
     const platform = createWebPlatform();
-    document.title = "ZCodium - Web + Server";
+    document.title = "yazcode - Web + Server";
 
     root.render(
       <AppErrorBoundary>

@@ -1,4 +1,4 @@
-# ZCodium 桌面更新
+# yazcode 桌面更新
 
 ## 规则与边界
 

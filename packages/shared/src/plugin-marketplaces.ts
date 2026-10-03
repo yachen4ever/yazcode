@@ -48,7 +48,7 @@ export const DEFAULT_PLUGIN_MARKETPLACES: DefaultPluginMarketplace[] = [
 /**
  * 默认插件市场集合按官方服务开关过滤：
  * 官方来源只在 marketplace 开启时进入集合；本地内置插件与个人来源不受影响。
- * agent 进程的开关来自 Desktop 的 env 投影或 CLI 手动的 ZCODIUM_ENABLE_OFFICIAL_*。
+ * agent 进程的开关来自 Desktop 的 env 投影或 CLI 手动的 YAZCODE_ENABLE_OFFICIAL_*。
  */
 export function resolveDefaultPluginMarketplaces(): DefaultPluginMarketplace[] {
   return DEFAULT_PLUGIN_MARKETPLACES.filter(

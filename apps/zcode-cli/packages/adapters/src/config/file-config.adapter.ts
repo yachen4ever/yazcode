@@ -59,7 +59,7 @@ export interface PluginRemovePatchResult {
 }
 
 const DEFAULT_CONFIG_FILE = "config.json";
-const DEFAULT_BASE_DIR = "~/.zcodium/cli";
+const DEFAULT_BASE_DIR = "~/.yazcode/cli";
 
 /**
  * Resolve path with ~ expansion

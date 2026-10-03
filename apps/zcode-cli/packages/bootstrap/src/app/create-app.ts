@@ -146,7 +146,7 @@ function decodePromptAttachmentDataUrl(
 }
 
 export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp> {
-  // CLI/headless：官方平台功能默认关闭；可用 ZCODIUM_ENABLE_OFFICIAL_* 环境变量按需开启。
+  // CLI/headless：官方平台功能默认关闭；可用 YAZCODE_ENABLE_OFFICIAL_* 环境变量按需开启。
   setOfficialServiceSwitches(readOfficialServiceSwitchesFromEnv(process.env));
 
   if (!options?.providerRegistry) {
@@ -364,7 +364,7 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       (messageEnabled
         ? createNodeSessionMailboxAdapter({
             rootDir: resolvePath(
-              (options.env ?? process.env).ZCODE_MAILBOX_ROOT ?? "~/.zcodium/mailbox",
+              (options.env ?? process.env).ZCODE_MAILBOX_ROOT ?? "~/.yazcode/mailbox",
             ),
           })
         : undefined);

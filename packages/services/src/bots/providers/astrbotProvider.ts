@@ -3,7 +3,7 @@
 // 这是官方 BotsService 的一个 BotProviderAdapter：
 // - 入站：bridge command 帧 → BotInboundMessage，交官方命令准入 / 任务驱动。
 // - 出站：BotOutboundMessage 文本 → bridge delivery 帧。
-// - 交互：官方 selection 走文本回退（ZCodium 侧 channel 固定为 astrbot）。
+// - 交互：官方 selection 走文本回退（yazcode 侧 channel 固定为 astrbot）。
 //
 // 轮次模型（与插件对齐，每命令一个 stream）：
 //   beginTurn → accepted(新 stream) → delivery… → status

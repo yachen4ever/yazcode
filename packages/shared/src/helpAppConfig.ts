@@ -1,4 +1,4 @@
-import { isOfficialServiceEnabled, ZCODIUM_ISSUES_URL } from "./officialPlatformPolicy.js";
+import { isOfficialServiceEnabled, YAZCODE_ISSUES_URL } from "./officialPlatformPolicy.js";
 import { z } from "zod";
 import { buildZCodeEndpointUrls } from "./zcodeEndpoint.js";
 import { getCommunityUrlFromConfigs, getFeedbackUrlFromConfig } from "./remoteAppConfig.js";
@@ -64,11 +64,11 @@ export function createHelpAppConfigReader(options: {
     if (!isOfficialServiceEnabled("clientConfig"))
       return {
         community_urls: {
-          "zh-CN": ZCODIUM_ISSUES_URL,
-          "en-US": ZCODIUM_ISSUES_URL,
-          "fa-IR": ZCODIUM_ISSUES_URL,
+          "zh-CN": YAZCODE_ISSUES_URL,
+          "en-US": YAZCODE_ISSUES_URL,
+          "fa-IR": YAZCODE_ISSUES_URL,
         },
-        feedback_url: ZCODIUM_ISSUES_URL,
+        feedback_url: YAZCODE_ISSUES_URL,
         feedback_use_external_form: true,
       };
     for (const [key, entry] of entries) {

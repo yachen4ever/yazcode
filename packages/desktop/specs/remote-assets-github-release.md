@@ -18,7 +18,7 @@
 
 - GitHub Release 的 asset 名不允许 `/`，组件必须压成单段文件名。
 - 版本里的 `+` 统一替换为 `-`：客户端会把 `+` 编码成 `%2B`，不同托管端的解码行为不一致；替换后下载 URL 与 asset 名完全一致。
-- **所有发布资产统一加 `zz-` 前缀**：GitHub Release 的资产列表按名称（忽略大小写）排序，与上传顺序无关；前缀把 remote assets 沉到发布页最后，安装包与更新元数据保持在前。`zz-` 在 `zcodium-*` 之后（第二个字符 `z` > `c`），是确保沉底的排序键。
+- **所有发布资产统一加 `zz-` 前缀**：GitHub Release 的资产列表按名称（忽略大小写）排序，与上传顺序无关；前缀把 remote assets 沉到发布页最后，安装包与更新元数据保持在前。`zz-` 在 `yazcode-*` 之后（第二个字符 `z` > `c`），是确保沉底的排序键。
 - 命名：`zz-<platformArch>__<componentId>__<version(+ → -)>.tar.gz`，例如 `zz-linux-x64__server-bundle__v3.14.4-ef831e13132e.tar.gz`；manifest 输出为 `zz-manifest-<arch>.json`。
 - 客户端 manifest 名候选：`zz-manifest-<arch>.json` 优先，`manifest-<arch>.json` 作为旧布局回退；组件 URL 由 manifest 的 `artifactPath` 决定，客户端不硬编码组件名。
 - manifest 其余字段（`id` / `version` / `sha256` / `mount`）保持原值，只重写 `artifactPath`。
@@ -35,7 +35,7 @@
 
 ## 开箱即用（构建内置源）
 
-- release workflow 构建桌面端时注入 `ZCODIUM_REMOTE_ASSET_CDN_BASE_URL`（本仓库该 tag 的 `releases/download/<tag>`），编译期写入 main 进程；安装版开箱即可连接 WSL/SSH，不需要用户配置环境变量。
+- release workflow 构建桌面端时注入 `YAZCODE_REMOTE_ASSET_CDN_BASE_URL`（本仓库该 tag 的 `releases/download/<tag>`），编译期写入 main 进程；安装版开箱即可连接 WSL/SSH，不需要用户配置环境变量。
 - `resolveRemoteCdnBaseUrls` 解析优先级：用户显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` > 构建内置源 > 官方 CDN（仅此路径受 marketplace 开关控制）。内置源与用户源都属自有分发，不经过官方服务开关与官方出口策略。
 - fork 构建时地址由 `github.repository` 决定，天然指向 fork 自己的 Release 资产。
 - dev/本地构建不注入内置源，仍走 mock-cdn 或显式配置。
@@ -51,4 +51,4 @@
 2. 加载链路测试：本地 HTTP 服务扁平布局，`ensureRemoteReleaseDirFromCdn` 能按 manifest 下载、校验并物化到 `releases/<version>/<platform>/<mount>`。
 3. `pnpm typecheck`、`pnpm lint`、架构检查通过；release workflow YAML 语法合法。
 4. 版本对齐：`ZCODE_APP_VERSION=<audit 版本>` 构建出的 remote assets，其 `manifest.appVersion` 与 server bundle 的 `--version` 输出都等于该版本；未设置时回退 `package.json` 版本。
-5. 开箱即用：`ZCODIUM_REMOTE_ASSET_CDN_BASE_URL` 注入后，发布版无需任何用户配置即可解析出远程资源源；用户显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` 仍优先于内置源。
+5. 开箱即用：`YAZCODE_REMOTE_ASSET_CDN_BASE_URL` 注入后，发布版无需任何用户配置即可解析出远程资源源；用户显式 `ZCODE_REMOTE_ASSET_CDN_BASE_URL` 仍优先于内置源。

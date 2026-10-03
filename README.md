@@ -1,7 +1,7 @@
-# ZCodium
+# yazcode
 
 <div align="center">
-  <img src="public/logo/open-audit.svg" alt="ZCodium" width="96" height="96" />
+  <img src="public/logo/open-audit.svg" alt="yazcode" width="96" height="96" />
   <p><strong>An independent security audit fork of ZCode</strong></p>
 </div>
 <p align="center">
@@ -9,17 +9,17 @@
   <a href="https://zcodium-project.github.io/">Project site</a>
 </p>
 
-> This repository is forked from [zai-org/ZCode](https://github.com/zai-org/ZCode), open-sourced by Zhipu on September 21, 2026. The name follows the same pattern as Chrome → Chromium and VS Code → VSCodium: **ZCode → ZCodium**. Everything here is backed by code and reproducible checks.
+> This repository is forked from [zai-org/ZCode](https://github.com/zai-org/ZCode), open-sourced by Zhipu on September 21, 2026. The name follows the same pattern as Chrome → Chromium and VS Code → VSCodium: **ZCode → yazcode**. Everything here is backed by code and reproducible checks.
 
 <div align="center">
-  <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="ZCodium desktop app: a finished agent run with its change summary and follow-up input" width="860" />
+  <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="yazcode desktop app: a finished agent run with its change summary and follow-up input" width="860" />
 </div>
 
 ## Features
 
-ZCodium keeps the product itself — an AI coding workspace for desktop, browser and terminal — and rebuilds it from the public source with monitoring and telemetry removed and vendor services off by default.
+yazcode keeps the product itself — an AI coding workspace for desktop, browser and terminal — and rebuilds it from the public source with monitoring and telemetry removed and vendor services off by default.
 
-- **One Agent, three interfaces**: the Electron desktop app, the browser workspace and the `zcodium` terminal TUI share the same Agent runtime and sessions; you can also connect to a remote host over SSH, or drive the same desktop agent from your phone's browser.
+- **One Agent, three interfaces**: the Electron desktop app, the browser workspace and the `yazcode` terminal TUI share the same Agent runtime and sessions; you can also connect to a remote host over SSH, or drive the same desktop agent from your phone's browser.
 - **Plans, edits, runs, verifies**: file changes arrive as diffs, terminal commands carry their context, the agent checks its own work by running commands and tests, and a built-in browser plugin drives a real browser for web tasks.
 - **Asks before it touches your project**: every edit, command and tool call can require approval — allow once, always in this project, or full access.
 - **Multi-agent collaboration and orchestration**: sub-agents, dynamic workflows, skills and scheduled automations.
@@ -27,13 +27,13 @@ ZCodium keeps the product itself — an AI coding workspace for desktop, browser
 - **Bring your own model**: built-in presets for DeepSeek, OpenAI, Anthropic, Moonshot Kimi, MiniMax, Z.AI (GLM), Alibaba, xAI, Xiaomi MiMo and OpenRouter, plus fully custom endpoints (Chat Completions, Responses, Anthropic Messages).
 
 <div align="center">
-  <img src="https://zcodium-project.github.io/shots/review-flow.png" alt="ZCodium asking for permission before editing a file: allow once, always in this project, full access, or deny" width="860" />
+  <img src="https://zcodium-project.github.io/shots/review-flow.png" alt="yazcode asking for permission before editing a file: allow once, always in this project, full access, or deny" width="860" />
   <p><em>Approval-first: the agent stops and asks before it edits a file, runs a command or calls a tool.</em></p>
 </div>
 
 ## How it compares with upstream
 
-| Item                     | ZCodium (this repo)                                                                  | Official client (closed source)                                           | Official open source             |
+| Item                     | yazcode (this repo)                                                                  | Official client (closed source)                                           | Official open source             |
 | ------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | -------------------------------- |
 | Monitoring and telemetry | **All removed** (~26k lines), with regression checks                                 | Everything on by default; the switches never stopped packaging or uploads | Same as the closed-source client |
 | Repository upload logic  | Removed                                                                              | Present (until the 2026-09-18 report)                                     | Removed (since 2026-09-21)       |
@@ -41,7 +41,7 @@ ZCodium keeps the product itself — an AI coding workspace for desktop, browser
 | Build transparency       | **GitHub Actions builds transparently from this repo**; artifacts ship with releases | Vendor binaries, not reproducible                                         | No public build                  |
 | Issues and collaboration | **Open** — issues and discussions welcome                                            | Not open                                                                  | Closed                           |
 
-## What ZCodium changes vs. official ZCode
+## What yazcode changes vs. official ZCode
 
 Compared with the upstream open-source release:
 
@@ -100,35 +100,35 @@ The [Releases](https://github.com/ZCodium-project/ZCodium/releases) page ships d
 
 ### macOS (.dmg)
 
-1. Download `ZCodium-*-mac-arm64.dmg` (Apple Silicon) or `ZCodium-*-mac-x64.dmg` (Intel), open it and drag ZCodium into Applications.
+1. Download `yazcode-*-mac-arm64.dmg` (Apple Silicon) or `yazcode-*-mac-x64.dmg` (Intel), open it and drag yazcode into Applications.
 2. The app is not signed by ZCode, so Gatekeeper will say the developer cannot be verified (or that the app is damaged). **After dragging the app into Applications**, run the command below (enter your login password when asked; nothing is shown while typing):
 
    ```bash
    # One-time command (unblocks and launches; it exits immediately):
-   sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/ZCodium.app" && open -a "ZCodium"
+   sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/yazcode.app" && open -a "yazcode"
    ```
 
    The absolute `/usr/bin/xattr` path avoids shadowing by other tools with the same name (for example the Python xattr package), which fail with "option -r not recognized". Alternatively, right-click (Control-click) the app in Finder → Open → click Open again in the dialog. Afterwards it launches normally with a double-click.
 
 ### Windows (.exe)
 
-1. Download `ZCodium-*-win-x64.exe` and double-click it.
+1. Download `yazcode-*-win-x64.exe` and double-click it.
 2. The installer is not signed by ZCode, so SmartScreen shows the "Windows protected your PC" warning. Click **More info** → **Run anyway** and finish the installer.
 
-   This is the expected prompt, not a sign of corruption; you can also verify the installer against the `sha256.txt` from the release page first, e.g. `certutil -hashfile ZCodium-<version>-win-x64.exe SHA256` compared with the matching line.
+   This is the expected prompt, not a sign of corruption; you can also verify the installer against the `sha256.txt` from the release page first, e.g. `certutil -hashfile yazcode-<version>-win-x64.exe SHA256` compared with the matching line.
 
 ### Linux (.AppImage)
 
-Pick the build that matches your CPU architecture: `ZCodium-*-linux-x86_64.AppImage` (Intel / AMD) or `ZCodium-*-linux-arm64.AppImage` (arm64 / aarch64).
+Pick the build that matches your CPU architecture: `yazcode-*-linux-x86_64.AppImage` (Intel / AMD) or `yazcode-*-linux-arm64.AppImage` (arm64 / aarch64).
 
 ```bash
 # x86_64 (Intel / AMD)
-chmod +x ZCodium-*-linux-x86_64.AppImage
-./ZCodium-*-linux-x86_64.AppImage
+chmod +x yazcode-*-linux-x86_64.AppImage
+./yazcode-*-linux-x86_64.AppImage
 
 # arm64 (aarch64)
-chmod +x ZCodium-*-linux-arm64.AppImage
-./ZCodium-*-linux-arm64.AppImage
+chmod +x yazcode-*-linux-arm64.AppImage
+./yazcode-*-linux-arm64.AppImage
 ```
 
 ### CLI distribution (.tar.gz)
@@ -136,10 +136,10 @@ chmod +x ZCodium-*-linux-arm64.AppImage
 The CLI distribution is a self-contained bundle (TUI + Web + Agent) and needs Node.js 24; the install script and runtime code can both be reviewed in this repository:
 
 ```bash
-tar -xzf zcodium-*.tar.gz
-cd zcodium
-./install.sh        # installs the zcodium command (defaults to ~/.zcodium/runtime, entry in ~/.local/bin)
-zcodium --help      # or run directly: node bin/zcode.mjs --help
+tar -xzf yazcode-*.tar.gz
+cd yazcode
+./install.sh        # installs the yazcode command (defaults to ~/.yazcode/runtime, entry in ~/.local/bin)
+yazcode --help      # or run directly: node bin/zcode.mjs --help
 ```
 
 ## Build and Release
@@ -161,7 +161,7 @@ Join the community for discussions and feedback:
 
 This repository is community-driven open source and is not affiliated with any existing commercial company. All facts come from public reporting and independent code audits, with sources cited. If any party believes something is inaccurate, please open an issue.
 
-[Other similar community distributions: ZCodium](https://github.com/axiom-desu/ZCodium)
+[Other similar community distributions: yazcode](https://github.com/axiom-desu/yazcode)
 
 ---
 
@@ -177,7 +177,7 @@ ZCode is an AI coding workspace with desktop, browser, and terminal interfaces. 
 | ---------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------ |
 | Desktop                      | Electron desktop application                                                              | `pnpm dev:desktop`             |
 | Web / ZCode CLI distribution | Terminal and browser workspace; packages the TUI, Web client, backend, and Agent together | `pnpm dev:web`                 |
-| Agent CLI                    | The `zcodium` terminal interface, which also provides the Agent runtime for Desktop and Web | `pnpm --filter @zcode/cli dev` |
+| Agent CLI                    | The `yazcode` terminal interface, which also provides the Agent runtime for Desktop and Web | `pnpm --filter @zcode/cli dev` |
 
 ## Setup
 
@@ -219,7 +219,7 @@ pnpm dev:desktop:test
 Set `ZCODE_DATA_BASE_DIR` to use a separate development data directory. For example, on macOS / Linux:
 
 ```bash
-ZCODIUM_DATA_BASE_DIR="$HOME/.zcode-dev-home" pnpm dev:desktop:test
+YAZCODE_DATA_BASE_DIR="$HOME/.zcode-dev-home" pnpm dev:desktop:test
 ```
 
 ### Web Development
@@ -239,21 +239,21 @@ After changing Agent source code, run `pnpm --filter @zcode/cli... build` and re
 
 ### ZCode CLI distribution
 
-The command-line distribution includes the TUI, Web client, and Agent behind one `zcodium` command. With no arguments it starts the TUI; a leading `--web` starts Web mode; all other arguments go to the existing Agent CLI. Both modes run locally without Electron.
+The command-line distribution includes the TUI, Web client, and Agent behind one `yazcode` command. With no arguments it starts the TUI; a leading `--web` starts Web mode; all other arguments go to the existing Agent CLI. Both modes run locally without Electron.
 
 ```bash
 # Start the terminal UI by default
-zcodium
+yazcode
 
 # Start the Web interface
-zcodium --web
+yazcode --web
 
 # Set the project and port without opening a browser automatically
-zcodium --web --workspace /path/to/project --port 3030 --no-open
+yazcode --web --workspace /path/to/project --port 3030 --no-open
 
 # Show CLI or Web options
-zcodium --help
-zcodium --web --help
+yazcode --help
+yazcode --web --help
 ```
 
 In Web mode, it uses the current directory as the workspace, listens on `127.0.0.1` without token authentication by default, selects an available port, and opens a browser. Use the URL printed in the terminal and press `Ctrl+C` to stop the service. For LAN access, use `--host 0.0.0.0`; listening on a non-local address generates an access token by default. Use the token-bearing URL printed in the terminal. Set a token with `--token`, or disable token authentication with `--no-token`.
@@ -323,7 +323,7 @@ pnpm build:zcode
 pnpm build:zcode --skip-build
 
 # Show options for the version, output directory, and more
-pnpm build:zcodium --help
+pnpm build:yazcode --help
 ```
 
 The version defaults to the root `package.json` version. Output is written to `dist/zcode/`:

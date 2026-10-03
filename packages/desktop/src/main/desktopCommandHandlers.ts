@@ -93,7 +93,7 @@ async function clearAllDataAndRelaunch(options: {
     title: "Clear All Data",
     message: "确定要清除所有数据吗？",
     detail:
-      "将删除 ~/.zcodium/v2（配置、凭据、日志）和浏览器缓存（localStorage）。操作不可恢复，清除后应用将自动重启。",
+      "将删除 ~/.yazcode/v2（配置、凭据、日志）和浏览器缓存（localStorage）。操作不可恢复，清除后应用将自动重启。",
   });
   if (response !== 1) {
     return;
@@ -102,9 +102,9 @@ async function clearAllDataAndRelaunch(options: {
   const { rm } = await import("node:fs/promises");
   try {
     await rm(options.credentialsDir, { recursive: true, force: true });
-    options.logger.info("[clear-all-data] deleted ~/.zcodium/v2");
+    options.logger.info("[clear-all-data] deleted ~/.yazcode/v2");
   } catch (error) {
-    options.logger.error("[clear-all-data] failed to delete ~/.zcodium/v2:", error);
+    options.logger.error("[clear-all-data] failed to delete ~/.yazcode/v2:", error);
   }
 
   for (const win of BrowserWindow.getAllWindows()) {
@@ -308,7 +308,7 @@ function buildZCodeEndpointPromptHtml(currentValue: string): string {
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>ZCodium Endpoint</title>
+    <title>yazcode Endpoint</title>
     <style>
       :root { color-scheme: light dark; }
       body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -321,7 +321,7 @@ function buildZCodeEndpointPromptHtml(currentValue: string): string {
   </head>
   <body>
     <form id="form">
-      <label for="endpoint">ZCodium endpoint origin</label>
+      <label for="endpoint">yazcode endpoint origin</label>
       <input id="endpoint" value="${value}" placeholder="https://endpoint.example.com" spellcheck="false" />
       <div class="hint">Use an http or https origin, for example https://endpoint.example.com.</div>
       <div class="actions">
@@ -360,7 +360,7 @@ function showZCodeEndpointPromptWindow(options: {
       resizable: false,
       minimizable: false,
       maximizable: false,
-      title: "ZCodium Endpoint",
+      title: "yazcode Endpoint",
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
@@ -657,7 +657,7 @@ export async function executeDesktopCommand(options: {
       } catch (error) {
         await showMessageBoxWithOptionalParent(targetWindow, {
           type: "error",
-          title: "ZCodium Endpoint",
+          title: "yazcode Endpoint",
           message: "Endpoint 无效",
           detail: error instanceof Error ? error.message : String(error),
         });

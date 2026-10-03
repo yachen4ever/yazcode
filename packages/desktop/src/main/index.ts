@@ -460,7 +460,7 @@ async function runBrowserCommandOnView(params: {
 let currentDesktopZoomLevel = 0;
 let currentDesktopWindowSize: DesktopWindowSize | undefined;
 const preloadPath = join(import.meta.dirname, "../preload/index.cjs");
-const settingsFile = join(homedir(), ".zcodium", "v2", "setting.json");
+const settingsFile = join(homedir(), ".yazcode", "v2", "setting.json");
 let activeAppShutdownPolicy = resolveAppShutdownPolicy("normal", process.platform);
 let activeAppShutdownKind: AppShutdownKind | null = null;
 const WINDOWS_AGENT_FORCE_KILL_TIMEOUT_MS = 2_000;
@@ -476,7 +476,7 @@ interface RuntimeProcessEnvPreparation {
 
 /**
  * 官方服务开关的 agent env 投影：Desktop 设置是唯一事实源，输出完整键集覆盖 shell 残留的
- * ZCODIUM_ENABLE_OFFICIAL_*。Host/agent 在启动时读取，设置页切换开关后需重启应用（或新建窗口）生效。
+ * YAZCODE_ENABLE_OFFICIAL_*。Host/agent 在启动时读取，设置页切换开关后需重启应用（或新建窗口）生效。
  * 读取失败时按全关投影（fail-closed），仍返回完整键集。
  */
 async function mergeOfficialServiceEnvProjection(
@@ -1797,7 +1797,7 @@ app.whenReady().then(async () => {
     bootstrapSettings = await mainSettingService.get();
     if (bootstrapSettings.dataBaseDir) {
       setDataBaseDir(bootstrapSettings.dataBaseDir);
-      // 自定义数据目录是另一个 base：其内部的 .zcode 旧根同样需要迁移到 .zcodium。
+      // 自定义数据目录是另一个 base：其内部的 .zcode 旧根同样需要迁移到 .yazcode。
       migrateLegacyZCodeDataRoot();
     }
     if (bootstrapSettings.locale) {

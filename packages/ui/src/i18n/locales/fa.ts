@@ -12,7 +12,7 @@ const faIR: Record<string, string> = {
   "startPlan.recommendation.dismiss": "دیگر نشان نده",
   "occupationOnboarding.stepMode": "حالت رابط کاربری",
   "occupationOnboarding.modeTitle": "حالت رابط کاربری خود را انتخاب کنید",
-  "occupationOnboarding.modeDescription": "دوست دارید ZCodium کار خود را چگونه نمایش دهد؟",
+  "occupationOnboarding.modeDescription": "دوست دارید yazcode کار خود را چگونه نمایش دهد؟",
   "occupationOnboarding.coding": "حالت کدنویسی",
   "occupationOnboarding.codingDescription":
     "می‌خواهم در سراسر فرایند توسعه، کد، خروجی دستورها و جزئیات تغییرها را ببینم.",
@@ -62,27 +62,27 @@ const faIR: Record<string, string> = {
   "occupationOnboarding.migrationDescription": "مهاجرت تاریخچهٔ گفتگوها از Claude Code",
   "occupationOnboarding.memory": "فعال‌سازی حافظهٔ فضای کاری",
   "occupationOnboarding.memoryDescription":
-    "به ZCodium اجازه دهید ترجیحات و زمینهٔ کاری شما را به خاطر بسپارد.",
+    "به yazcode اجازه دهید ترجیحات و زمینهٔ کاری شما را به خاطر بسپارد.",
   "occupationOnboarding.suggestions": "فعال‌سازی پیشنهادهای پیش‌دستانهٔ وظیفه",
   "occupationOnboarding.suggestionsDescription":
     "در گفتگوهای جدید پیشنهاد نشان داده می‌شود. با کلیک، کادر نوشتن پر می‌شود.",
   "occupationOnboarding.close": "خروج از راهنمای شروع",
-  "startup.global.silent": "در حال راه‌اندازی ZCodium",
+  "startup.global.silent": "در حال راه‌اندازی yazcode",
   "startup.global.upgrading": "ارتقای داده‌های محلی",
   "startup.global.initializing": "مقداردهی اولیهٔ داده‌های محلی",
   "startup.global.waiting": "در انتظار آماده‌سازی پایگاه داده",
   "startup.global.saving": "ذخیرهٔ به‌روزرسانی‌ها",
   "startup.global.finishing": "پایان راه‌اندازی",
   "startup.global.servicesFailed":
-    "داده‌های محلی آماده است، اما راه‌اندازی سرویس‌های برنامه ناموفق بود. اطلاعات عیب‌یابی را کپی کنید، سپس از برنامه خارج شده و ZCodium را دوباره باز کنید.",
+    "داده‌های محلی آماده است، اما راه‌اندازی سرویس‌های برنامه ناموفق بود. اطلاعات عیب‌یابی را کپی کنید، سپس از برنامه خارج شده و yazcode را دوباره باز کنید.",
   "startup.global.starting": "آماده‌سازی داده‌های محلی",
   "startup.global.preparing_host_storage": "آماده‌سازی نمایهٔ وظیفه‌ها",
   "startup.global.preparing_session_storage": "آماده‌سازی تاریخچهٔ گفتگوها",
-  "startup.global.starting_services": "راه‌اندازی ZCodium",
+  "startup.global.starting_services": "راه‌اندازی yazcode",
   "startup.global.ready": "داده‌های محلی آماده است",
   "startup.global.failed": "آماده‌سازی راه‌اندازی ناموفق بود",
   "startup.global.help":
-    "ZCodium پس از پایان آماده‌سازی باز می‌شود. تاریخچه‌های بزرگ ممکن است بیشتر طول بکشند. لطفاً برنامه را باز نگه دارید.",
+    "yazcode پس از پایان آماده‌سازی باز می‌شود. تاریخچه‌های بزرگ ممکن است بیشتر طول بکشند. لطفاً برنامه را باز نگه دارید.",
   "startup.global.diagnostic": "شناسهٔ عیب‌یابی",
   "startup.global.copy": "کپی اطلاعات عیب‌یابی",
   "startup.global.exit": "خروج",
@@ -103,15 +103,15 @@ const faIR: Record<string, string> = {
   "startup.global.error.open_failed":
     "باز کردن پایگاه داده ممکن نشد. بررسی کنید پوشهٔ داده وجود دارد و در دسترس است، سپس دوباره تلاش کنید.",
   "startup.global.error.lock_timeout":
-    "مهلت انتظار برای قفل نوشتن پایگاه داده به پایان رسید. ممکن است فرایند دیگری از ZCodium یا CLI در حال به‌روزرسانی داده‌ها باشد. پس از پایان آن دوباره تلاش کنید.",
+    "مهلت انتظار برای قفل نوشتن پایگاه داده به پایان رسید. ممکن است فرایند دیگری از yazcode یا CLI در حال به‌روزرسانی داده‌ها باشد. پس از پایان آن دوباره تلاش کنید.",
   "startup.global.error.sql_failed":
     "آماده‌سازی کامل نشد. اطلاعات عیب‌یابی را کپی کنید و لاگ‌ها را بررسی کنید. مشکل را برطرف کنید، سپس به‌صورت دستی دوباره تلاش کنید. برنامه به‌صورت خودکار تلاش مجدد نمی‌کند.",
   "startup.global.error.startup_status_timeout":
-    "هیچ وضعیتی از راه‌اندازی دریافت نشد. از برنامه خارج شده و ZCodium را دوباره باز کنید. اگر دوباره ناموفق بود، اطلاعات عیب‌یابی را در اختیار پشتیبانی قرار دهید.",
+    "هیچ وضعیتی از راه‌اندازی دریافت نشد. از برنامه خارج شده و yazcode را دوباره باز کنید. اگر دوباره ناموفق بود، اطلاعات عیب‌یابی را در اختیار پشتیبانی قرار دهید.",
   "startup.global.error.transport_closed":
-    "فرایند آماده‌سازی پایان یافت یا اتصالش قطع شد. برای بررسی دوبارهٔ سابقه‌های مهاجرت، از برنامه خارج شده و ZCodium را دوباره باز کنید.",
+    "فرایند آماده‌سازی پایان یافت یا اتصالش قطع شد. برای بررسی دوبارهٔ سابقه‌های مهاجرت، از برنامه خارج شده و yazcode را دوباره باز کنید.",
   "startup.global.error.unsupported_runtime":
-    "ایجنت پیکربندی‌شده از آماده‌سازی فضای ذخیره‌سازی پشتیبانی نمی‌کند. ایجنت همراه برنامه را بازیابی کنید، سپس ZCodium را دوباره باز کنید.",
+    "ایجنت پیکربندی‌شده از آماده‌سازی فضای ذخیره‌سازی پشتیبانی نمی‌کند. ایجنت همراه برنامه را بازیابی کنید، سپس yazcode را دوباره باز کنید.",
   "startup.database.checking": "بررسی تاریخچه",
   "startup.database.waiting_for_lock": "در انتظار آماده‌سازی داده‌ها توسط پنجرهٔ دیگر",
   "startup.database.migrating": "ارتقای تاریخچه",
@@ -160,7 +160,7 @@ const faIR: Record<string, string> = {
   "offPeak.chatCreated.queuedAt": "#{position} در صف",
   "offPeak.chatCreated.open": "رفتن به وظیفه‌های زمان بیکاری",
   "settings.computerUse.disabledToast":
-    "Computer Use غیرفعال است. برای اعمال شدن، گفتگوهای موجود به راه‌اندازی دوبارهٔ ZCodium نیاز دارند.",
+    "Computer Use غیرفعال است. برای اعمال شدن، گفتگوهای موجود به راه‌اندازی دوبارهٔ yazcode نیاز دارند.",
   "settings.modelProvider.connectionUnavailableNotice": "طرح فعلی در دسترس نیست.",
   "settings.modelProvider.switchConnection": "تغییر به «{connection}»",
   "settings.modelProvider.connectionSuggestionStale":
@@ -196,7 +196,7 @@ const faIR: Record<string, string> = {
   "conversationShare.permission.linkViewerHint": "امکان درون‌برد و ادامه دادن نیست",
   "conversationShare.permission.linkViewerSummary": "دارندگان لینک می‌توانند مشاهده کنند",
   "conversationShare.permission.linkEditor": "هر کس با لینک می‌تواند درون‌برد کند و ادامه دهد",
-  "conversationShare.permission.linkEditorHint": "درون‌برد به ZCodium",
+  "conversationShare.permission.linkEditorHint": "درون‌برد به yazcode",
   "conversationShare.permission.linkEditorSummary":
     "دارندگان لینک می‌توانند درون‌برد کند و ادامه دهد",
   "conversationShare.permission.privateSummary": "فقط من",
@@ -425,7 +425,7 @@ const faIR: Record<string, string> = {
   "conversationShare.import.committing": "در حال ایجاد گفتگوی مشترک‌شده",
   "conversationShare.import.complete": "درون‌برد اشتراک‌گذاری کامل شد",
   "conversationShare.import.loginRequired":
-    "این اشتراک‌گذاری به‌صورت ناشناس قابل درون‌برد نیست. وارد ZCodium شوید و دوباره تلاش کنید",
+    "این اشتراک‌گذاری به‌صورت ناشناس قابل درون‌برد نیست. وارد yazcode شوید و دوباره تلاش کنید",
   "conversationShare.import.notFound": "این اشتراک‌گذاری در دسترس نیست",
   "conversationShare.import.expired":
     "اشتراک‌گذاری منقضی شده است. از سازندهٔ آن بخواهید لینک جدیدی بسازد",
@@ -552,7 +552,7 @@ const faIR: Record<string, string> = {
   "confirmDialog.projectRemoveDescription":
     "پروژه «{projectName}» از نوار کناری حذف می‌شود، اما فایل‌های روی دیسک دست‌نخورده باقی می‌مانند.",
   "bots.title": "بات‌ها",
-  "bots.description": "اتصال گفت‌وگوهای خارجی و وب‌هوک‌ها به بات‌های ZCodium.",
+  "bots.description": "اتصال گفت‌وگوهای خارجی و وب‌هوک‌ها به بات‌های yazcode.",
   "bots.listTitle": "بات‌ها",
   "bots.addBot": "بات جدید",
   "bots.addBinding": "افزودن پیوند",
@@ -858,14 +858,14 @@ const faIR: Record<string, string> = {
   "bots.unbindSuccess": "پیوند بات لغو شد",
   "bots.unbindFailed": "لغو پیوند بات ناموفق بود: {error}",
   "bots.deleteFailed": "حذف ربات ناموفق بود: {error}",
-  "welcome.title": "به ZCodium خوش آمدید",
+  "welcome.title": "به yazcode خوش آمدید",
   "welcome.username": "نام کاربری",
   "welcome.password": "رمز عبور",
   "welcome.login": "ورود",
   "welcome.loggingIn": "در حال ورود...",
   "welcome.loginFailed": "ورود ناموفق بود",
   "login.title": "راه‌اندازی API",
-  "login.description": "برای شروع استفاده از ZCodium، یک کلید API پیکربندی کنید",
+  "login.description": "برای شروع استفاده از yazcode، یک کلید API پیکربندی کنید",
   "login.oauth.activeProviderHint":
     "فراهم‌کننده فعال فعلی: {provider}. ورود دوباره، هویت فعلی را جایگزین می‌کند.",
   "login.oauth.loadingProviders": "در حال بارگذاری فراهم‌کننده‌های حساب...",
@@ -909,7 +909,7 @@ const faIR: Record<string, string> = {
   "app.currentTheme": "فعلی: {theme}",
   "app.login": "اتصال",
   "app.logout": "قطع اتصال",
-  "logout.confirm.title": "قطع اتصال و راه‌اندازی دوباره ZCodium؟",
+  "logout.confirm.title": "قطع اتصال و راه‌اندازی دوباره yazcode؟",
   "logout.confirm.descriptionWithRunningSessions":
     "{count} نشست در حال اجرا وجود دارد. قطع اتصال باعث قطع آن‌ها و راه‌اندازی دوباره برنامه می‌شود.",
   "logout.confirm.descriptionDefault":
@@ -1053,7 +1053,7 @@ const faIR: Record<string, string> = {
   "modelTrajectory.close": "بستن",
   "modelTrajectory.loading": "در حال بارگذاری مسیر…",
   "modelTrajectory.empty":
-    "هیچ فراخوانی مدلی ثبت نشده است (فقط ZCodium Agent ورودی/خروجی مدل را می‌نویسد)",
+    "هیچ فراخوانی مدلی ثبت نشده است (فقط yazcode Agent ورودی/خروجی مدل را می‌نویسد)",
   "modelTrajectory.error": "بارگذاری مسیر ناموفق بود",
   "modelTrajectory.truncatedNotice":
     "رکوردها بیش از حد است؛ فقط فراخوانی‌های اخیر نمایش داده می‌شوند",
@@ -1514,7 +1514,7 @@ const faIR: Record<string, string> = {
   "titleBar.menu.view.actualSize": "اندازه واقعی",
   "titleBar.menu.view.zoomIn": "بزرگ‌نمایی",
   "titleBar.menu.view.zoomOut": "کوچک‌نمایی",
-  "titleBar.menu.help.about": "درباره ZCodium",
+  "titleBar.menu.help.about": "درباره yazcode",
   "titleBar.menu.help.checkForUpdates": "بررسی وجود به‌روزرسانی",
   "titleBar.menu.help.feedback": "بازخورد",
   "sidebar.menu.community": "انجمن",
@@ -1563,7 +1563,7 @@ const faIR: Record<string, string> = {
   "update.toast.ready": "نسخه v{version} دانلود شد؛ برای نصب، برنامه را دوباره راه‌اندازی کنید",
   "update.toast.devSkipped": "به‌روزرسانی‌ها در نسخه‌های توسعه غیرفعال است",
   "update.toast.error": "بررسی به‌روزرسانی ناموفق بود: {error}",
-  "forceUpdate.title": "برای ادامه، ZCodium را به‌روزرسانی کنید",
+  "forceUpdate.title": "برای ادامه، yazcode را به‌روزرسانی کنید",
   "forceUpdate.description":
     "نسخه فعلی شما v{currentVersion} است که از حداقل نسخه پشتیبانی‌شده یعنی v{minimalVersion} پایین‌تر است. پیش از ادامه کار با این کلاینت، ابتدا به‌روزرسانی کنید.",
   "forceUpdate.currentVersion": "نسخه فعلی",
@@ -1644,7 +1644,7 @@ const faIR: Record<string, string> = {
   "workspaceSidebar.notConnected": "متصل نیست",
   "workspaceSidebar.empty": "هنوز فضای کاری وجود ندارد. برای شروع، یک فضای کاری باز کنید.",
   "workspaceSidebar.unavailableLocalDirectory":
-    "پوشه فضای کاری وجود ندارد یا قابل دسترسی نیست. فعلاً فقط می‌توانید تاریخچه را ببینید. برای ادامه، پوشه را بازیابی کنید و ZCodium را دوباره راه‌اندازی کنید.",
+    "پوشه فضای کاری وجود ندارد یا قابل دسترسی نیست. فعلاً فقط می‌توانید تاریخچه را ببینید. برای ادامه، پوشه را بازیابی کنید و yazcode را دوباره راه‌اندازی کنید.",
   "workspaceSidebar.showSidebar": "نمایش/پنهان کردن نوار کناری",
   "workspaceSidebar.hideSidebar": "نمایش/پنهان کردن نوار کناری",
   "workspaceSidebar.toggleSidebar": "نمایش/پنهان کردن نوار کناری",
@@ -1685,7 +1685,7 @@ const faIR: Record<string, string> = {
   "ssh.assetInstallMode.local-download-upload": "دانلود روی سیستم محلی، سپس آپلود",
   "ssh.assetInstallMode.remote-download": "دانلود روی سرور از راه دور",
   "ssh.assetInstallModeDescription":
-    "دانلود روی سرور، زمان انتظار برای آپلود را کاهش می‌دهد، اما سرور باید به CDN مربوط به ZCodium دسترسی داشته باشد و ابزارهای دانلود، استخراج و بررسی checksum را در اختیار داشته باشد.",
+    "دانلود روی سرور، زمان انتظار برای آپلود را کاهش می‌دهد، اما سرور باید به CDN مربوط به yazcode دسترسی داشته باشد و ابزارهای دانلود، استخراج و بررسی checksum را در اختیار داشته باشد.",
   "ssh.password": "رمز عبور",
   "ssh.passwordPlaceholder": "رمز عبور SSH خود را وارد کنید",
   "ssh.privateKey": "کلید خصوصی",
@@ -1729,7 +1729,7 @@ const faIR: Record<string, string> = {
     "در حال برقراری اتصال {method} هستیم. می‌توانید روند راه‌اندازی را به صورت زنده اینجا دنبال کنید.",
   "webRemoteControl.trigger": "کنترل از راه دور با موبایل",
   "webRemoteControl.title": "کنترل از راه دور با موبایل",
-  "webRemoteControl.description": "کنترل فضاهای کاری ZCodium از طریق چت‌بات‌ها.",
+  "webRemoteControl.description": "کنترل فضاهای کاری yazcode از طریق چت‌بات‌ها.",
   "webRemoteControl.botChannel.title": "استفاده از کانال ربات",
   "webRemoteControl.botChannel.description": "برای دسترسی موبایلی طولانی‌مدت، یک چت‌بات متصل کنید.",
   "webRemoteControl.botChannel.weixin.title": "Weixin",
@@ -1944,7 +1944,7 @@ const faIR: Record<string, string> = {
   "chat.changeSummary.reverted": "واگرد شد",
   "chat.changeSummary.rewindDialog.title": "واگرد تغییرات فایل‌ها",
   "chat.changeSummary.rewindDialog.description":
-    "ZCodium پیش از نوشتن، محتوای فعلی فایل‌ها را دوباره بررسی می‌کند. اگر فرایند دیگری فایلی را تغییر داده باشد، هیچ فایلی نوشته نخواهد شد.",
+    "yazcode پیش از نوشتن، محتوای فعلی فایل‌ها را دوباره بررسی می‌کند. اگر فرایند دیگری فایلی را تغییر داده باشد، هیچ فایلی نوشته نخواهد شد.",
   "chat.changeSummary.rewindDialog.loading": "در حال بررسی فایل‌های قابل واگرد…",
   "chat.changeSummary.rewindDialog.safeTitle": "{count} مورد امن برای واگرد",
   "chat.changeSummary.rewindDialog.unsafeTitle": "{count} مورد ناامن برای واگرد",
@@ -2105,7 +2105,7 @@ const faIR: Record<string, string> = {
     "در زمان اجرای ترمینال داخلی، در صورت امکان محیط پوسته ورود (login shell)، پروکسی، متغیرهای Kubernetes و قلم ترمینال محلی به ارث برود.",
   "settings.terminalFontFamily": "قلم ترمینال",
   "settings.terminalFontFamilyDescription":
-    "برای تشخیص خودکار تنظیمات ترمینال سیستم خالی بگذارید؛ برای بازنویسی قلم ترمینال ZCodium مقداری تعیین کنید.",
+    "برای تشخیص خودکار تنظیمات ترمینال سیستم خالی بگذارید؛ برای بازنویسی قلم ترمینال yazcode مقداری تعیین کنید.",
   "settings.terminalFontFamilyPlaceholder": "برای ارث‌بری خالی بگذارید، مثلاً MesloLGS NF, monospace",
   "settings.integratedTerminalShell": "پوسته ترمینال یکپارچه",
   "settings.integratedTerminalShellDescription":
@@ -2224,7 +2224,7 @@ const faIR: Record<string, string> = {
     "فراخوانی‌های متوالی Write، Edit و ApplyPatch را در یک بخش Changes گروه‌بندی می‌کند.",
   "settings.zcodeInteractionBehavior": "رفتار تعامل",
   "settings.zcodeInteractionBehaviorDescription":
-    "در حین اجرای ZCodium، اقدام‌های بعدی را به صف اضافه کنید یا هدایت کنید تا پس از فراخوانی بعدی ابزار اجرا شوند.",
+    "در حین اجرای yazcode، اقدام‌های بعدی را به صف اضافه کنید یا هدایت کنید تا پس از فراخوانی بعدی ابزار اجرا شوند.",
   "settings.zcodeInteractionBehavior.option.queue": "صف",
   "settings.zcodeInteractionBehavior.option.guide": "هدایت",
   "settings.askUserQuestionAutoResolution": "ادامه خودکار پرسش‌ها",
@@ -2247,14 +2247,14 @@ const faIR: Record<string, string> = {
   "settings.taskAutoArchiveDays.option.30": "بایگانی پس از 30 روز",
   "settings.dataBaseDir": "مسیر ذخیره داده‌ها",
   "settings.dataBaseDirDescription":
-    "پوشه ریشه داده‌های برنامه (به‌طور پیش‌فرض پوشه خانه کاربر). داده‌های موجود به مکان جدید کپی می‌شوند. پسوند .zcodium/v2 قابل تغییر نیست.",
+    "پوشه ریشه داده‌های برنامه (به‌طور پیش‌فرض پوشه خانه کاربر). داده‌های موجود به مکان جدید کپی می‌شوند. پسوند .yazcode/v2 قابل تغییر نیست.",
   "settings.dataBaseDirPlaceholder": "پیش‌فرض: پوشه خانه کاربر",
   "settings.dataBaseDirBrowse": "انتخاب پوشه",
   "settings.dataBaseDirSave": "ذخیره",
   "settings.dataBaseDirCopying": "در حال کپی داده‌ها؛ لطفاً برنامه را نبندید...",
   "settings.dataBaseDirCopyFailed": "کپی داده‌ها ناموفق بود. مسیر تغییر نکرد.",
   "settings.dataBaseDirForbiddenInstallDir":
-    "پوشه داده‌ها نمی‌تواند پوشه نصب ZCodium در Windows باشد. پوشه‌ای بیرون از محل نصب برنامه انتخاب کنید.",
+    "پوشه داده‌ها نمی‌تواند پوشه نصب yazcode در Windows باشد. پوشه‌ای بیرون از محل نصب برنامه انتخاب کنید.",
   "settings.dataBaseDirRestartRequired":
     "داده‌ها ذخیره شد. برای اعمال، لطفاً برنامه را دوباره راه‌اندازی کنید.",
   "settings.locale.system": "پیش‌فرض سیستم",
@@ -2271,7 +2271,7 @@ const faIR: Record<string, string> = {
   "settings.migration.title": "مهاجرت",
   "settings.migration.sectionTitle": "مهاجرت تاریخچه Claude",
   "settings.migration.sectionDescription":
-    "تاریخچه بومی Claude Code را در این دستگاه اسکن کنید، در صورت تمایل بر اساس فضای کاری و بازه فعالیت فیلتر کنید، سپس نشست‌های انتخاب‌شده را به فهرست‌های وظیفه متناظر در ZCodium درون‌بری کنید.",
+    "تاریخچه بومی Claude Code را در این دستگاه اسکن کنید، در صورت تمایل بر اساس فضای کاری و بازه فعالیت فیلتر کنید، سپس نشست‌های انتخاب‌شده را به فهرست‌های وظیفه متناظر در yazcode درون‌بری کنید.",
   "settings.migration.badge.localOnly": "رکوردهای محلی Claude",
   "settings.migration.badge.manualOnly": "فقط دستی",
   "settings.migration.currentWorkspace": "فضای کاری فعلی",
@@ -2346,14 +2346,14 @@ const faIR: Record<string, string> = {
     "دریافت پیکربندی کلاینت Z.AI و داده‌های پیش‌گرمایش راه‌اندازی.",
   "settings.usageTitle": "آمار مصرف",
   "settings.usageDescription": "مرور فعالیت تقریبی و مصرف مدل تجمیع‌شده از نشست‌های محلی.",
-  "resourceManager.storage.summaryTotal": "مجموع مصرف‌شده توسط ZCodium",
+  "resourceManager.storage.summaryTotal": "مجموع مصرف‌شده توسط yazcode",
   "resourceManager.storage.scanning": "در حال محاسبه…",
   "resourceManager.storage.lastScanned": "آخرین محاسبه {time}",
   "resourceManager.storage.idle": "هنوز محاسبه نشده است",
   "resourceManager.storage.failed": "محاسبه ناموفق بود",
   "resourceManager.storage.rescan": "محاسبه دوباره",
   "resourceManager.storage.disk": "دیسک",
-  "resourceManager.storage.diskUsage": "ZCodium از {used} استفاده می‌کند",
+  "resourceManager.storage.diskUsage": "yazcode از {used} استفاده می‌کند",
   "resourceManager.storage.diskFree": "{free} آزاد از {total}",
   "resourceManager.storage.diskUnknown": "ظرفیت دیسک در دسترس نیست",
   "resourceManager.storage.roots": "پوشه‌های داده",
@@ -2420,7 +2420,7 @@ const faIR: Record<string, string> = {
   "settings.embeddedBrowserAllowInsecureCertificatesSavedHint":
     "تنظیمات گواهی ذخیره شد. برای اعمال شدن، برنامه را دوباره راه‌اندازی کنید.",
   "settings.browser.data.section": "داده‌های مرورگر",
-  "settings.browser.desktopOnly": "داده‌های مرورگر فقط در نسخه دسکتاپ ZCodium قابل مدیریت هستند.",
+  "settings.browser.desktopOnly": "داده‌های مرورگر فقط در نسخه دسکتاپ yazcode قابل مدیریت هستند.",
   "settings.browser.import.title": "درون‌برد وضعیت ورود Chrome",
   "settings.browser.import.description":
     "وضعیت ورود Chrome را یک‌بار به مرورگر داخلی منتقل کنید تا هوش مصنوعی بتواند سایت‌هایی را که از قبل در آن‌ها وارد شده‌اید باز کند و روان‌تر کار کند.",
@@ -2438,13 +2438,13 @@ const faIR: Record<string, string> = {
   "settings.browser.import.elevationCancelled":
     "دسترسی مدیر در Windows لغو شد. هیچ کوکی‌ای درون‌برد نشد.",
   "settings.browser.import.helperVerificationFailed":
-    "ZCodium نتوانست مؤلفه درون‌برد امن خود در Windows را تأیید کند. پیش از درون‌برد کوکی‌ها، ZCodium را دوباره نصب یا به‌روزرسانی کنید.",
+    "yazcode نتوانست مؤلفه درون‌برد امن خود در Windows را تأیید کند. پیش از درون‌برد کوکی‌ها، yazcode را دوباره نصب یا به‌روزرسانی کنید.",
   "settings.browser.import.appBoundFailed":
     "Windows نتوانست کوکی‌های App-Bound مربوط به Chrome را باز کند. هیچ کوکی‌ای درون‌برد نشد.",
   "settings.browser.import.adminConfirmTitle":
     "اجازه دسترسی مدیر برای درون‌برد کوکی‌های Chrome داده شود؟",
   "settings.browser.import.adminConfirmDescription":
-    "Chrome در Windows از کوکی‌ها با رمزنگاری App-Bound محافظت می‌کند. فقط برای همین درون‌برد، ZCodium دسترسی مدیر درخواست می‌کند، یک سرویس سیستمی موقت راه‌اندازی می‌کند و بلافاصله پس از آن آن را حذف می‌کند. رمزهای عبور Chrome هرگز خوانده یا درون‌برد نمی‌شوند.",
+    "Chrome در Windows از کوکی‌ها با رمزنگاری App-Bound محافظت می‌کند. فقط برای همین درون‌برد، yazcode دسترسی مدیر درخواست می‌کند، یک سرویس سیستمی موقت راه‌اندازی می‌کند و بلافاصله پس از آن آن را حذف می‌کند. رمزهای عبور Chrome هرگز خوانده یا درون‌برد نمی‌شوند.",
   "settings.browser.import.adminConsent": "دسترسی مدیر را فقط برای همین درون‌برد کوکی تأیید می‌کنم",
   "settings.browser.import.adminConfirmAction": "ادامه و درخواست دسترسی",
   "settings.browser.import.cookieProtected":
@@ -2500,7 +2500,7 @@ const faIR: Record<string, string> = {
   "settings.previewBadge.dark": "تیره",
   "settings.modelProviderTitle": "تنظیمات مدل",
   "settings.mcpTitle": "سرورهای MCP",
-  "settings.mcp.description": "مدیریت پیکربندی‌های سرور MCP مورد استفاده ZCodium Agent.",
+  "settings.mcp.description": "مدیریت پیکربندی‌های سرور MCP مورد استفاده yazcode Agent.",
   "settings.mcp.create.open": "افزودن سرور MCP",
   "settings.mcp.import.open": "درون‌برد سرورهای MCP از ایجنت‌های خارجی",
   "settings.mcp.import.action": "درون‌برد",
@@ -2577,7 +2577,7 @@ const faIR: Record<string, string> = {
     "این سرور MCP افزونه بارگذاری شده، اما در حال حاضر متصل نیست.",
   "settings.mcp.host.active": "داخلی میزبان",
   "settings.mcp.host.activeDescription":
-    "ZCodium این سرور MCP را برای افزونه {pluginName} ارائه می‌دهد. هویت زمان اجرای آن توسط میزبان مدیریت می‌شود.",
+    "yazcode این سرور MCP را برای افزونه {pluginName} ارائه می‌دهد. هویت زمان اجرای آن توسط میزبان مدیریت می‌شود.",
   "settings.mcp.plugin.disabled": "افزونه غیرفعال است",
   "settings.mcp.plugin.disabledDescription":
     "این سرور MCP درون یک افزونه قرار دارد. برای بارگذاری آن، افزونه را فعال کنید.",
@@ -2589,7 +2589,7 @@ const faIR: Record<string, string> = {
     "برای تکمیل اتصال این سرور MCP افزونه، مجوزدهی را باز کنید.",
   "settings.mcp.oauth.openAuthorization": "باز کردن مجوزدهی",
   "settings.mcp.statusOnlyUnsupported":
-    "این ZCodium Agent نمی‌تواند وضعیت OAuth را به‌روزرسانی کند. ZCodium را ارتقا دهید یا دوباره راه‌اندازی کنید، سپس تنظیمات MCP را دوباره باز کنید تا یک به‌روزرسانی کامل انجام شود.",
+    "این yazcode Agent نمی‌تواند وضعیت OAuth را به‌روزرسانی کند. yazcode را ارتقا دهید یا دوباره راه‌اندازی کنید، سپس تنظیمات MCP را دوباره باز کنید تا یک به‌روزرسانی کامل انجام شود.",
   "settings.mcp.refreshFailed": "به‌روزرسانی وضعیت MCP ناموفق بود: {error}",
   "settings.mcp.status.toolCount": "{count} ابزار",
   "settings.mcp.status.connectedReason": "متصل و در دسترس.",
@@ -2682,7 +2682,7 @@ const faIR: Record<string, string> = {
   "settings.mcpServers.import.targetLabel": "مقصد درون‌برد",
   "settings.mcpServers.import.target.global": "درون‌برد به دامنه سراسری",
   "settings.mcpServers.import.target.project": "درون‌برد به پروژه",
-  "settings.mcpServers.import.importing": "در حال درون‌برد سرورهای MCP به ZCodium",
+  "settings.mcpServers.import.importing": "در حال درون‌برد سرورهای MCP به yazcode",
   "settings.mcpServers.import.imported": "درون‌برد شد",
   "settings.mcpServers.import.skipped": "رد شد",
   "settings.mcpServers.import.failed": "ناموفق",
@@ -2826,7 +2826,7 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.startPlan.highlight.metering.description":
     "مصرف تنها پس از استفاده از مدل‌های پرچم‌دار GLM پلتفرم محاسبه می‌شود.",
   "settings.modelProvider.startPlan.compatibility":
-    "از BYOK و BYOA پشتیبانی می‌کند. Base URL، قالب API و API Key به‌صورت خودکار توسط ZCodium مدیریت می‌شوند.",
+    "از BYOK و BYOA پشتیبانی می‌کند. Base URL، قالب API و API Key به‌صورت خودکار توسط yazcode مدیریت می‌شوند.",
   "settings.modelProvider.codingPlan.title": "{provider} - طرح کدنویسی",
   "settings.modelProvider.codingPlan.webview.title": "طرح کدنویسی",
   "settings.modelProvider.codingPlan.webview.authInjectFailed":
@@ -2965,7 +2965,7 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.resetForm": "بازنشانی فرم",
   "settings.modelProvider.fieldHelp": "درباره {field}",
   "settings.modelProvider.help.contextWindow":
-    "ظرفیت زمینه‌ای که مدل می‌تواند در هر لحظه پردازش کند، بر حسب توکن. ZCodium از این مقدار برای مدیریت زمینه استفاده می‌کند.\nاز حد واقعی مدل فراتر نروید.",
+    "ظرفیت زمینه‌ای که مدل می‌تواند در هر لحظه پردازش کند، بر حسب توکن. yazcode از این مقدار برای مدیریت زمینه استفاده می‌کند.\nاز حد واقعی مدل فراتر نروید.",
   "settings.modelProvider.help.maxOutputTokens":
     "حداکثر تعداد توکنی که یک درخواست از مدل می‌تواند تولید کند.\nاز حد واقعی مدل فراتر نروید.",
   "settings.modelProvider.help.inputModalities":
@@ -2981,7 +2981,7 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.help.advanced":
     "**MFJS tool schema**: سازگاری با Moonshot Flavored JSON Schema را فعال می‌کند که معمولاً در API مدل Kimi شرکت Moonshot استفاده می‌شود. تنها زمانی فعال کنید که API مدل به این قالب نیاز داشته باشد.",
   "settings.modelProvider.help.followRecommendedConfig":
-    "بر اساس شناسه مدل، Base URL و قالب API با پیکربندی پیشنهادی مطابقت می‌دهد. ZCodium پیشنهادها را مداوم به‌روزرسانی می‌کند و به‌طور خودکار برای شما همگام‌سازی می‌کند.\nهر تنظیمی را که به‌صورت دستی تغییر دهید، به مدیریت دستی درمی‌آید و دیگر پیشنهادها را دنبال نمی‌کند؛ سایر تنظیمات تحت مدیریت پیکربندی هوشمند باقی می‌مانند.",
+    "بر اساس شناسه مدل، Base URL و قالب API با پیکربندی پیشنهادی مطابقت می‌دهد. yazcode پیشنهادها را مداوم به‌روزرسانی می‌کند و به‌طور خودکار برای شما همگام‌سازی می‌کند.\nهر تنظیمی را که به‌صورت دستی تغییر دهید، به مدیریت دستی درمی‌آید و دیگر پیشنهادها را دنبال نمی‌کند؛ سایر تنظیمات تحت مدیریت پیکربندی هوشمند باقی می‌مانند.",
   "settings.modelProvider.modelDefaultsLoaded": "پیکربندی هوشمند برای این مدل مطابقت یافت",
   "settings.modelProvider.modelConfigIncomplete": "پیکربندی مدل ناقص است",
   "settings.modelProvider.models": "فهرست مدل‌ها",
@@ -3111,7 +3111,7 @@ const faIR: Record<string, string> = {
   "settings.usage.entitlementFiveHourUsage": "باقی‌مانده 5 ساعته",
   "settings.usage.entitlementWeeklyUsage": "باقی‌مانده هفتگی",
   "settings.usage.entitlementMonthlyMcpUsage": "فراخوانی‌های ابزار",
-  "settings.usage.entitlementServerMcpUsage": "ZCodium MCP",
+  "settings.usage.entitlementServerMcpUsage": "yazcode MCP",
   "settings.usage.entitlementResetAt": "بازنشانی در {time}",
   "settings.usage.entitlementUsageDetails": "جزئیات مصرف ابزار",
   "settings.usage.entitlementPromptCap": "استخر پرامپت 5 ساعته",
@@ -3169,9 +3169,9 @@ const faIR: Record<string, string> = {
   "sidebar.usage.plan.fiveHour": "5 ساعت",
   "sidebar.usage.plan.weekly": "هفتگی",
   "sidebar.usage.plan.toolCalls": "فراخوانی‌های ابزار",
-  "sidebar.usage.plan.mcp": "ZCodium MCP",
-  "sidebar.usage.plan.zcodeMcp": "ZCodium MCP",
-  "sidebar.usage.plan.zcodeMcpDescription": "سهمیه تجمیعی روزانه برای افزونه‌های MCP داخلی ZCodium",
+  "sidebar.usage.plan.mcp": "yazcode MCP",
+  "sidebar.usage.plan.zcodeMcp": "yazcode MCP",
+  "sidebar.usage.plan.zcodeMcpDescription": "سهمیه تجمیعی روزانه برای افزونه‌های MCP داخلی yazcode",
   "chat.planUsage.title": "مصرف طرح",
   "chat.planUsage.titleWithPlan": "مصرف طرح {plan}",
   "chat.planUsage.providerFallback": "فراهم‌کننده فعلی",
@@ -3387,10 +3387,10 @@ const faIR: Record<string, string> = {
   "settings.skills.import.mode.copy": "کپی",
   "settings.skills.import.mode.symlink": "پیوند نمادین",
   "settings.skills.import.mode.copy.description":
-    "کل پوشه مهارت در ZCodium کپی می‌شود. تغییرات بعدی در پوشه ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
+    "کل پوشه مهارت در yazcode کپی می‌شود. تغییرات بعدی در پوشه ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
   "settings.skills.import.mode.symlink.description":
-    "یک پیوند پوشه به مهارت ایجنت خارجی ایجاد می‌شود. ZCodium تغییرات بعدی منبع را دنبال می‌کند، اما مهارت به در دسترس ماندن آن مسیر منبع وابسته است.",
-  "settings.skills.import.importing": "در حال درون‌برد مهارت‌ها به ZCodium",
+    "یک پیوند پوشه به مهارت ایجنت خارجی ایجاد می‌شود. yazcode تغییرات بعدی منبع را دنبال می‌کند، اما مهارت به در دسترس ماندن آن مسیر منبع وابسته است.",
+  "settings.skills.import.importing": "در حال درون‌برد مهارت‌ها به yazcode",
   "settings.skills.import.imported": "درون‌برد شد",
   "settings.skills.import.skipped": "رد شد",
   "settings.skills.import.failed": "ناموفق",
@@ -3465,7 +3465,7 @@ const faIR: Record<string, string> = {
   "settings.skills.diagnostics.code.skill_not_found": "مهارت یافت نشد",
   "settings.subagents.title": "ایجنت‌های فرعی",
   "settings.subagents.description":
-    "مدیریت فایل‌های Markdown ایجنت فرعیِ سطح کاربر که توسط ZCodium Agent مصرف می‌شوند.",
+    "مدیریت فایل‌های Markdown ایجنت فرعیِ سطح کاربر که توسط yazcode Agent مصرف می‌شوند.",
   "settings.subagents.workspaceScopeUnsupported":
     "ایجاد یا ویرایش در سطح فضای کاری پشتیبانی نمی‌شود",
   "settings.subagents.searchPlaceholder": "جستجوی ایجنت‌های فرعی...",
@@ -3608,7 +3608,7 @@ const faIR: Record<string, string> = {
   "settings.plugins.description":
     "افزونه‌های نصب‌شده را فعال یا غیرفعال کنید. افزونه‌ها مهارت‌ها، دستورها، هوک‌ها و سرورهای MCP را یکجا در اختیار شما می‌گذارند.",
   "settings.plugins.store.subtitle":
-    "ZCodium را با مهارت‌ها، دستورها و سرورهای MCP از افزونه‌ها گسترش دهید",
+    "yazcode را با مهارت‌ها، دستورها و سرورهای MCP از افزونه‌ها گسترش دهید",
   "settings.plugins.store.searchPlaceholder": "جستجوی افزونه‌ها",
   "settings.plugins.store.searchResults": "نتایج جستجو ({count})",
   "settings.plugins.store.searchEmpty": "هیچ افزونه‌ای با جستجوی شما مطابقت ندارد",
@@ -3817,10 +3817,10 @@ const faIR: Record<string, string> = {
   "settings.plugins.import.mode.copy": "کپی",
   "settings.plugins.import.mode.symlink": "پیوند نمادین",
   "settings.plugins.import.mode.copy.description":
-    "کل پوشه افزونه در ZCodium کپی و در plugins.dirs ثبت می‌شود. تغییرات بعدی در پوشه ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
+    "کل پوشه افزونه در yazcode کپی و در plugins.dirs ثبت می‌شود. تغییرات بعدی در پوشه ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
   "settings.plugins.import.mode.symlink.description":
-    "یک پیوند پوشه به افزونه ایجنت خارجی ساخته و در plugins.dirs ثبت می‌شود. ZCodium تغییرات بعدی منبع را دنبال می‌کند، اما افزونه به در دسترس ماندن آن مسیر منبع وابسته است.",
-  "settings.plugins.import.importing": "در حال درون‌برد افزونه‌ها در ZCodium",
+    "یک پیوند پوشه به افزونه ایجنت خارجی ساخته و در plugins.dirs ثبت می‌شود. yazcode تغییرات بعدی منبع را دنبال می‌کند، اما افزونه به در دسترس ماندن آن مسیر منبع وابسته است.",
+  "settings.plugins.import.importing": "در حال درون‌برد افزونه‌ها در yazcode",
   "settings.plugins.import.imported": "درون‌برد شد",
   "settings.plugins.import.skipped": "رد شد",
   "settings.plugins.import.failed": "ناموفق",
@@ -3829,9 +3829,9 @@ const faIR: Record<string, string> = {
   "settings.plugins.import.finish": "انجام شد",
   "settings.commands.title": "دستورها",
   "settings.commands.description":
-    "فایل‌های دستور .md مربوط به ZCodium Agent را مدیریت کنید. دستورها را می‌توان با /command-name در گفتگو فراخوانی کرد.",
+    "فایل‌های دستور .md مربوط به yazcode Agent را مدیریت کنید. دستورها را می‌توان با /command-name در گفتگو فراخوانی کرد.",
   "settings.commands.sourceFilterLabel": "فیلتر منبع",
-  "settings.commands.source.zcodeAgent": "ZCodium Agent",
+  "settings.commands.source.zcodeAgent": "yazcode Agent",
   "settings.commands.add": "جدید",
   "settings.commands.addNew": "دستور جدید",
   "settings.commands.addDescription":
@@ -3889,10 +3889,10 @@ const faIR: Record<string, string> = {
   "settings.commands.import.mode.copy": "کپی",
   "settings.commands.import.mode.symlink": "پیوند نمادین",
   "settings.commands.import.mode.copy.description":
-    "فایل دستور در ZCodium کپی می‌شود. تغییرات بعدی در فایل ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
+    "فایل دستور در yazcode کپی می‌شود. تغییرات بعدی در فایل ایجنت خارجی به‌طور خودکار همگام نمی‌شوند.",
   "settings.commands.import.mode.symlink.description":
-    "یک پیوند فایل به دستور ایجنت خارجی ساخته می‌شود. ZCodium تغییرات بعدی منبع را دنبال می‌کند، اما دستور به در دسترس ماندن آن مسیر منبع وابسته است.",
-  "settings.commands.import.importing": "در حال درون‌برد دستورها در ZCodium",
+    "یک پیوند فایل به دستور ایجنت خارجی ساخته می‌شود. yazcode تغییرات بعدی منبع را دنبال می‌کند، اما دستور به در دسترس ماندن آن مسیر منبع وابسته است.",
+  "settings.commands.import.importing": "در حال درون‌برد دستورها در yazcode",
   "settings.commands.import.imported": "درون‌برد شد",
   "settings.commands.import.skipped": "رد شد",
   "settings.commands.import.failed": "ناموفق",
@@ -3991,8 +3991,8 @@ const faIR: Record<string, string> = {
   "settingsSync.action.rescanning": "در حال اسکن...",
   "settingsSync.action.importSelected": "درون‌برد موارد انتخاب‌شده",
   "settingsSync.action.importing": "در حال درون‌برد...",
-  "settingsSync.action.finish": "شروع استفاده از ZCodium",
-  "settingsSync.agent.zcode": "ایجنت ZCodium",
+  "settingsSync.action.finish": "شروع استفاده از yazcode",
+  "settingsSync.agent.zcode": "ایجنت yazcode",
   "settingsSync.agent.claudeCode": "Claude Code",
   "settingsSync.agent.codexCli": "Codex CLI",
   "settingsSync.agent.openCode": "OpenCode",
@@ -4041,17 +4041,17 @@ const faIR: Record<string, string> = {
   "settingsSync.discovery.description":
     "تنظیمات قابل درون‌برد ایجنت‌ها دیگر به‌طور خودکار اسکن نمی‌شوند.",
   "settingsSync.discovery.helper":
-    "فقط موارد مفقود درون‌برد می‌شوند و تنظیمات فعلی ZCodium شما بازنویسی نخواهد شد.",
+    "فقط موارد مفقود درون‌برد می‌شوند و تنظیمات فعلی yazcode شما بازنویسی نخواهد شد.",
   "settingsSync.discovery.agentCount": "ایجنت‌های یافت‌شده: {count}",
   "settingsSync.discovery.categoryCount": "دسته‌های یافت‌شده: {count}",
   "settingsSync.discovery.error": "اسکن ناموفق بود: {error}",
   "settingsSync.discovery.continue": "ادامه",
-  "onboarding.dialog.title": "به ZCodium خوش آمدید",
+  "onboarding.dialog.title": "به yazcode خوش آمدید",
   "onboarding.dialog.description": "نحوه شروع نخستین نشست خود را انتخاب کنید.",
   "onboarding.wizard.label": "راهنمای مهاجرت",
   "onboarding.welcome.eyebrow": "راه‌اندازی نخستین اجرا",
-  "onboarding.welcome.title": "به ZCodium خوش آمدید",
-  "onboarding.welcome.start": "شروع ZCodium",
+  "onboarding.welcome.title": "به yazcode خوش آمدید",
+  "onboarding.welcome.start": "شروع yazcode",
   "onboarding.welcome.migrate": "راهنمای مهاجرت",
   "onboarding.welcome.helper":
     "تنظیمات ابزارهای موجود را هم‌اکنون درون‌برد کنید، یا صرف‌نظر کنید و بعداً از تنظیمات ادامه دهید.",
@@ -4073,7 +4073,7 @@ const faIR: Record<string, string> = {
   "onboarding.stepDescription.commandsImport":
     "پیش از مهاجرت نهایی، دستورهای انتخاب‌شده را از ایجنت‌های خارجی درون‌برد کنید.",
   "onboarding.stepDescription.migration":
-    "مهاجرت را شروع کنید و صبر کنید تا ZCodium انتخاب‌های شما را درون‌برد کند.",
+    "مهاجرت را شروع کنید و صبر کنید تا yazcode انتخاب‌های شما را درون‌برد کند.",
   "onboarding.sessions.empty":
     "هنوز فضای کاری وجود ندارد. تاریخچه محلی را اسکن کنید، سپس فضاهای کاری موردنظر برای مهاجرت را انتخاب کنید.",
   "onboarding.sessions.count": "{count} نشست",
@@ -4092,7 +4092,7 @@ const faIR: Record<string, string> = {
   "onboarding.agentsFile.error": "بررسی وضعیت مهاجرت AGENTS.md ممکن نشد: {error}",
   "onboarding.agentsFile.confirmTitle": "بازنویسی AGENTS.md پیش‌فرض؟",
   "onboarding.agentsFile.confirmDescription":
-    "ZCodium فایل {source} را در {target} کپی می‌کند.\nاگر فایل مقصد از قبل موجود باشد، پیکربندی پیش‌فرض AGENTS در ZCodium بازنویسی خواهد شد.",
+    "yazcode فایل {source} را در {target} کپی می‌کند.\nاگر فایل مقصد از قبل موجود باشد، پیکربندی پیش‌فرض AGENTS در yazcode بازنویسی خواهد شد.",
   "onboarding.agentsFile.confirmAction": "بازنویسی و مهاجرت",
   "onboarding.finish.summary.label.imported": "درون‌بردشده",
   "onboarding.finish.summary.label.skipped": "نادیده گرفته‌شده",
@@ -4169,8 +4169,8 @@ const faIR: Record<string, string> = {
   "chat.emptyResult.description":
     "این وظیفه بدون هیچ محتوای گفتگو به پایان رسید. ممکن است پیش از تولید پاسخ توسط مدل متوقف شده باشد.",
   "chat.placeholder.newTask":
-    "از ZCodium هر چیزی بپرسید، @ برای افزودن زمینه، / برای دستورها یا قابلیت‌ها",
-  "chat.placeholder.newTaskMobile": "از ZCodium هر چیزی بپرسید…",
+    "از yazcode هر چیزی بپرسید، @ برای افزودن زمینه، / برای دستورها یا قابلیت‌ها",
+  "chat.placeholder.newTaskMobile": "از yazcode هر چیزی بپرسید…",
   "chat.placeholder.followUpAsk": "درخواست تغییرات بعدی",
   "chat.placeholder.followUpQueue": "برای قرار دادن تغییرات بعدی در صف، به تایپ ادامه دهید",
   "chat.placeholder.loading": "در حال راه‌اندازی وظیفه...",
@@ -4431,7 +4431,7 @@ const faIR: Record<string, string> = {
   "chat.compact.duplicateBlocked": "یک فشرده‌سازی در حال اجراست یا در صف قرار دارد.",
   "chat.modelSwitch.contextWindowGuard.title": "پیش از تغییر مدل، زمینه را فشرده کنید",
   "chat.modelSwitch.contextWindowGuard.description":
-    "این گفتگو {used} توکن مصرف کرده است؛ بیش از {target} توکن زمینه در دسترس {modelName} پس از رزرو حداکثر خروجی.\nابتدا گفتگوی فعلی را با مدل فعلی فشرده کنید. اگر زمینه فشرده‌شده جا شود، ZCodium تغییر مدل‌ها را ادامه می‌دهد.",
+    "این گفتگو {used} توکن مصرف کرده است؛ بیش از {target} توکن زمینه در دسترس {modelName} پس از رزرو حداکثر خروجی.\nابتدا گفتگوی فعلی را با مدل فعلی فشرده کنید. اگر زمینه فشرده‌شده جا شود، yazcode تغییر مدل‌ها را ادامه می‌دهد.",
   "chat.modelSwitch.contextWindowGuard.compress": "فشرده‌سازی",
   "chat.modelSwitch.contextWindowGuard.runningBlocked":
     "این گفتگو زمینه‌ای بیشتر از زمینه در دسترس مدل مقصد پس از رزرو حداکثر خروجی مصرف کرده است. پیش از تغییر مدل باید گفتگو فشرده شود، اما وظیفه فعلی هنوز در حال اجراست و فشرده‌سازی زمینه در حال حاضر ممکن نیست. منتظر بمانید تا وظیفه تمام شود، سپس دوباره مدل را عوض کنید.",
@@ -4443,11 +4443,11 @@ const faIR: Record<string, string> = {
     "Computer Use در حالت انتظار است — در نخستین استفاده به‌صورت خودکار راه‌اندازی می‌شود",
   "chat.toolbar.computerUse.tooltip.starting": "در حال فعال‌سازی افزونه Computer Use…",
   "chat.toolbar.computerUse.tooltip.ready":
-    "Computer Use آماده است — کافی است بگویید می‌خواهید ZCodium چه کاری انجام دهد",
+    "Computer Use آماده است — کافی است بگویید می‌خواهید yazcode چه کاری انجام دهد",
   "chat.toolbar.computerUse.tooltip.permissionRequired":
     "مجوزهای macOS موجود نیست — برای اعطای مجوز کلیک کنید",
   "chat.toolbar.computerUse.tooltip.error":
-    "فعال‌سازی Computer Use ناموفق بود. لطفاً برنامه ZCodium را دوباره راه‌اندازی کنید و تلاش دوباره انجام دهید، یا از ZCodium بخواهید لاگ‌ها را بررسی کند",
+    "فعال‌سازی Computer Use ناموفق بود. لطفاً برنامه yazcode را دوباره راه‌اندازی کنید و تلاش دوباره انجام دهید، یا از yazcode بخواهید لاگ‌ها را بررسی کند",
   "chat.toolbar.computerUse.tooltip.sessionBusy":
     "یک گفتگو در حال اجراست. Computer Use فعلاً قابل تغییر نیست — پس از پایان آن دوباره تلاش کنید.",
   "chat.toolbar.mode.description":
@@ -4749,7 +4749,7 @@ const faIR: Record<string, string> = {
     "اتصال به ایجنت محلی ممکن نشد؛ گردش‌های کار سراسری در دسترس نیستند.",
   "workflows.hub.empty.title": "هنوز هیچ گردش کار ذخیره‌شده‌ای در پروژه‌های باز شما نیست",
   "workflows.hub.empty.hint":
-    "یک گردش کار را با ZCodium در گفتگو طراحی کنید و وقتی درست کار کرد، از آن بخواهید گردش کار را در یک پروژه ذخیره کند. پروژه‌های بازنشده اینجا ظاهر نمی‌شوند.",
+    "یک گردش کار را با yazcode در گفتگو طراحی کنید و وقتی درست کار کرد، از آن بخواهید گردش کار را در یک پروژه ذخیره کند. پروژه‌های بازنشده اینجا ظاهر نمی‌شوند.",
   "workflows.hub.noWorkspace": "برای دیدن گردش‌های کارش، یک فضای کاری باز کنید.",
   "workflows.hub.loadError": "خواندن گردش‌های کار ممکن نشد: {error}",
   "workflows.hub.invalid": "{count} فایل خوانده نشد",
@@ -4810,7 +4810,7 @@ const faIR: Record<string, string> = {
   "workflows.hub.detail.description": "توضیحات",
   "workflows.hub.detail.whenToUse": "چه زمانی استفاده شود",
   "workflows.hub.detail.whenToUse.help":
-    "راهنمای مسیریابی برای ZCodium: اینکه این گردش کار چه زمانی انتخاب درستی است.",
+    "راهنمای مسیریابی برای yazcode: اینکه این گردش کار چه زمانی انتخاب درستی است.",
   "workflows.hub.detail.args": "آرگومان‌ها",
   "workflows.hub.detail.args.name": "نام",
   "workflows.hub.detail.args.type": "نوع",
@@ -4831,7 +4831,7 @@ const faIR: Record<string, string> = {
   "workflows.hub.detail.meta.descriptionRequired": "توضیحات الزامی است",
   "workflows.hub.detail.script": "اسکریپت",
   "workflows.hub.detail.script.note":
-    "اسکریپت فقط‌خواندنی است. برای تغییر آن، با ZCodium در گفتگو اصلاحش کنید و نسخه‌ای جدید ذخیره کنید.",
+    "اسکریپت فقط‌خواندنی است. برای تغییر آن، با yazcode در گفتگو اصلاحش کنید و نسخه‌ای جدید ذخیره کنید.",
   "workflows.hub.detail.script.copy": "کپی اسکریپت",
   "workflows.hub.detail.loadError": "خواندن این گردش کار ممکن نشد: {reason}",
   "workflows.hub.detail.notFound": "این گردش کار دیگر در پروژه نیست.",
@@ -5315,7 +5315,7 @@ const faIR: Record<string, string> = {
   "chat.slash.skills.empty": "مهارت منطبقی یافت نشد",
   "chat.slash.subagents.title": "ایجنت‌ها",
   "chat.slash.subagents.empty": "ایجنت منطبقی یافت نشد",
-  "chat.slash.emptyUnavailable": "برای نشست فعلی ZCodium Agent هیچ دستور اسلشی منتشر نشده است",
+  "chat.slash.emptyUnavailable": "برای نشست فعلی yazcode Agent هیچ دستور اسلشی منتشر نشده است",
   "chat.slash.emptyResults": "دستور اسلش منطبقی یافت نشد",
   "chat.error.connectionLost": "اتصال به ایجنت قطع شد",
   "chat.error.processExited": "فرایند ایجنت به‌طور غیرمنتظره‌ای پایان یافت",
@@ -5541,7 +5541,7 @@ const faIR: Record<string, string> = {
   "resourceManager.cpu": "CPU",
   "resourceManager.memory": "حافظه",
   "resourceManager.storage": "فضای ذخیره‌سازی",
-  "resourceManager.appUsage": "ZCodium",
+  "resourceManager.appUsage": "yazcode",
   "resourceManager.systemUsage": "سیستم",
   "resourceManager.category.base": "خدمات پایه",
   "resourceManager.category.builtinPlugin": "افزونه‌های داخلی",
@@ -5787,7 +5787,7 @@ const faIR: Record<string, string> = {
   "feedback.submit.template.section.errorSummaryLine": "خلاصه خطا: {message}",
   "feedback.submit.template.section.errorDetail": "جزئیات خطا",
   "feedback.submit.template.section.errorTraceId": "TraceID: {traceId}",
-  "feedback.submit.template.section.copyErrorHeading": "اطلاعات خطای ZCodium",
+  "feedback.submit.template.section.copyErrorHeading": "اطلاعات خطای yazcode",
   "feedback.submit.template.section.notProvided": "ارائه نشده",
   "feedback.submit.template.section.remoteLogEmpty": "لاگ اتصالی ثبت نشده است",
   "feedback.submit.template.section.taskFeedbackTitle": "بازخورد درباره وظیفه: {title}",
@@ -5938,7 +5938,7 @@ const faIR: Record<string, string> = {
   "automations.statusFilter.completed": "تکمیل‌شده",
   "automations.statusFilter.failed": "ناموفق",
   "automations.statusFilter.empty": "هیچ وظیفه‌ای با این فیلتر مطابقت ندارد",
-  "offPeak.keepAwakeBanner": "در حین اجرای گفت‌وگو در ZCodium، رایانه خود را بیدار نگه دارید.",
+  "offPeak.keepAwakeBanner": "در حین اجرای گفت‌وگو در yazcode، رایانه خود را بیدار نگه دارید.",
   "offPeak.sectionTitle": "وظایف زمان بیکاری",
   "offPeak.createButton": "ایجاد وظیفه زمان بیکاری",
   "offPeak.templates.sectionTitle": "قالب وظیفه زمان بیکاری",
@@ -5994,7 +5994,7 @@ const faIR: Record<string, string> = {
   "offPeak.form.titlePlaceholder": "مثلاً بازآرایی شبانه کد",
   "offPeak.form.instructionsLabel": "دستورالعمل‌ها",
   "offPeak.form.instructionsPlaceholder":
-    "وظیفه‌ای را توصیف کنید که ZCodium بتواند در پس‌زمینه روی آن کار کند، شامل نتیجه مورد انتظار و هرگونه محدودیت…",
+    "وظیفه‌ای را توصیف کنید که yazcode بتواند در پس‌زمینه روی آن کار کند، شامل نتیجه مورد انتظار و هرگونه محدودیت…",
   "offPeak.form.permissionWarning":
     "اجرای وظایف زمان بیکاری بدون حضور شما انجام می‌شود. اقداماتی که نیاز به تأیید دارند، وظیفه را تا زمان پاسخ شما متوقف می‌کنند.",
   "offPeak.form.modelLabel": "مدل",
@@ -6188,9 +6188,9 @@ const faIR: Record<string, string> = {
   "automations.runs.prevPage": "قبلی",
   "automations.runs.nextPage": "بعدی",
   "chat.cuaReadiness.toolsNotLoaded":
-    "ZCodium Computer Use هنوز در حال آماده‌سازی است — ابزارهای آن هنوز بارگذاری نشده‌اند ({count} مورد بارگذاری شده). مجوزهای زیر را اعطا کنید؛ ابزارها پس از آماده شدن ابزار کمکی ظاهر می‌شوند.",
+    "yazcode Computer Use هنوز در حال آماده‌سازی است — ابزارهای آن هنوز بارگذاری نشده‌اند ({count} مورد بارگذاری شده). مجوزهای زیر را اعطا کنید؛ ابزارها پس از آماده شدن ابزار کمکی ظاهر می‌شوند.",
   "chat.cuaReadiness.toolsPreparing":
-    "ZCodium Computer Use هنوز در حال آماده‌سازی است — ابزارهای آن هنوز بارگذاری نشده‌اند. مجوزهای زیر را اعطا کنید؛ ابزارها پس از آماده شدن ابزار کمکی ظاهر می‌شوند.",
+    "yazcode Computer Use هنوز در حال آماده‌سازی است — ابزارهای آن هنوز بارگذاری نشده‌اند. مجوزهای زیر را اعطا کنید؛ ابزارها پس از آماده شدن ابزار کمکی ظاهر می‌شوند.",
   "chat.toolCall.cua.requestAccess": "بررسی دسترسی Computer Use",
   "chat.toolCall.cua.appName": "Computer Use",
   "chat.toolCall.cua.group.completedLabel": "Computer Use",
@@ -6317,9 +6317,9 @@ const faIR: Record<string, string> = {
   "cuaPermission.modal.restartButton": "راه‌اندازی دوباره Helper",
   "cuaPermission.modal.restarting": "در حال راه‌اندازی دوباره Helper…",
   "cuaPermission.modal.restartFailed": "راه‌اندازی دوباره Helper ناموفق بود: {error}",
-  "cuaPermission.modal.relaunchAppButton": "راه‌اندازی دوباره ZCodium",
+  "cuaPermission.modal.relaunchAppButton": "راه‌اندازی دوباره yazcode",
   "cuaPermission.modal.relaunchAppHint":
-    "پس از راه‌اندازی دوباره Helper هنوز کار نمی‌کند؟ ZCodium را دوباره راه‌اندازی کنید تا فرایند Helper به‌طور کامل بارگذاری شود.",
+    "پس از راه‌اندازی دوباره Helper هنوز کار نمی‌کند؟ yazcode را دوباره راه‌اندازی کنید تا فرایند Helper به‌طور کامل بارگذاری شود.",
   "cuaPermission.status.granted": "اعطا شده",
   "cuaPermission.status.missing": "ناموجود",
   "cuaPermission.status.unknown": "نامشخص",
@@ -6333,7 +6333,7 @@ const faIR: Record<string, string> = {
   "cuaPermission.tools.agentUpdateRequired":
     "ایجنت متصل برای بررسی آمادگی ایمن بیش از حد قدیمی است. آن را به‌روزرسانی یا دوباره راه‌اندازی کنید، سپس دوباره بررسی کنید.",
   "cuaPermission.tools.untrustedRuntime":
-    "ابزارهای Computer Use پیدا شد، اما از افزونه تأییدشدهٔ ZCodium نیامده‌اند. نصب افزونه را بازبینی کنید، سپس دوباره بررسی کنید.",
+    "ابزارهای Computer Use پیدا شد، اما از افزونه تأییدشدهٔ yazcode نیامده‌اند. نصب افزونه را بازبینی کنید، سپس دوباره بررسی کنید.",
   "cuaPermission.perm.accessibility": "دسترسی‌پذیری",
   "cuaPermission.perm.accessibility.purpose": "خواندن/هدایت عناصر UI + شبیه‌سازی ورودی",
   "cuaPermission.perm.screenRecording": "ضبط صفحه‌نمایش",
@@ -6344,7 +6344,7 @@ const faIR: Record<string, string> = {
     "لطفاً پیش از استفاده از آن، macOS را ارتقا دهید. راه‌اندازی مجوزها در نسخه‌های قدیمی‌تر امکان‌پذیر نیست.",
   "cuaPermission.ready": "مجوزها آماده است",
   "cuaPermission.ready.sessionValidationHint":
-    "ZCodium هنگام شروع نخستین نشست شما، ابزارهای Computer Use را با دقیقاً همان نشست بررسی و تأیید می‌کند.",
+    "yazcode هنگام شروع نخستین نشست شما، ابزارهای Computer Use را با دقیقاً همان نشست بررسی و تأیید می‌کند.",
   "settings.computerUse.title": "Computer Use",
   "settings.computerUse.toggleLabel": "فعال‌سازی Computer Use",
   "settings.computerUse.toggleDescription":
@@ -6400,9 +6400,9 @@ const faIR: Record<string, string> = {
   "workflows.hub.history.note":
     "سوابق اجرا از دفتر رویداد گردش کارهای این پروژه می‌آید و با ری‌استارت باقی می‌ماند. «باز کردن اجرا» به گفت‌وگویی که آن را آغاز کرده برمی‌گردد و جزئیات اجرا را باز می‌کند.",
   "chat.quota.mcp.quotaExhausted":
-    "سهمیه امروز MCP «{server}» در ZCodium تمام شد. فردا بازنشانی می‌شود.",
+    "سهمیه امروز MCP «{server}» در yazcode تمام شد. فردا بازنشانی می‌شود.",
   "chat.quota.mcp.codingPlanRequired":
-    "سهمیه‌ای برای MCP «{server}» در ZCodium وجود ندارد. برای استفاده، یک کلید API یا Coding Plan پیکربندی کنید.",
+    "سهمیه‌ای برای MCP «{server}» در yazcode وجود ندارد. برای استفاده، یک کلید API یا Coding Plan پیکربندی کنید.",
   "offPeak.notify.completed.body": "«{title}» با موفقیت کامل شد.",
   "offPeak.notify.failed.body": "«{title}» با خطا متوقف شد.",
   "offPeak.newTask.bannerText":

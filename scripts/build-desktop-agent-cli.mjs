@@ -25,7 +25,7 @@ const pnpmRunEnv = {
 };
 // 剔除宿主 CLI 泄漏的 builtin 配置路径（新旧前缀），staging 事实源锁回仓库 config。
 for (const key of Object.keys(pnpmRunEnv)) {
-  if (key.startsWith("ZCODE_BUILTIN_PROVIDER") || key.startsWith("ZCODIUM_BUILTIN_PROVIDER")) {
+  if (key.startsWith("ZCODE_BUILTIN_PROVIDER") || key.startsWith("YAZCODE_BUILTIN_PROVIDER")) {
     delete pnpmRunEnv[key];
   }
 }

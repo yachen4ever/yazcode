@@ -452,7 +452,7 @@ export default {
     zcodeProductFlavor: desktopProductIdentity.flavor,
     homepage: "https://zcodium-project.github.io/",
     author: {
-      name: "ZCodium",
+      name: "yazcode",
       email: "daiqianghaha@foxmail.com",
     },
   },
@@ -701,7 +701,7 @@ export default {
     // 与 /usr/share/icons/hicolor/*/apps/zcode.png 保持一致。
     executableName: desktopProductIdentity.linuxExecutableName,
     category: "Development",
-    maintainer: "ZCodium <zcodium-project@users.noreply.github.com>",
+    maintainer: "yazcode <yazcode-project@users.noreply.github.com>",
   },
   deb: {
     // 生产版与 Preview 必须是两个 dpkg package；只改可执行名仍会让安装器把另一版本当成升级替换。
@@ -733,7 +733,7 @@ export default {
     // 丢失 Electron Framework 主二进制，安装后启动直接报 DYLD Library missing。
     // 显式放大 DMG 容量，避免拷贝截断导致的“Framework 目录存在但核心文件缺失”。
     size: "3200m",
-    // 使用自定义安装背景图（620x460 窗口，背景上标注 ZCodium 与解除 Gatekeeper 拦截的命令）。
+    // 使用自定义安装背景图（620x460 窗口，背景上标注 yazcode 与解除 Gatekeeper 拦截的命令）。
     background: "build/dmg_background.png",
     // 安装盘图标统一使用安装专用素材，避免复用应用图标导致安装识别度不足。
     icon: "build/icon_installer.icns",
@@ -776,6 +776,6 @@ export default {
     // 用 GitHub provider 走 Releases API，运行时配合 allowPrerelease。
     provider: "github",
     owner: "ZCodium-project",
-    repo: "ZCodium",
+    repo: "yazcode",
   },
 };

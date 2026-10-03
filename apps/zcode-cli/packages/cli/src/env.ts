@@ -136,5 +136,8 @@ function applyBetaStorageDefault(env: CliEnv, argv: readonly string[]): void {
   const explicitBeta = env.ZCODE_BETA === "1" || env.ZCODE_ENV === "beta";
   const invokedAsBeta = argv.some((arg) => /(^|[/\\])zcode-beta(?:$|\.)/u.test(arg));
   if (!explicitBeta && !invokedAsBeta) return;
-  readExternalEnvVar(env, "ZCODE_STORAGE_DIR") = join(homedir(), ".zcode-beta");
+  // 写入端：新名 + 旧名双写（beta 存储目录）。
+  const betaStorageDir = join(homedir(), ".zcode-beta");
+  env.ZCODIUM_STORAGE_DIR = betaStorageDir;
+  env.ZCODE_STORAGE_DIR = betaStorageDir;
 }

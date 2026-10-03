@@ -1,4 +1,4 @@
-/** ZCodium 审计版：官方平台功能开关。
+/** yazcode 审计版：官方平台功能开关。
  *
  * 每个官方功能一个开关，默认全部关闭；关闭时应用不发起任何官方平台请求（凭证读取与网络请求前短路）。
  * 用户可以在设置的“官方服务”里单独开启需要的功能。
@@ -67,13 +67,13 @@ export function normalizeOfficialServiceSwitches(input: unknown): OfficialServic
  * CLI/headless 读取与 Desktop 的 agent env 投影共用，禁止在两处手写键名。
  */
 export const OFFICIAL_SERVICE_ENV_KEYS: Readonly<Record<string, OfficialServiceKey>> = {
-  ZCODIUM_ENABLE_OFFICIAL_ACCOUNT: "account",
-  ZCODIUM_ENABLE_OFFICIAL_FEEDBACK: "feedback",
-  ZCODIUM_ENABLE_OFFICIAL_CODING_PLAN: "codingPlan",
-  ZCODIUM_ENABLE_OFFICIAL_MCP: "officialMcp",
-  ZCODIUM_ENABLE_OFFICIAL_OFFPEAK: "offPeak",
-  ZCODIUM_ENABLE_OFFICIAL_MARKETPLACE: "marketplace",
-  ZCODIUM_ENABLE_OFFICIAL_CLIENT_CONFIG: "clientConfig",
+  YAZCODE_ENABLE_OFFICIAL_ACCOUNT: "account",
+  YAZCODE_ENABLE_OFFICIAL_FEEDBACK: "feedback",
+  YAZCODE_ENABLE_OFFICIAL_CODING_PLAN: "codingPlan",
+  YAZCODE_ENABLE_OFFICIAL_MCP: "officialMcp",
+  YAZCODE_ENABLE_OFFICIAL_OFFPEAK: "offPeak",
+  YAZCODE_ENABLE_OFFICIAL_MARKETPLACE: "marketplace",
+  YAZCODE_ENABLE_OFFICIAL_CLIENT_CONFIG: "clientConfig",
 };
 
 /** CLI/headless 用环境变量开启官方功能；键名见上方映射，值为 "1" 时开启。 */
@@ -92,7 +92,7 @@ export function readOfficialServiceSwitchesFromEnv(
 /**
  * Desktop 运行时的 agent env 投影：按设置输出完整键集（开启=1、关闭=0）。
  *
- * 必须写完整键集：用户 shell 里可能残留 `ZCODIUM_ENABLE_OFFICIAL_*=1`，
+ * 必须写完整键集：用户 shell 里可能残留 `YAZCODE_ENABLE_OFFICIAL_*=1`，
  * Desktop 的设置是唯一事实源，关闭项要显式覆盖为 0，不能依赖“缺键=关闭”。
  */
 export function buildOfficialServiceEnvPatch(input: unknown): Record<string, string> {
@@ -124,7 +124,7 @@ export function isOfficialPlatformEnabled(): boolean {
 export function assertOfficialServiceAvailable(key: OfficialServiceKey): void {
   if (!isOfficialServiceEnabled(key)) {
     throw new Error(
-      `ZCodium 默认不连接官方平台，此功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${ZCODIUM_ISSUES_URL}`,
+      `yazcode 默认不连接官方平台，此功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${YAZCODE_ISSUES_URL}`,
     );
   }
 }
@@ -135,15 +135,15 @@ export function isConversationShareAvailable(): boolean {
 }
 
 export function assertConversationShareRemoved(): void {
-  throw new Error(`对话分享已在 ZCodium 下线。反馈请访问 ${ZCODIUM_ISSUES_URL}`);
+  throw new Error(`对话分享已在 yazcode 下线。反馈请访问 ${YAZCODE_ISSUES_URL}`);
 }
 
-export const ZCODIUM_ISSUES_URL = "https://github.com/ZCodium-project/ZCodium/issues";
+export const YAZCODE_ISSUES_URL = "https://github.com/ZCodium-project/ZCodium/issues";
 
 export function assertOfficialPlatformAvailable(): void {
   if (!isOfficialPlatformEnabled()) {
     throw new Error(
-      `ZCodium 默认不连接官方平台，此功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${ZCODIUM_ISSUES_URL}`,
+      `yazcode 默认不连接官方平台，此功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${YAZCODE_ISSUES_URL}`,
     );
   }
 }
@@ -249,8 +249,10 @@ export function assertOfficialPlatformAccessible(input: string | URL): void {
   const key = resolveOfficialServiceForUrl(input);
   if (key) {
     throw new Error(
-      `ZCodium 默认不连接官方平台，${key} 功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${ZCODIUM_ISSUES_URL}`,
+      `yazcode 默认不连接官方平台，${key} 功能未开启。可在设置的“官方服务”里打开；反馈请访问 ${YAZCODE_ISSUES_URL}`,
     );
   }
-  throw new Error(`该官方平台地址在 ZCodium 已下线或未登记，不能访问。反馈请访问 ${ZCODIUM_ISSUES_URL}`);
+  throw new Error(
+    `该官方平台地址在 yazcode 已下线或未登记，不能访问。反馈请访问 ${YAZCODE_ISSUES_URL}`,
+  );
 }

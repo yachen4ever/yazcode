@@ -217,11 +217,11 @@ function resolveUserHomeDir(): string {
 }
 
 function getUserZcodeConfigPath(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "cli", "config.json");
+  return join(resolveUserHomeDir(), ".yazcode", "cli", "config.json");
 }
 
 function getUserZcodePluginRoot(): string {
-  return join(resolveUserHomeDir(), ".zcodium", "plugins");
+  return join(resolveUserHomeDir(), ".yazcode", "plugins");
 }
 
 async function collectLocalUserPluginCandidates(): Promise<PluginSyncCandidate[]> {
