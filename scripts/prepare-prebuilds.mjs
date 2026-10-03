@@ -640,9 +640,9 @@ function resolveComponentSemanticVersion(componentVersion) {
   return /^[a-f0-9]{12,64}$/.test(suffix) ? version.slice(0, plusIndex) : version;
 }
 
-// glm 承载 zcode-cli app-server 协议 schema。即使 runtime 版本未变化，
-// zcode.cjs 也可能随 app 代码变更；跨 release 复用旧 glm 会让远端 agent 拒绝新协议字段。
-const nonReusableReleaseAssetIds = new Set(["server-bundle", "glm"]);
+// agent-runtime 组件承载 zcode-cli app-server 协议 schema。即使 runtime 版本未变化，
+// zcode.cjs 也可能随 app 代码变更；跨 release 复用旧组件会让远端 agent 拒绝新协议字段。
+const nonReusableReleaseAssetIds = new Set(["server-bundle", "agent-runtime"]);
 
 function readJsonFile(filePath) {
   try {
@@ -801,8 +801,8 @@ function buildReusableComponentRequiredPaths(componentId, platformKey) {
       return ["node"];
     case "node-pty":
       return platformKey.startsWith("darwin-") ? ["pty.node", "spawn-helper"] : ["pty.node"];
-    case "glm":
-      // GLM 现在是编译产物 zcode.cjs（跨平台同一份），远端用已部署的 node 执行它。
+    case "agent-runtime":
+      // agent-runtime 现在是编译产物 zcode.cjs（跨平台同一份），远端用已部署的 node 执行它。
       // 复用时还要确认官方插件 seed 资源完整，否则旧 release 会继续产出 0 builtin plugin 的远端资源包。
       return ["zcode.cjs", ...remoteOfficialPluginRequiredPaths];
     case "bfs":
@@ -839,8 +839,8 @@ export function buildRemoteComponentDefinitions(platformKey) {
       sourcePath: join(releaseDir, "node-pty", platformKey),
     },
     {
-      id: "glm",
-      // GLM native binary 之前固定成 v1，二进制版本升级后不会触发组件 cache 失效。
+      id: "agent-runtime",
+      // agent-runtime 组件产物之前固定成 v1，二进制版本升级后不会触发组件 cache 失效。
       // 这里复用 ZCODE_AGENT_RUNTIME.glm.version，保持 manifest 版本与运行时描述一致。
       semanticPrefix: ZCODE_AGENT_RUNTIME.glm.version,
       mount: joinPosix("glm", platformKey),

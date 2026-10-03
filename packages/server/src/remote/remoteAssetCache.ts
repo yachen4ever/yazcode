@@ -57,7 +57,8 @@ const REMOTE_ASSET_PROGRESS_INTERVAL_MS = 1_000;
 const REMOTE_ASSET_PROGRESS_PERCENT_STEP = 5;
 const CONTENT_ADDRESSED_COMPONENT_RELEASE_DIRS: Record<string, string> = {
   "server-bundle": "server-content",
-  glm: "glm-content",
+  // 键是 release 组件 id；值是本地缓存目录名，保持 glm-content 以兼容已有缓存。
+  "agent-runtime": "glm-content",
 };
 const REMOTE_ASSET_DIRECTORY_COMMIT_RETRY_DELAYS_MS = [
   50, 100, 200, 400, 800, 1_600, 3_200,
@@ -103,7 +104,7 @@ const REMOTE_COMPONENT_MOUNT_RULES: Record<string, ComponentMountRule> = {
     platformScoped: true,
     resolveExpectedMount: (platformArch) => `node-pty/${platformArch}`,
   },
-  glm: {
+  "agent-runtime": {
     platformScoped: true,
     resolveExpectedMount: (platformArch) => `glm/${platformArch}`,
   },
@@ -1377,11 +1378,11 @@ function resolveContentAddressedReleaseSegments(
 ): string[] {
   const segments: string[] = [];
   for (const componentId of Object.keys(CONTENT_ADDRESSED_COMPONENT_RELEASE_DIRS)) {
-    // 兼容历史全量 release：未指定组件时只沿用原有 GLM 内容目录；server
+    // 兼容历史全量 release：未指定组件时只沿用原有 agent-runtime 内容目录；server
     // 安装始终显式请求 server-bundle，因此仍会进入独立 SHA release。
     if (
       requestedComponentIds === null
-        ? componentId !== "glm"
+        ? componentId !== "agent-runtime"
         : !requestedComponentIds.has(componentId)
     ) {
       continue;

@@ -253,7 +253,7 @@ export async function deployServer(
     expectedServerBundleSha256: string | null,
   ): Promise<boolean> => {
     const hasPendingAppVersionRefresh = await hasRemoteAssetComponentRefreshPending(backend, {
-      componentId: "glm",
+      componentId: "agent-runtime",
       platformArch,
     });
     const shouldForceRefreshContentAddressedAssets =
@@ -262,10 +262,10 @@ export async function deployServer(
       (serverDeployDecision.shouldDeploy && serverDeployDecision.appVersionChanged === true);
 
     if (shouldForceRefreshContentAddressedAssets) {
-      // server 会先于 GLM 更新；若后续步骤失败，下次连接时 server 版本
-      // 已经匹配。必须持久化升级强刷状态，让重试继续绕过同 SHA cache，直到 GLM 成功覆盖 marker。
+      // server 会先于 agent-runtime 组件更新；若后续步骤失败，下次连接时 server 版本
+      // 已经匹配。必须持久化升级强刷状态，让重试继续绕过同 SHA cache，直到该组件成功覆盖 marker。
       await markRemoteAssetComponentRefreshPending(backend, {
-        componentId: "glm",
+        componentId: "agent-runtime",
         platformArch,
         appVersion: ZCODE_VERSION,
       });
@@ -728,7 +728,7 @@ function resolveRequiredMockReleasePaths(
           requiredPaths.add(`node-pty/${platformArch}/spawn-helper`);
         }
         break;
-      case "glm":
+      case "agent-runtime":
         requiredPaths.add(`glm/${platformArch}/zcode.cjs`);
         for (const relativePath of REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS) {
           requiredPaths.add(`glm/${platformArch}/packages/${relativePath}`);
