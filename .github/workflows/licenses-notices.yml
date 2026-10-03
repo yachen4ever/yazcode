@@ -67,21 +67,32 @@ jobs:
       - name: Regenerate third-party notices
         run: node scripts/licenses.mjs notices
 
-      # licenses.mjs 遇到第一个缺失的生产依赖就抛错，这里在失败时把完整缺失集合
-      # 打出来，省得每次只为多知道一个包再重跑一次全量安装。
-      - name: Report full set of uninstalled production packages
+      # licenses.mjs 两类硬失败都只报第一个命中项（Missing installed dependency /
+      # Stale npm notice override），这里在失败时把两个集合一次性打全，省得每次只为
+      # 多知道一个条目再重跑一次全量安装。
+      - name: Diagnose ledger blockers
         if: failure()
         run: |
           node --input-type=module -e '
-          import { readWorkspaceProductionGraph, scanInstalledPackages } from "./scripts/third-party-npm.mjs";
+          import { readFile } from "node:fs/promises";
+          import {
+            readWorkspaceProductionGraph,
+            scanInstalledPackages,
+          } from "./scripts/third-party-npm.mjs";
           const root = process.cwd();
           const { required, projects } = await readWorkspaceProductionGraph(root);
           const installed = await scanInstalledPackages(root, projects);
           const missing = [...required]
             .filter(([key]) => !installed.has(key))
             .map(([, item]) => `${item.name}@${item.version}`);
-          console.log(`::warning::生产图 ${required.size} 个包中有 ${missing.length} 个未安装`);
+          console.log(`::warning::生产图 ${required.size} 个包，未安装 ${missing.length} 个`);
           console.log(missing.join("\n") || "(none)");
+
+          const overrides = JSON.parse(await readFile("third-party/npm-overrides.json", "utf8"));
+          const current = new Set([...required.keys()]);
+          const stale = overrides.filter((entry) => !current.has(entry.package));
+          console.log(`::warning::notice override 共 ${overrides.length} 条，陈旧 ${stale.length} 条`);
+          console.log(stale.map((entry) => entry.package).join("\n") || "(none)");
           '
 
       - name: Report diff against committed ledger
