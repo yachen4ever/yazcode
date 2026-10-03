@@ -1,4 +1,4 @@
-# ZCode Feature Notes and Third-Party Component Notices
+# yazcode Feature Notes and Third-Party Component Notices
 
 <p align="center">
   English | <a href="NOTICE.zh-CN.md">简体中文</a>

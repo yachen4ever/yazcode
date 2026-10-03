@@ -7,12 +7,12 @@ export const enUS: ZCodeCopy = {
       localeUnsupported: (value) =>
         `Unsupported --locale value: ${value}. Supported locales: en-US, zh-CN, fa-IR, auto.`,
     },
-    help: (version) => `zcode ${version}
+    help: (version) => `yazcode ${version}
 
 Usage:
-  zcode [command] [options]
+  yazcode [command] [options]
 
-With no command, zcode opens the full-screen TUI.
+With no command, yazcode opens the full-screen TUI.
 
 Commands:
   app-server Run the ZCode Protocol stdio app server

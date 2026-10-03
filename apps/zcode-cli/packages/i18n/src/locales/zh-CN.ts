@@ -7,12 +7,12 @@ export const zhCN: ZCodeCopy = {
       localeUnsupported: (value) =>
         `不支持的 --locale 值：${value}。支持的语言：en-US、zh-CN、fa-IR、auto。`,
     },
-    help: (version) => `zcode ${version}
+    help: (version) => `yazcode ${version}
 
 用法:
-  zcode [command] [options]
+  yazcode [command] [options]
 
-不传 command 时，zcode 会打开全屏 TUI。
+不传 command 时，yazcode 会打开全屏 TUI。
 
 命令:
   app-server 运行 ZCode Protocol stdio app server

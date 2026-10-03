@@ -5,6 +5,10 @@
     "third-party/inventory.json",
     "third-party/upstream/**",
     "third-party/native-search/licenses/**",
-    "third-party/runtime/*.txt"
+    "third-party/runtime/*.txt",
+    ".agents/skills/docx/**",
+    ".agents/skills/xlsx/**",
+    ".agents/skills/pptx/**",
+    ".agents/skills/pdf/**"
   ]
 }

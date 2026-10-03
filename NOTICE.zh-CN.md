@@ -1,4 +1,4 @@
-# ZCode 相关功能说明与第三方组件声明
+# yazcode 相关功能说明与第三方组件声明
 
 <p align="center">
   <a href="NOTICE.md">English</a> | 简体中文

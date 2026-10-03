@@ -2744,7 +2744,6 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.catalogProviderEmpty": "هیچ فراهم‌کننده‌ای یافت نشد",
   "settings.modelProvider.addProviderAction": "افزودن فراهم‌کننده",
   "settings.modelProvider.templatePickerTitle": "افزودن فراهم‌کننده",
-  "settings.modelProvider.templateGroup.zhipu": "Zhipu",
   "settings.modelProvider.templateGroup.other": "سایر",
   "settings.modelProvider.templatePickerBack": "بازگشت به جزئیات فراهم‌کننده",
   "settings.modelProvider.addProviderModelReminder":

@@ -1,4 +1,4 @@
-# ZCode 插件商店（Plugin Store）
+# yazcode 插件商店（Plugin Store）
 
 插件设置页及其市场浏览/安装体验的领域词汇表。本文件统一定义商店相关术语，供页面、服务和文档使用。
 

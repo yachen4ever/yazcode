@@ -2611,7 +2611,6 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.catalogProviderEmpty": "未找到供应商",
   "settings.modelProvider.addProviderAction": "添加供应商",
   "settings.modelProvider.templatePickerTitle": "添加供应商",
-  "settings.modelProvider.templateGroup.zhipu": "智谱",
   "settings.modelProvider.templateGroup.other": "其他",
   "settings.modelProvider.templatePickerBack": "返回供应商详情",
   "settings.modelProvider.addProviderModelReminder": "添加供应商前，请至少添加一个模型。",
@@ -2887,7 +2886,7 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.newProviderName": "新供应商",
   "settings.modelProvider.modelsPlaceholder": "每行一个模型名称",
   "settings.modelProvider.modelsCount": "{count} 个模型",
-  "settings.modelProvider.presetTitle": "智谱",
+  "settings.modelProvider.presetTitle": "供应商",
   "settings.modelProvider.presetDescription":
     "内置 Z.ai 与 BigModel 供应商，可通过 API Key 完成配置。",
   "settings.modelProvider.presetEmpty": "尚未同步，请先配置 API Key。",

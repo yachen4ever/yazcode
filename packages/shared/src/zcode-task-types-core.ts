@@ -31,7 +31,20 @@ export type InputId = string;
 export type QueryId = string;
 // ---- ZCode Provider ----
 
-/** 支持的 ZCode agent 提供方；当前仅保留 glm。 */
+/**
+ * 支持的 ZCode agent 提供方；当前仅保留 glm。
+ *
+ * 警告：字面值 "glm" 是**持久化标识**，不是品牌文案选择，禁止改名。
+ * - buildSkillId() 产出 `glm:<scope>:<name>:<hash>`，技能启用/禁用状态按此写入配置；
+ * - 任务与会话元数据的 provider 字段同样存着 "glm"。
+ * 改成 yazcode 之类会让存量技能开关状态与历史会话的 provider 失配。
+ * 真要改，必须同时提供迁移并继续读取旧 token。
+ *
+ * 另注：本条与 providers.ts 的 ZCODE_PROVIDERS 是同一事实的两处手写定义。
+ * 去品牌化 fork 只自带一个 agent，永不新增 provider，故当前不会漂移；
+ * 若将来真的要支持多 provider，须把两处收敛到一处，否则运行时 zod 校验
+ * （validation.ts 的 zcodeProviderSchema）与本类型会对"合法值"产生分歧。
+ */
 export type ZCodeProvider = "glm";
 export type ZCodeGlmAgentModelStateUpdateReason =
   | "session_initialized"

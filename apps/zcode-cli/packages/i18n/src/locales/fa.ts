@@ -7,12 +7,12 @@ export const faIR: ZCodeCopy = {
       localeUnsupported: (value) =>
         `مقدار --locale پشتیبانی نمی‌شود: ${value}. زبان‌های پشتیبانی‌شده: en-US، zh-CN، fa-IR، auto.`,
     },
-    help: (version) => `zcode ${version}
+    help: (version) => `yazcode ${version}
 
 طرز استفاده:
-  zcode [command] [options]
+  yazcode [command] [options]
 
-بدون هیچ دستوری، zcode رابط ترمینالی تمام‌صفحه (TUI) را باز می‌کند.
+بدون هیچ دستوری، yazcode رابط ترمینالی تمام‌صفحه (TUI) را باز می‌کند.
 
 دستورها:
   app-server اجرای سرور app استاندارد io مبتنی بر ZCode Protocol

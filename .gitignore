@@ -69,3 +69,10 @@ packages/desktop/.e2e-artifacts/
 packages/desktop/.e2e-cache/
 packages/desktop/.e2e-network-capture/
 .zcode-runtime/
+
+# 工作区本地文件：工作区文件搜索的忽略规则，按工作区自动生成，初始内容是本仓
+# .gitignore 的拷贝，且刻意与 .gitignore 解耦（之后各自独立演化，见
+# packages/services/src/file/workspaceFileIgnore.ts 的设计说明）。提交它等于冻结
+# 一份必然漂移的副本；且代码有 fallback-gitignore / fallback-builtin 降级链，
+# 缺它不影响功能。要团队共享一份定制范围时，再显式 force-add。
+.zcodeignore
