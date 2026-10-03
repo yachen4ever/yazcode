@@ -2896,6 +2896,8 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.reorderProvider": "拖拽调整供应商顺序",
   "settings.modelProvider.reorderModel": "拖拽调整模型顺序",
   "settings.modelProvider.empty": "暂无自定义模型供应商",
+  "settings.modelProvider.emptyHint":
+    "点击右上角「添加供应商」从预设模板创建，或直接创建自定义供应商并填写 API Key。",
   "settings.modelProvider.deleteConfirm": '确定要删除"{name}"吗？',
   "settings.modelProvider.deleteConfirmTitle": "删除供应商“{name}”？",
   "settings.modelProvider.deleteConfirmDescription":
