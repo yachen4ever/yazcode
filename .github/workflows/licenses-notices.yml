@@ -1,0 +1,58 @@
+# 许可声明重生成：必须在 Linux 上跑 `node scripts/licenses.mjs notices`。
+#
+# 为什么不能在本机跑：
+# scripts/licenses.mjs 的 notices 走 collectNpmNotices -> scanInstalledPackages，
+# 按「磁盘上真实安装的 node_modules」收集许可文件，而不是只读锁文件。安装树里含大量
+# 平台相关 optional 依赖（@napi-rs/canvas-*、@lydell/node-pty 等），pnpm 只安装当前
+# 平台能匹配的那一份。于是在 Windows 上跑，生产图里 Linux/win32 专属包会全部落到
+# missingProductionPackages，误报约 30 条「失效」——那是平台差异，不是台账缺陷。
+#
+# 为什么用 ubuntu-latest：
+# release.yml 的 build / remote-assets job 也跑在 ubuntu-latest 上，同镜像、同
+# pnpm 10.33.2、同 node 24。用同一个 runner 重生成，才能让 inventory 与实际发版
+# 构建机的依赖树一致（见 third-party/README.md 的约定）。
+#
+# 产物不自动提交：THIRD-PARTY-NOTICES.md 与 third-party/inventory.json 通过
+# actions/upload-artifact 交回，人工 review diff 后再入库，避免 CI 直接改 main。
+name: licenses-notices
+
+on:
+  workflow_dispatch:
+
+jobs:
+  notices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # 与 release.yml 的 build job 保持同一安装口径（prod + dev 全量）。
+      # notices 声明只取生产图，但许可标识门禁作用于全量实装包，两者需同一棵树。
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate third-party notices
+        run: node scripts/licenses.mjs notices
+
+      - name: Report diff against committed ledger
+        run: |
+          set -euo pipefail
+          git --no-pager diff --stat -- THIRD-PARTY-NOTICES.md third-party/inventory.json
+          git --no-pager diff --numstat -- THIRD-PARTY-NOTICES.md third-party/inventory.json || true
+
+      - name: Upload regenerated ledgers
+        uses: actions/upload-artifact@v4
+        with:
+          name: licenses-notices
+          path: |
+            THIRD-PARTY-NOTICES.md
+            third-party/inventory.json
+          retention-days: 30
