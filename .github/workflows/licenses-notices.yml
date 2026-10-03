@@ -2,10 +2,11 @@
 #
 # 为什么不能在本机跑：
 # scripts/licenses.mjs 的 notices 走 collectNpmNotices -> scanInstalledPackages，
-# 按「磁盘上真实安装的 node_modules」收集许可文件，而不是只读锁文件。安装树里含大量
-# 平台相关 optional 依赖（@napi-rs/canvas-*、@lydell/node-pty 等），pnpm 只安装当前
-# 平台能匹配的那一份。于是在 Windows 上跑，生产图里 Linux/win32 专属包会全部落到
-# missingProductionPackages，误报约 30 条「失效」——那是平台差异，不是台账缺陷。
+# 按「磁盘上真实安装的 node_modules」收集许可文件，而不是只读锁文件；缺任何一个生产
+# 依赖就抛 `Missing installed dependency`。而安装树里含大量平台相关 optional 依赖
+# （@napi-rs/canvas-*、@tailwindcss/oxide-* 等），pnpm 只落当前平台能匹配的那一份。
+# 于是在 Windows 或 macOS 上跑，Linux 专属的预编译产物全部落到 missing，声明根本
+# 生成不出来。这是平台差异，不是台账缺陷，所以必须在 Linux 上做。
 #
 # 为什么用 ubuntu-latest：
 # release.yml 的 build / remote-assets job 也跑在 ubuntu-latest 上，同镜像、同
@@ -34,6 +35,30 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      # pnpm-workspace.yaml 的 supportedArchitectures.libc 只列了 current + glibc，
+      # 于是 musl 平台的预编译产物（@napi-rs/canvas-linux-*-musl 等）在任何
+      # glibc runner 上都装不出来，missingProductionPackages 会直接抛
+      # `Missing installed dependency`。那是「不是本机」而不是「装不上」——
+      # 仓库发布物覆盖 5 个平台，声明台账也应该覆盖这些变体的许可文本。
+      # supportedArchitectures 不写进锁文件 settings（只记 autoInstallPeers /
+      # excludeLinksFromLockfile），所以这里临时补一项不会让 --frozen-lockfile 失效。
+      - name: Add musl to supported libc for this job only
+        run: |
+          set -euo pipefail
+          node -e '
+          const fs = require("node:fs");
+          const file = "pnpm-workspace.yaml";
+          const anchor = "  libc:\n    - current\n    - glibc\n";
+          const source = fs.readFileSync(file, "utf8");
+          if (!source.includes(anchor)) {
+            console.error("::error::pnpm-workspace.yaml 的 supportedArchitectures.libc 结构已变，先对齐再跑本工作流");
+            process.exit(1);
+          }
+          if (source.includes("- musl")) process.exit(0);
+          fs.writeFileSync(file, source.replace(anchor, anchor + "    - musl\n"));
+          '
+          sed -n "/^supportedArchitectures:/,/^[a-z]/p" pnpm-workspace.yaml
+
       # 与 release.yml 的 build job 保持同一安装口径（prod + dev 全量）。
       # notices 声明只取生产图，但许可标识门禁作用于全量实装包，两者需同一棵树。
       - name: Install dependencies
@@ -41,6 +66,23 @@ jobs:
 
       - name: Regenerate third-party notices
         run: node scripts/licenses.mjs notices
+
+      # licenses.mjs 遇到第一个缺失的生产依赖就抛错，这里在失败时把完整缺失集合
+      # 打出来，省得每次只为多知道一个包再重跑一次全量安装。
+      - name: Report full set of uninstalled production packages
+        if: failure()
+        run: |
+          node --input-type=module -e '
+          import { readWorkspaceProductionGraph, scanInstalledPackages } from "./scripts/third-party-npm.mjs";
+          const root = process.cwd();
+          const { required, projects } = await readWorkspaceProductionGraph(root);
+          const installed = await scanInstalledPackages(root, projects);
+          const missing = [...required]
+            .filter(([key]) => !installed.has(key))
+            .map(([, item]) => `${item.name}@${item.version}`);
+          console.log(`::warning::生产图 ${required.size} 个包中有 ${missing.length} 个未安装`);
+          console.log(missing.join("\n") || "(none)");
+          '
 
       - name: Report diff against committed ledger
         run: |
