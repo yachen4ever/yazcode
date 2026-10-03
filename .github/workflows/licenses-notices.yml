@@ -67,6 +67,11 @@ jobs:
       - name: Regenerate third-party notices
         run: node scripts/licenses.mjs notices
 
+      # 生成通过后再跑一次许可标识门禁：check 校验全量实装包（prod + dev）的许可
+      # 分类，以及声明新鲜度。只跑 notices 会漏掉构建依赖侧的越界许可。
+      - name: Run license identifier gate
+        run: node scripts/licenses.mjs check
+
       # licenses.mjs 两类硬失败都只报第一个命中项（Missing installed dependency /
       # Stale npm notice override），这里在失败时把两个集合一次性打全，省得每次只为
       # 多知道一个条目再重跑一次全量安装。
@@ -95,11 +100,18 @@ jobs:
           console.log(stale.map((entry) => entry.package).join("\n") || "(none)");
           '
 
+      # 台账已进入仓库后重跑，diff 应为空——非空说明生成结果不可复现（依赖树随机器
+      # 漂移、文件行尾，或某个输入没被纳入哈希），必须先查清再入库。
       - name: Report diff against committed ledger
         run: |
           set -euo pipefail
+          changed=$(git --no-pager diff --numstat -- THIRD-PARTY-NOTICES.md third-party/inventory.json | wc -l)
           git --no-pager diff --stat -- THIRD-PARTY-NOTICES.md third-party/inventory.json
-          git --no-pager diff --numstat -- THIRD-PARTY-NOTICES.md third-party/inventory.json || true
+          if [ "$changed" -ne 0 ]; then
+            echo "::error::重生成结果与已入库台账不一致（$changed 个文件有差异），生成不可复现"
+            exit 1
+          fi
+          echo "重生成结果与已入库台账一致：生成可复现 ✓"
 
       - name: Upload regenerated ledgers
         uses: actions/upload-artifact@v4
