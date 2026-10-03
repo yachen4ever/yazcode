@@ -15,10 +15,46 @@
 #
 # 产物不自动提交：THIRD-PARTY-NOTICES.md 与 third-party/inventory.json 通过
 # actions/upload-artifact 交回，人工 review diff 后再入库，避免 CI 直接改 main。
+#
+# 作为长期闸门：依赖树或台账输入一变就自动重生成并与已入库台账比对，不一致直接
+# 失败——「依赖改了但台账没重生成」必须在合并前暴露，不能留到发版。
 name: licenses-notices
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      # 依赖图与安装口径
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "**/package.json"
+      - "patches/**"
+      # 台账本身（含手工编辑，必须能被验出来）
+      - "THIRD-PARTY-NOTICES.md"
+      - "third-party/**"
+      # 被登记为 copied 组件的源码
+      - ".agents/skills/**"
+      # 生成器与门禁逻辑
+      - "scripts/**"
+      - ".github/workflows/licenses-notices.yml"
+  push:
+    branches: [main]
+    paths:
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "**/package.json"
+      - "patches/**"
+      - "THIRD-PARTY-NOTICES.md"
+      - "third-party/**"
+      - ".agents/skills/**"
+      - "scripts/**"
+      - ".github/workflows/licenses-notices.yml"
+
+# 同一分支连续推送只保留最新一次，避免旧 run 抢报失败。
+concurrency:
+  group: licenses-notices-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   notices:
@@ -42,6 +78,11 @@ jobs:
       # 仓库发布物覆盖 5 个平台，声明台账也应该覆盖这些变体的许可文本。
       # supportedArchitectures 不写进锁文件 settings（只记 autoInstallPeers /
       # excludeLinksFromLockfile），所以这里临时补一项不会让 --frozen-lockfile 失效。
+      #
+      # 这个补丁只对「把文件装到磁盘上」这一件事有意义，所以下面 install 结束立刻
+      # 还原。generate-third-party-notices.mjs 会把 pnpm-workspace.yaml 本身作为
+      # 输入记进 inventory.inputs 哈希；若带着补丁生成，台账记录的就是仓库里并不
+      # 存在的那个文件，任何非 CI 环境重生成都会被判成「不可复现」。
       - name: Add musl to supported libc for this job only
         run: |
           set -euo pipefail
@@ -62,7 +103,14 @@ jobs:
       # 与 release.yml 的 build job 保持同一安装口径（prod + dev 全量）。
       # notices 声明只取生产图，但许可标识门禁作用于全量实装包，两者需同一棵树。
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          # musl 产物已经落盘，工作区文件的作用期结束。还原后才能保证 inventory
+          # 记录的输入哈希与仓库实际内容一致。
+          git checkout -- pnpm-workspace.yaml
+          git --no-pager diff --exit-code -- pnpm-workspace.yaml \
+            || { echo "::error::pnpm-workspace.yaml 未能还原，台账输入哈希会失真"; exit 1; }
 
       - name: Regenerate third-party notices
         run: node scripts/licenses.mjs notices
@@ -113,7 +161,10 @@ jobs:
           fi
           echo "重生成结果与已入库台账一致：生成可复现 ✓"
 
+      # 门禁失败时也必须把产物交出去：作者需要的正是这份「应该长什么样」的文件，
+      # 直接提交即可修复。always() 保证差异校验拦下 run 时不会把出路一起拦掉。
       - name: Upload regenerated ledgers
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: licenses-notices
