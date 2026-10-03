@@ -749,7 +749,7 @@ function applyUpdateProvider(options: InitAutoUpdaterOptions): void {
   autoUpdater.allowPrerelease = true;
   autoUpdater.setFeedURL({
     provider: "github",
-    owner: "ZCodium-project",
+    owner: "yachen4ever",
     repo: "yazcode",
   });
   logger.info("[auto-update] github provider applied (prereleases allowed)");

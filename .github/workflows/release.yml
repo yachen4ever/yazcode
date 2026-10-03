@@ -108,7 +108,7 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           cat > /tmp/release-notes.md <<'NOTES'
-          # ZCodium <VERSION>
+          # yazcode <VERSION>
 
           ## English
 
@@ -125,23 +125,23 @@ jobs:
 
           ### Install
 
-          - **macOS (.dmg)**: download `ZCodium-<VERSION>-mac-arm64.dmg` (Apple Silicon) or `ZCodium-<VERSION>-mac-x64.dmg` (Intel), open it, drag ZCodium into Applications. The app is not signed by ZCode, so Gatekeeper blocks the first launch - this system block is macOS only. Allow it once with the command below (enter your login password when asked; nothing is shown while typing; the command launches the app and exits immediately):
+          - **macOS (.dmg)**: download `yazcode-<VERSION>-mac-arm64.dmg` (Apple Silicon) or `yazcode-<VERSION>-mac-x64.dmg` (Intel), open it, drag yazcode into Applications. The app is not signed by ZCode, so Gatekeeper blocks the first launch - this system block is macOS only. Allow it once with the command below (enter your login password when asked; nothing is shown while typing; the command launches the app and exits immediately):
 
             ```bash
-            sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/ZCodium.app" && open -a "ZCodium"
+            sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/yazcode.app" && open -a "yazcode"
             ```
 
             The absolute `/usr/bin/xattr` path avoids shadowing by other tools with the same name. You can also right-click (Control-click) the app in Finder -> Open -> Open.
-          - **Windows (.exe)**: run `ZCodium-<VERSION>-win-x64.exe`. The installer is not signed by ZCode, so SmartScreen shows a warning - a warning, not a system block; click **More info** -> **Run anyway**. This is expected, not a corrupted file.
-          - **Linux x64 (.AppImage)**: `chmod +x ZCodium-<VERSION>-linux-x86_64.AppImage && ./ZCodium-<VERSION>-linux-x86_64.AppImage`.
-          - **Linux arm64 (.AppImage)**: `chmod +x ZCodium-<VERSION>-linux-arm64.AppImage && ./ZCodium-<VERSION>-linux-arm64.AppImage`.
+          - **Windows (.exe)**: run `yazcode-<VERSION>-win-x64.exe`. The installer is not signed by ZCode, so SmartScreen shows a warning - a warning, not a system block; click **More info** -> **Run anyway**. This is expected, not a corrupted file.
+          - **Linux x64 (.AppImage)**: `chmod +x yazcode-<VERSION>-linux-x86_64.AppImage && ./yazcode-<VERSION>-linux-x86_64.AppImage`.
+          - **Linux arm64 (.AppImage)**: `chmod +x yazcode-<VERSION>-linux-arm64.AppImage && ./yazcode-<VERSION>-linux-arm64.AppImage`.
           - **CLI (.tar.gz)**: requires Node.js 24. Extract and run:
 
             ```bash
-            tar -xzf zcodium-<VERSION>.tar.gz
-            cd zcodium
-            ./install.sh        # installs the zcode command into ~/.zcode/runtime
-            zcode --help        # or run: node bin/zcode.mjs --help
+            tar -xzf yazcode-<VERSION>.tar.gz
+            cd yazcode
+            ./install.sh        # installs the yazcode command into ~/.yazcode/runtime
+            yazcode --help      # or run: node bin/zcode.mjs --help
             ```
 
           ## 中文
@@ -159,33 +159,33 @@ jobs:
 
           ### 安装说明
 
-          - **macOS（.dmg）**：按机型下载 `ZCodium-<VERSION>-mac-arm64.dmg`（Apple Silicon）或 `ZCodium-<VERSION>-mac-x64.dmg`（Intel），打开后把 ZCodium 拖进“应用程序”。没有 ZCode 官方签名，Gatekeeper 会拦截首次打开——这是 macOS 独有的系统拦截。用下面命令放行一次（输入密码时不显示字符；命令会自动启动应用并立即退出）：
+          - **macOS（.dmg）**：按机型下载 `yazcode-<VERSION>-mac-arm64.dmg`（Apple Silicon）或 `yazcode-<VERSION>-mac-x64.dmg`（Intel），打开后把 yazcode 拖进“应用程序”。没有 ZCode 官方签名，Gatekeeper 会拦截首次打开——这是 macOS 独有的系统拦截。用下面命令放行一次（输入密码时不显示字符；命令会自动启动应用并立即退出）：
 
             ```bash
-            sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/ZCodium.app" && open -a "ZCodium"
+            sudo /usr/bin/xattr -rd com.apple.quarantine "/Applications/yazcode.app" && open -a "yazcode"
             ```
 
             使用 `/usr/bin/xattr` 绝对路径，避免 PATH 中同名工具干扰。也可以在“访达”里右键（Control-点击）应用 -> 打开 -> 弹窗里再点“打开”。
-          - **Windows（.exe）**：运行 `ZCodium-<VERSION>-win-x64.exe`。没有 ZCode 官方签名，SmartScreen 会显示警告——只是警告，不是系统拦截；点“**更多信息**” -> “**仍要运行**”。这是预期提示，不是文件损坏。
-          - **Linux x64（.AppImage）**：`chmod +x ZCodium-<VERSION>-linux-x86_64.AppImage && ./ZCodium-<VERSION>-linux-x86_64.AppImage`。
-          - **Linux arm64（.AppImage）**：`chmod +x ZCodium-<VERSION>-linux-arm64.AppImage && ./ZCodium-<VERSION>-linux-arm64.AppImage`。
+          - **Windows（.exe）**：运行 `yazcode-<VERSION>-win-x64.exe`。没有 ZCode 官方签名，SmartScreen 会显示警告——只是警告，不是系统拦截；点“**更多信息**” -> “**仍要运行**”。这是预期提示，不是文件损坏。
+          - **Linux x64（.AppImage）**：`chmod +x yazcode-<VERSION>-linux-x86_64.AppImage && ./yazcode-<VERSION>-linux-x86_64.AppImage`。
+          - **Linux arm64（.AppImage）**：`chmod +x yazcode-<VERSION>-linux-arm64.AppImage && ./yazcode-<VERSION>-linux-arm64.AppImage`。
           - **CLI（.tar.gz）**：需要 Node.js 24。解压后运行：
 
             ```bash
-            tar -xzf zcodium-<VERSION>.tar.gz
-            cd zcodium
-            ./install.sh        # 安装 zcode 命令到 ~/.zcode/runtime
-            zcode --help        # 或直接运行：node bin/zcode.mjs --help
+            tar -xzf yazcode-<VERSION>.tar.gz
+            cd yazcode
+            ./install.sh        # 安装 yazcode 命令到 ~/.yazcode/runtime
+            yazcode --help      # 或直接运行：node bin/zcode.mjs --help
             ```
 
           ## Downloads / 产物
 
-          - macOS Apple Silicon: `ZCodium-<VERSION>-mac-arm64.dmg` / `.zip`
-          - macOS Intel: `ZCodium-<VERSION>-mac-x64.dmg` / `.zip`
-          - Windows x64: `ZCodium-<VERSION>-win-x64.exe`
-          - Linux x64: `ZCodium-<VERSION>-linux-x86_64.AppImage`
-          - Linux arm64: `ZCodium-<VERSION>-linux-arm64.AppImage`
-          - CLI: `zcodium-<VERSION>.tar.gz`
+          - macOS Apple Silicon: `yazcode-<VERSION>-mac-arm64.dmg` / `.zip`
+          - macOS Intel: `yazcode-<VERSION>-mac-x64.dmg` / `.zip`
+          - Windows x64: `yazcode-<VERSION>-win-x64.exe`
+          - Linux x64: `yazcode-<VERSION>-linux-x86_64.AppImage`
+          - Linux arm64: `yazcode-<VERSION>-linux-arm64.AppImage`
+          - CLI: `yazcode-<VERSION>.tar.gz`
           - Checksums: `sha256.txt`（覆盖上方安装包与 CLI 包 / covers the installers and CLI package above）
           - Update metadata: `latest*.yml`, `latest.json`
           NOTES
@@ -265,7 +265,7 @@ jobs:
           # GitHub API 偶发连接失败（runner 网络抖动），上传重试 3 次；--clobber 让重试可安全覆盖。
           for attempt in 1 2 3; do
             if gh release upload "$TAG" \
-              dist/zcode/releases/*/zcodium-*.tar.gz \
+              dist/zcode/releases/*/yazcode-*.tar.gz \
               dist/zcode/releases/*/sha256.txt \
               dist/zcode/install.sh \
               dist/zcode/latest.json \
@@ -519,12 +519,12 @@ jobs:
           # 回归保护：清单必须覆盖每个平台的安装包与 CLI 侧文件；缺任一类都说明
           # 上传或片段生成出了问题，阻止发布而不是发布不完整的清单。
           for pattern in \
-            '^[0-9a-f]{64}  zcodium-[^ ]+\.tar\.gz$' \
+            '^[0-9a-f]{64}  yazcode-[^ ]+\.tar\.gz$' \
             '^[0-9a-f]{64}  install\.sh$' \
-            '^[0-9a-f]{64}  ZCodium-[^ ]+\.dmg$' \
-            '^[0-9a-f]{64}  ZCodium-[^ ]+\.zip$' \
-            '^[0-9a-f]{64}  ZCodium-[^ ]+\.exe$' \
-            '^[0-9a-f]{64}  ZCodium-[^ ]+\.AppImage$'; do
+            '^[0-9a-f]{64}  yazcode-[^ ]+\.dmg$' \
+            '^[0-9a-f]{64}  yazcode-[^ ]+\.zip$' \
+            '^[0-9a-f]{64}  yazcode-[^ ]+\.exe$' \
+            '^[0-9a-f]{64}  yazcode-[^ ]+\.AppImage$'; do
             if ! grep -Eq "$pattern" sha256.txt; then
               echo "::error::sha256.txt is missing an entry matching $pattern"
               exit 1
