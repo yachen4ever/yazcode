@@ -9,11 +9,25 @@
   <a href="https://zcodium-project.github.io/">Project site</a>
 </p>
 
-> This repository is forked from [zai-org/ZCode](https://github.com/zai-org/ZCode), open-sourced by Zhipu on September 21, 2026. The name follows the same pattern as Chrome → Chromium and VS Code → VSCodium: **ZCode → yazcode**. Everything here is backed by code and reproducible checks.
+> yazcode continues the **ZCode → ZCodium → yazcode** lineage: ZCode is Z.ai's coding agent, open-sourced on September 21, 2026; ZCodium is the community audit fork that stripped monitoring, telemetry and vendored services; yazcode independently continues that work under its own name. Everything here is backed by code and reproducible checks — see [Lineage](#lineage-zcode--zcodium--yazcode) for the full relationship.
 
 <div align="center">
   <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="yazcode desktop app: a finished agent run with its change summary and follow-up input" width="860" />
 </div>
+
+## Lineage: ZCode → ZCodium → yazcode
+
+| Project | Repository | What it is |
+| ------- | ---------- | ---------- |
+| **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | Z.ai's coding agent, open-sourced by Zhipu on September 21, 2026. The origin of everything here. |
+| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | The community audit fork: monitoring and telemetry removed, vendored services off by default. Its development pace stalled, so yazcode continues the work. |
+| **yazcode** | this repository | Independent continuation of ZCodium under its own name: own data directory (`~/.yazcode`), own env prefix (`YAZCODE_*`), own protocol (`yazcode://`), and the Zhipu subscription system fully removed. |
+
+How the three relate in practice:
+
+- yazcode tracks **both** upstreams as git remotes (`zcode` → zai-org/ZCode, `zcodium` → ZCodium-project/ZCodium). Upstream changes are audited before any risk-free ones are synced.
+- Product-level decisions (the data-directory rename, de-Zhipu work) stay **yazcode-only**; uncontroversial fixes and small features are still sent back to ZCodium as PRs.
+- User data lives in `~/.yazcode` — migrated automatically on first run from legacy `~/.zcode` (official client) or `~/.zcodium` (early yazcode builds).
 
 ## Features
 

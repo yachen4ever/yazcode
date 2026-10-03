@@ -9,11 +9,25 @@
   <a href="https://zcodium-project.github.io/">项目网站</a>
 </p>
 
-> 本仓库 fork 自智谱 2026 年 9 月 21 日开源的 [zai-org/ZCode](https://github.com/zai-org/ZCode)。名字沿用 Chrome → Chromium、VS Code → VSCodium 的变形逻辑：**ZCode → yazcode**。所有结论以代码和可复现的验证为准。
+> yazcode 延续 **ZCode → ZCodium → yazcode** 的脉络（命名沿用 Chrome → Chromium 的变形逻辑）：ZCode 是智谱 2026 年 9 月 21 日开源的编程 Agent；ZCodium 是移除监控遥测、默认关闭官方服务的社区审计 fork；yazcode 以自己的名字独立延续这项工作。所有结论以代码和可复现的验证为准，三者完整关系见下方「脉络」小节。
 
 <div align="center">
   <img src="https://zcodium-project.github.io/shots/hero-app.png" alt="yazcode 桌面端：任务完成后的改动摘要与后续输入" width="860" />
 </div>
+
+## 脉络：ZCode → ZCodium → yazcode
+
+| 项目 | 仓库 | 定位 |
+| ---- | ---- | ---- |
+| **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | 智谱 2026 年 9 月 21 日开源的编程 Agent，本仓库一切工作的源头。 |
+| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | 社区审计 fork：移除监控遥测、官方服务默认关闭。因更新停滞，由 yazcode 延续其工作。 |
+| **yazcode** | 本仓库 | 以自己的名字独立延续 ZCodium：独立数据目录（`~/.yazcode`）、独立环境变量前缀（`YAZCODE_*`）、独立协议（`yazcode://`），并完整移除智谱订阅体系。 |
+
+三者的实际关系：
+
+- yazcode 以 git remote 同时跟踪**两条**上游（`zcode` → zai-org/ZCode，`zcodium` → ZCodium-project/ZCodium），上游变更先审计、再择无风险者同步。
+- 产品级决策（数据目录更名、去智谱）**仅属于 yazcode**；无争议的缺陷修复与小功能仍会以 PR 形式回提给 ZCodium。
+- 用户数据在 `~/.yazcode`——首次启动自动从旧 `~/.zcode`（官方客户端）或 `~/.zcodium`（早期 yazcode 构建）迁移。
 
 ## 功能介绍
 
