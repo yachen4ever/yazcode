@@ -1,4 +1,5 @@
-"""AcroForm metadata enumeration for the MiniMax PDF skill.
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
+"""AcroForm metadata enumeration for the yazcode PDF skill.
 
 The functions here produce the JSON-shaped records that the
 ``inspect`` and ``fill`` script groups consume. The schema is:

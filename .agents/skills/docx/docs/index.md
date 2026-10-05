@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice. -->
 # docx — index
 
 Start here only after reading `../SKILL.md`.
@@ -30,7 +31,7 @@ visual system:
 - `references/typography_guide.md`
 - `references/design_principles.md`
 - `references/cjk_typography.md`
-- `scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples*.cs`
+- `scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples*.cs`
 
 Then choose backend and execute.
 

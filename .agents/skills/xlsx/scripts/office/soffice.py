@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """LibreOffice (soffice) launcher with AF_UNIX fallback.
 
 Sandboxed VMs (e.g. macOS App Sandbox / Linux seccomp) may prohibit AF_UNIX
@@ -15,7 +16,7 @@ Public API (identical to upstream, outside this rewrite's scope)::
     env = get_soffice_env()
     subprocess.run(["soffice", ...], env=env)
 
-Part of the MiniMax xlsx skill (MIT). See LICENSE for terms.
+Part of the yazcode xlsx skill (MIT). See THIRD-PARTY-NOTICES.md for terms.
 """
 
 import os

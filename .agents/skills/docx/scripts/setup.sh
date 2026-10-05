@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice.
 #!/usr/bin/env bash
 # docx Environment Setup & Initialization Script
 # Focus: macOS full-fidelity DOCX environment with no sudo requirement.
@@ -448,7 +449,7 @@ verify_installation() {
   step "Verification Test"
   local test_output="/tmp/docx-setup-test-$$.docx"
   info "Creating a test document..."
-  if cd "$DOTNET_DIR" && dotnet run --project MiniMaxAIDocx.Cli -- create --type report --output "$test_output" --title "Setup Test" 2>>"$LOG_FILE"; then
+  if cd "$DOTNET_DIR" && dotnet run --project YazOffice.Cli -- create --type report --output "$test_output" --title "Setup Test" 2>>"$LOG_FILE"; then
     log "Test document created: $test_output"
     rm -f "$test_output"
     log "Test passed — docx is ready to use"

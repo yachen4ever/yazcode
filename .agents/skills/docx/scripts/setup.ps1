@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice.
 # docx Environment Setup & Initialization Script (Windows PowerShell)
 # Mirror of setup.sh — Windows 10/11 + Windows Server 2019+
 # Requires: PowerShell 5.1+ (Windows-shipped) or PowerShell 7+ (pwsh)
@@ -447,7 +448,7 @@ function Test-Verification {
     Push-Location $DotnetDir
     try {
         Write-Info "Creating a test document..."
-        & dotnet run --project MiniMaxAIDocx.Cli -- create --type report --output $testOutput --title 'Setup Test' 2>&1 |
+        & dotnet run --project YazOffice.Cli -- create --type report --output $testOutput --title 'Setup Test' 2>&1 |
             Append-LogUtf8 | Out-Null
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $testOutput)) {
             Write-Fail "Test document creation failed. Check $LogFile for details."

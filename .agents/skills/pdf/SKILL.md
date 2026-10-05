@@ -16,7 +16,7 @@ metadata:
 Copied from MiniMaxAI/minimax-code (packages/local-runtime/assets/skills/pdf)
 at revision 564e9166d81f87b0b767b005e4779d4697b512be.
 Copyright (c) 2026 MiniMax Code. Licensed under MIT.
-Modified by ZCode: added this provenance notice only; skill content is otherwise unchanged.
+Modified by ZCode: 2026-10 de-branding — host-specific vision tooling and skill references removed, author examples neutralized.
 See THIRD-PARTY-NOTICES.md in the repository root for license and provenance.
 -->
 
@@ -59,14 +59,10 @@ route has its own guide in `docs/`. Read the guide before authoring or running a
 > multi-level headers, merged cells, footnoted sub-totals), MUST be read visually, **one page per
 > call, never a range** — pdfplumber returns scrambled fragments on these layouts even when the PDF
 > is text-native, and packing neighbour pages into one image makes the model mis-attribute values to
-> the wrong page. **Pick the visual path by model capability:**
->
-> - **Vision-capable model (e.g. M3 — can natively accept image input):** rasterise that single page
->   to PNG (`pdftoppm` / `pypdfium2`, or `scripts/render/page_rasterize.py`) and read the PNG
->   directly with the **Read tool**. Faster, offline, no upstream LLM call — this is the default
->   now.
-> - **Text-only model (e.g. M2.7 — cannot see images):** fall back to `read_pdf_vision.py` invoked
->   with `--pages N` (a single page), which ships the page to native Matrix vision.
+> the wrong page. Rasterise that single page to PNG (`pdftoppm` / `pypdfium2`, or
+> `scripts/render/page_rasterize.py`) and read the PNG directly with the **Read tool**. If the
+> running model cannot accept image input, return the text-only result and say the visual content
+> could not be interpreted.
 
 > **4. Verify HTML→PDF page size and chart presence after every render.** Always pass `--format A4`
 > or `--format Letter` explicitly to `make.sh render` — Chromium overrides CSS `@page { size }` when
@@ -80,15 +76,14 @@ route has its own guide in `docs/`. Read the guide before authoring or running a
 > `pdftotext` cannot see images and will silently pass a chart-less deck. Both checks are mandatory.
 
 > **5. Don't suppress stderr.** `2>/dev/null` is **never** the right choice in this skill
-> (`make.sh render`/`reformat`/`fill`, `read_pdf_vision.py`, `pdfinfo`, `pdftotext`, `pdfimages`,
-> `qpdf`). On failure you lose the only signal that explains why and have to rerun blind. If output
-> is too noisy, redirect to a log file and grep on demand:
+> (`make.sh render`/`reformat`/`fill`, `pdfinfo`, `pdftotext`, `pdfimages`, `qpdf`). On failure you
+> lose the only signal that explains why and have to rerun blind. If output is too noisy, redirect
+> to a log file and grep on demand:
 >
 > ```bash
-> python3 -m scripts.read_pdf_vision --input report.pdf --pages 5 \
->   2>/tmp/vision.log
+> bash scripts/make.sh render --in page.html --out out.pdf 2>/tmp/render.log
 > # If the result looks wrong, only then:
-> #   grep -in "error\|trace\|fail\|502\|413" /tmp/vision.log | head -20
+> #   grep -in "error\|trace\|fail" /tmp/render.log | head -20
 > ```
 
 > **6. Always serialise JSON with `ensure_ascii=False`.** When this skill writes a JSON config /
@@ -170,16 +165,13 @@ route has its own guide in `docs/`. Read the guide before authoring or running a
 | Intent                                                                                | Guide                                            | Entry                                                                |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
 | **Default** — text + tables from any text-native PDF                                  | [`docs/read-guide.md`](docs/read-guide.md) §3.1  | `pdfplumber` (5–10 line inline recipe)                               |
-| **Vision escalation** — scanned / image-only PDFs, chart values, broken reading order | [`docs/vision-guide.md`](docs/vision-guide.md)   | `python3 -m scripts.read_pdf_vision --input report.pdf --pages 1-30` |
+| **Vision escalation** — scanned / image-only PDFs, chart values, broken reading order | rasterise to PNG, then Read tool ([`docs/read-guide.md`](docs/read-guide.md) §3.3) | `pdftoppm -png -r 200 report.pdf page` |
 | Coordinate-aware extraction, page count, decryption, rasterise pages                  | [`docs/read-guide.md`](docs/read-guide.md) §3–§4 | inline cookbook recipes                                              |
 
 > Default to **pdfplumber**. Only escalate to vision when the text path is insufficient (`(cid:NNN)`
-> glyphs, empty strings, charts that matter, magazine-style layout). **When vision IS needed, check
-> the running model first:** a vision-capable model (e.g. M3) should rasterise the page(s) to PNG
-> and read them with the Read tool directly — no daemon, no MCP, no upstream LLM call.
-> `read_pdf_vision.py` is the fallback for text-only models (e.g. M2.7) that cannot accept image
-> input. See [`docs/read-guide.md`](docs/read-guide.md) §3.3 and
-> [`docs/vision-guide.md`](docs/vision-guide.md).
+> glyphs, empty strings, charts that matter, magazine-style layout). When vision IS needed,
+> rasterise the page(s) to PNG and read them with the Read tool directly — one page per call for
+> chart / financial-table pages. See [`docs/read-guide.md`](docs/read-guide.md) §3.3.
 
 ### Combined chains — read then write
 
@@ -188,9 +180,9 @@ into REFORMAT or CREATE. Common patterns:
 
 | User intent                           | Read step                                                                                                                     | Write step                                                                                                                                                                                                                |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Restyle an existing PDF               | pdfplumber recipe ([`docs/read-guide.md`](docs/read-guide.md) §3.1) for text-native, or `read_pdf_vision.py` for layout-heavy | REFORMAT — pass extracted markdown as `--input`                                                                                                                                                                           |
-| Fill an unfamiliar form               | `read_pdf_vision.py` to describe field layout/labels                                                                          | `bash scripts/make.sh fill probe`, then [`docs/forms-guide.md`](docs/forms-guide.md)                                                                                                                                      |
-| Author a PDF inspired by a reference  | `read_pdf_vision.py` on the reference (palette, cover, sections)                                                              | CREATE — encode cues in HTML (CSS variables + cover archetype)                                                                                                                                                            |
+| Restyle an existing PDF               | pdfplumber recipe ([`docs/read-guide.md`](docs/read-guide.md) §3.1) for text-native, or rendered-page reading (§3.3) for layout-heavy | REFORMAT — pass extracted markdown as `--input`                                                                                                                                                                           |
+| Fill an unfamiliar form               | rasterise the form page(s) and read the PNGs to describe field layout/labels                                 | `bash scripts/make.sh fill probe`, then [`docs/forms-guide.md`](docs/forms-guide.md)                                                                                                                                      |
+| Author a PDF inspired by a reference  | rendered-page reading (§3.3) on the reference (palette, cover, sections)                                     | CREATE — encode cues in HTML (CSS variables + cover archetype)                                                                                                                                                            |
 | Translate a PDF/EML preserving layout | EML: parse text/html + cid assets; PDF: pdfplumber per page (or vision if scanned / broken layout)                            | REFORMAT + [`templates/translate-preserve-layout/`](templates/translate-preserve-layout/); for rich EML load [`docs/email-translation-goldman-two-sessions-case.md`](docs/email-translation-goldman-two-sessions-case.md) |
 | Verify a generated PDF (sanity loop)  | pdfplumber on the freshly written file                                                                                        | n/a — write → read                                                                                                                                                                                                        |
 
@@ -217,7 +209,6 @@ into REFORMAT or CREATE. Common patterns:
 | [`docs/reformat-guide.md`](docs/reformat-guide.md)                                                                 | REFORMAT route: input formats, title-lift, accent re-skinning, "when NOT to REFORMAT"                                                                                                 |
 | [`docs/forms-guide.md`](docs/forms-guide.md)                                                                       | FILL route: probe → AcroForm or visual overlay, JSON schemas, geometry lint                                                                                                           |
 | [`docs/read-guide.md`](docs/read-guide.md)                                                                         | READ route: pdfplumber default, library + CLI cookbook, troubleshooting                                                                                                               |
-| [`docs/vision-guide.md`](docs/vision-guide.md)                                                                     | `read_pdf_vision.py` reference — flags, JSON schema, internal chunking, time budget, error matrix                                                                                     |
 | [`docs/html-pdf-spec.md`](docs/html-pdf-spec.md)                                                                   | HTML→PDF mechanical contract — page geometry, page-break, Chart.js settle, CJK, color fidelity, quality gate                                                                          |
 | [`../xlsx/docs/superstore-multiformat-conversion-case.md`](../xlsx/docs/superstore-multiformat-conversion-case.md) | Cross-skill X8/P9 case: 10k-row Superstore Excel → CSV/JSON/HTML→PDF + XML-template CSV→XLSX                                                                                          |
 | [`docs/design-guide.md`](docs/design-guide.md)                                                                     | Aesthetic layer — palette mood table, typography pairs, cover archetypes, anti-patterns                                                                                               |
@@ -251,16 +242,11 @@ blindly.
 | `markdown-it-py`                              | REFORMAT (`reformat_parse.py`) | `pip install markdown-it-py`                                   |
 | `pypdf`                                       | FILL, MUTATE                   | `pip install pypdf`                                            |
 | `pdfplumber`                                  | READ (default)                 | `pip install pdfplumber`                                       |
-| `pdf2image`, `pillow`, `pypdfium2`            | READ vision + page rasterise   | `pip install pdf2image pillow pypdfium2`                       |
+| `pdf2image`, `pillow`, `pypdfium2`            | page rasterise (READ vision)   | `pip install pdf2image pillow pypdfium2`                       |
 | Node.js 18+                                   | `render_html.cjs`              | system                                                         |
 | `playwright` + Chromium                       | `render_html.cjs`              | `npm install -g playwright && npx playwright install chromium` |
 | `pdfinfo`, `pdftotext`, `pdfimages` (poppler) | READ + verification            | `brew install poppler`                                         |
 | `qpdf`                                        | MUTATE / decryption            | `brew install qpdf` (optional)                                 |
-
-`read_pdf_vision.py` additionally requires local-runtime to be running with authenticated native
-Matrix tools. Managed Matrix hosts use the Mavis login token; custom `MATRIX_BASE_URL` hosts
-require `MATRIX_TOKEN` in the runtime environment.
-Details: [`docs/vision-guide.md`](docs/vision-guide.md).
 
 ## Windows (win32) platform notes
 
@@ -291,5 +277,4 @@ bash -c "pdftotext -layout out.pdf - | head -40"
 | `brew install poppler` | `winget install` or `scoop install poppler`                         |
 | `~/.zshrc`             | `$PROFILE` (PowerShell profile) or set env vars via System Settings |
 
-**If Git Bash or any tool is missing**, read the `mavis` skill's
-`references/windows-tool-bootstrap.md` for detection + auto-install commands.
+**If Git Bash or any tool is missing**, check that the tool is installed and on PATH; otherwise install it with the platform package manager (winget or choco on Windows, brew on macOS, or the system package manager on Linux).

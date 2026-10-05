@@ -1,6 +1,7 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # Advanced Reference
 
-Maintained by MiniMax (MIT). This reference collects PDF features and
+Maintained by yazcode (MIT). This reference collects PDF features and
 libraries that are too situational for the main `SKILL.md`. Reach for
 it when the standard recipes in `create-guide.md` / `forms-guide.md` /
 `read-guide.md` are not enough.

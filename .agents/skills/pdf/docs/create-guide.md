@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # CREATE — Generate a New PDF
 
 > **Prerequisites.** Read [`html-pdf-spec.md`](html-pdf-spec.md) for the
@@ -87,7 +88,7 @@ hand-concatenate strings.
   "meta": {
     "title": "2024 Annual Report Digest",
     "subtitle": "Financial highlights and segment revenue",
-    "author": "Mavis",
+    "author": "yazcode",
     "date": "2026-04-26",
     "locale": "zh-CN",
     "page_format": "A4",

@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # recalc-guide — `scripts/recalc.py` reference
 
 > Detailed reference for the only wrapped script in this skill —
@@ -132,7 +133,7 @@ LibreOffice opens an internal AF_UNIX socket pair to coordinate the
 headless backend with the Basic interpreter. Some sandboxed
 environments deny AF_UNIX entirely:
 
-- macOS App Sandbox (Mavis daemon spawned from a sandboxed parent)
+- macOS App Sandbox (agent runtime daemon spawned from a sandboxed parent)
 - Linux containers with seccomp filters that block `socket(AF_UNIX,...)`
 
 `office/soffice.py::get_soffice_env()` probes for the restriction (one

@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """
 Validator for tracked changes in Word documents.
 """
@@ -10,7 +11,7 @@ from pathlib import Path
 
 class RedliningValidator:
 
-    def __init__(self, unpacked_dir, original_docx, verbose=False, author="Mavis"):
+    def __init__(self, unpacked_dir, original_docx, verbose=False, author="yazcode"):
         self.unpacked_dir = Path(unpacked_dir)
         self.original_docx = Path(original_docx)
         self.verbose = verbose

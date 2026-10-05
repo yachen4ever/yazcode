@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """Pack a directory into a DOCX, PPTX, or XLSX file.
 
 Validates with auto-repair, condenses XML formatting, and creates the Office file.
@@ -76,12 +77,12 @@ def _run_validation(
     validators = []
 
     if suffix == ".docx":
-        author = "Mavis"
+        author = "yazcode"
         if infer_author_func:
             try:
                 author = infer_author_func(unpacked_dir, original_file)
             except ValueError as e:
-                print(f"Warning: {e} Using default author 'Mavis'.", file=sys.stderr)
+                print(f"Warning: {e} Using default author 'yazcode'.", file=sys.stderr)
 
         validators = [
             DOCXSchemaValidator(unpacked_dir, original_file),

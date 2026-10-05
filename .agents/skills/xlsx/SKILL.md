@@ -13,7 +13,7 @@ license: MIT
 Copied from MiniMaxAI/minimax-code (packages/local-runtime/assets/skills/xlsx)
 at revision 564e9166d81f87b0b767b005e4779d4697b512be.
 Copyright (c) 2026 MiniMax Code. Licensed under MIT.
-Modified by ZCode: added this provenance notice only; skill content is otherwise unchanged.
+Modified by ZCode: 2026-10 de-branding — redlining author defaults set to yazcode, host-specific skill references and wording removed or neutralized.
 See THIRD-PARTY-NOTICES.md in the repository root for license and provenance.
 -->
 
@@ -505,5 +505,4 @@ bash -c "python -c \"from openpyxl import load_workbook; wb=load_workbook('file.
 | `brew install --cask libreoffice` | `winget install TheDocumentFoundation.LibreOffice` |
 | `coreutils` (`gtimeout`) | Not needed — `recalc.py` falls back to `subprocess` timeout kwarg |
 
-**If Git Bash or any tool is missing**, read the `mavis` skill's
-`references/windows-tool-bootstrap.md` for detection + auto-install commands.
+**If Git Bash or any tool is missing**, check that the tool is installed and on PATH; otherwise install it with the platform package manager (winget or choco on Windows, brew on macOS, or the system package manager on Linux).

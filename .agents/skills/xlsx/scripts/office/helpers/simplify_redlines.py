@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """Simplify tracked changes by merging adjacent w:ins or w:del elements.
 
 Merges adjacent <w:ins> elements from the same author into a single element.
@@ -169,7 +170,7 @@ def _get_authors_from_docx(docx_path: Path) -> dict[str, int]:
         return {}
 
 
-def infer_author(modified_dir: Path, original_docx: Path, default: str = "Mavis") -> str:
+def infer_author(modified_dir: Path, original_docx: Path, default: str = "yazcode") -> str:
     modified_xml = modified_dir / "word" / "document.xml"
     modified_authors = get_tracked_change_authors(modified_xml)
 

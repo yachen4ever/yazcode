@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # conventions-guide — financial-model conventions for Excel outputs
 
 > The full rationale behind the tables in [`SKILL.md`](../SKILL.md) §5 —
@@ -43,7 +44,7 @@ the way it does.
 | Negative | `(123)` (parentheses) | Accounting convention; minus signs blend into table grids and read as dashes at small font sizes |
 | Hardcode | `Source: …` annotation in the next column or as a cell comment (see §3) | Reviewer can audit every input back to its source without scrolling around |
 
-MiniMax-flavored sample headers: `ARR (¥mm)` / `Tokens (bn)` / `MAU
+Sample dashboard-flavored headers: `ARR (¥mm)` / `Tokens (bn)` / `MAU
 (mm)` / `Token unit price 1.2x` / `MAU YoY 0.0%`. Keep the unit in the
 header, not in the cell.
 
@@ -63,7 +64,7 @@ Five reference examples, spanning the source types reviewers see most:
 |---|---|
 | 10-K filing | `Source: AAPL 10-K FY2024, 2024-11-01, "Net sales by segment" table, https://www.sec.gov/...` |
 | 10-Q filing | `Source: AAPL 10-Q FY2025 Q2, 2025-05-02, "Operating expenses" line 12` |
-| Internal BI dashboard | `Source: MiniMax internal BI - MAU Dashboard, 2025-09-30, "moonshot-mau" view` |
+| Internal BI dashboard | `Source: internal BI dashboard, 2025-09-30` |
 | Interview transcript | `Source: User interview INT-2025-117, 2025-09-12, interviewee Z, page 4` |
 | Market data terminal | `Source: Wind Terminal, 2025-08-15, AAPL.O closing price` / `Source: Bloomberg, 2025-08-15, AAPL US Equity PX_LAST` |
 

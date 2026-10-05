@@ -1,4 +1,5 @@
-"""Tiny CLI helpers shared across the MiniMax PDF skill scripts.
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
+"""Tiny CLI helpers shared across the yazcode PDF skill scripts.
 
 Each entry-point script in ``scripts/`` builds its argparse parser
 through :func:`make_parser` so the help output, default ``--quiet`` /

@@ -1,6 +1,7 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """xlsx formula recalculation using LibreOffice and openpyxl, returning a JSON error list.
 
-Part of the MiniMax xlsx skill (MIT). See LICENSE for terms.
+Part of the yazcode xlsx skill (MIT). See THIRD-PARTY-NOTICES.md for terms.
 
 The CLI retains the upstream contract:
 

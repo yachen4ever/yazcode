@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # Pitfalls Index — Canonical Query Templates
 
 > **Match-and-fuse, don't read-and-think.** Each entry below is a
@@ -425,7 +426,9 @@ STEP 3 — Once target pages identified
   Determine page nature:
   - Pure prose / simple table → pdfplumber recipe (§3.1 in read-guide)
   - Chart / diagram / financial table → vision PER PAGE (mandatory, see §P7)
-    python3 -m scripts.read_pdf_vision --input "{PDF_PATH}" --pages N
+    pdftoppm -png -r 200 -f N -l N "{PDF_PATH}" <TMP>/page-N
+    # output name = <prefix>-<page> (page digits zero-pad to the PDF's page count)
+    # then read the PNG with the Read tool
 
 STEP 4 — JSON config (if writing intermediate file)
   json.dumps(payload, ensure_ascii=False, indent=2)
@@ -469,30 +472,20 @@ STEP 2 — Vision per page (MANDATORY — pdfplumber FORBIDDEN here)
   # adjacent numbers); extract_tables needs a clean grid these layouts
   # never have.
 
+  mkdir -p <TMP>/pages
   for p in $PAGES; do
-    python3 -m scripts.read_pdf_vision \
-      --input "{PDF_PATH}" --pages $p \
-      --prompt "For every table on this page output one row per cell:
-                header_l1 | header_l2 | row_label | value | footnote_ref.
-                Preserve every sub-total and footnote marker. Use - for
-                empty cells. Output as TSV." \
-      --json 2><TMP>/vision-p$p.log > <TMP>/vision-p$p.json
+    pdftoppm -png -r 200 -f $p -l $p "{PDF_PATH}" <TMP>/pages/page-$p
   done
+  # Output names are <prefix>-<page> (page digits zero-pad to the PDF's page count).
+  # Then read each PNG ONE PAGE PER CALL with the Read tool, prompting:
+  #   "For every table on this page output one row per cell:
+  #    header_l1 | header_l2 | row_label | value | footnote_ref.
+  #    Preserve every sub-total and footnote marker. Use - for
+  #    empty cells. Output as TSV."
 
-STEP 3 — Parse vision output
-  python3 <<EOF
-  import json, pathlib
-  rows = []
-  for p in PAGES:
-      data = json.loads(pathlib.Path(f"<TMP>/vision-p{p}.json").read_text())
-      # Vision output is in chunks[0].text; parse the TSV.
-      for line in data["chunks"][0]["text"].splitlines():
-          parts = line.split("\t")
-          if len(parts) == 5:
-              rows.append({"page": p, "l1": parts[0], "l2": parts[1],
-                           "label": parts[2], "value": parts[3],
-                           "footnote": parts[4]})
-  EOF
+STEP 3 — Collect the TSV rows
+  # Record the model's TSV output for each page verbatim into the working
+  # notes, one block per page, tagged with the page number $p.
 
 STEP 4 — Write to OUTPUT_FORMAT
 
@@ -510,16 +503,16 @@ STEP 4 — Write to OUTPUT_FORMAT
 
 STEP 5 — Verification
   Spot-check 3 sub-totals across statements: read them off the source PDF
-  visually, compare to the converted output. Mismatch → re-run vision
-  with a more explicit prompt for that page, never patch by hand.
+  visually, compare to the converted output. Mismatch → re-read that page
+  image with a more explicit prompt, never patch by hand.
 
 CONSTRAINTS:
   - pdfplumber.extract_tables on financial layouts is FORBIDDEN even when
     the PDF is text-native. Visual structure complexity > text-native check.
-  - Vision MUST be per-page (`--pages N`). A range like `--pages 1-30`
-    stitches pages together and mis-attributes values.
-  - Don't 2>/dev/null vision calls — the daemon log on stderr is the only
-    debugging signal.
+  - Vision MUST be per-page (one rendered PNG per Read call). Reading a
+    stitched multi-page image mis-attributes values.
+  - Don't 2>/dev/null the rasterise commands — stderr is the only
+    debugging signal when a page fails to render.
 ```
 
 ---

@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice. -->
 # Execution backends
 
 Read this only after the route is clear. For generation routes, recipe / template-mode choice comes
@@ -11,13 +12,13 @@ Shared roots:
 ```bash
 # macOS / Linux / WSL
 DOCX_ROOT="<skill_dir>"
-CLI="dotnet run --project $DOCX_ROOT/scripts/dotnet/MiniMaxAIDocx.Cli --"
+CLI="dotnet run --project $DOCX_ROOT/scripts/dotnet/YazOffice.Cli --"
 ```
 
 ```powershell
 # Windows
 $env:DOCX_ROOT = "<skill_dir>"
-$CLI = "dotnet run --project $env:DOCX_ROOT\scripts\dotnet\MiniMaxAIDocx.Cli --"
+$CLI = "dotnet run --project $env:DOCX_ROOT\scripts\dotnet\YazOffice.Cli --"
 ```
 
 ## Backend D — builtin dotnet CLI
@@ -72,7 +73,7 @@ if (-not ($check | Select-String -Pattern '^\[OK\]\s+dotnet\b')) {
 Same as `D`, plus read the relevant sample under:
 
 ```bash
-$DOCX_ROOT/scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs
+$DOCX_ROOT/scripts/dotnet/YazOffice.Core/Samples/*.cs
 ```
 
 ## Backend X — local XML patch runtime

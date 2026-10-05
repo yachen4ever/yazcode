@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 """
 Command line tool to validate Office document XML files against XSD schemas and tracked changes.
 
@@ -47,8 +48,8 @@ def main():
     )
     parser.add_argument(
         "--author",
-        default="Mavis",
-        help="Author name for redlining validation (default: Mavis)",
+        default="yazcode",
+        help="Author name for redlining validation (default: yazcode)",
     )
     args = parser.parse_args()
 

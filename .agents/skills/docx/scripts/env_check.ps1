@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice.
 # docx strict environment check (Windows PowerShell mirror of env_check.sh)
 # Authoritative for whether the skill may run on Windows.
 # Supports -Level Read|Render|Full (default Full). Output format and exit codes
@@ -215,7 +216,7 @@ if ($Level -eq 'Full') {
     } else {
         $built = $false
         foreach ($tfm in @('net10.0', 'net9.0', 'net8.0')) {
-            $dll = Join-Path $DotnetDir "MiniMaxAIDocx.Cli\bin\Debug\$tfm\MiniMaxAIDocx.Cli.dll"
+            $dll = Join-Path $DotnetDir "YazOffice.Cli\bin\Debug\$tfm\YazOffice.Cli.dll"
             if (Test-Path $dll) { $built = $true; break }
         }
         if ($built) {

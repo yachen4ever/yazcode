@@ -1,4 +1,5 @@
-"""Geometry helpers for the MiniMax PDF skill.
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
+"""Geometry helpers for the yazcode PDF skill.
 
 This module concentrates the coordinate-system bridges that the
 form-fill scripts share:

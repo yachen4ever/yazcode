@@ -1,0 +1,5 @@
+<!-- Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice. -->
+<Solution>
+  <Project Path="YazOffice.Cli/YazOffice.Cli.csproj" />
+  <Project Path="YazOffice.Core/YazOffice.Core.csproj" />
+</Solution>

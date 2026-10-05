@@ -7,7 +7,10 @@
     "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
     "importRevision": null,
     "provenance": "The original copy revision is not recorded in the current checkout; this pinned license reference is not asserted to be the original import version.",
-    "roots": ["packages/ui/src/components/ui", "packages/ui/src/styles.css"],
+    "roots": [
+      "packages/ui/src/components/ui",
+      "packages/ui/src/styles.css"
+    ],
     "scope": "Upstream-derived portions only; ZCode-specific files in the same directory are not attributed to the upstream project.",
     "license": "MIT"
   },
@@ -19,7 +22,10 @@
     "sha256": "b4f9adb7c568904834d0dd6cc98d16c390d21ca32fc17ae7a267715269bd5529",
     "importRevision": null,
     "provenance": "The original copy revision is not recorded in the current checkout; this pinned license reference is not asserted to be the original import version.",
-    "roots": ["packages/ui/src/components/ai-elements", ".agents/skills/ai-elements"],
+    "roots": [
+      "packages/ui/src/components/ai-elements",
+      ".agents/skills/ai-elements"
+    ],
     "scope": "Upstream-derived UI components, skill instructions, reference documentation and example scripts only; locally adapted for ZCode imports, styling and agent workflow. Original import revision not recorded.",
     "license": "Apache-2.0",
     "modifiedFiles": [
@@ -166,7 +172,9 @@
   },
   {
     "id": "Fig autocomplete registry",
-    "roots": ["apps/zcode-cli/packages/core/src/tool/handlers/generated/bash-command-registry.ts"],
+    "roots": [
+      "apps/zcode-cli/packages/core/src/tool/handlers/generated/bash-command-registry.ts"
+    ],
     "license": "MIT",
     "source": "https://raw.githubusercontent.com/withfig/autocomplete/aef52acff84c45edde61ae610cc2c964802b9a38/LICENSE",
     "file": "third-party/upstream/5129f8779dca579cfcb235570688a2f15822b270575e04f27ef906aabbcc0355.txt",
@@ -195,7 +203,11 @@
     "sha256": "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff",
     "importRevision": null,
     "provenance": "Original import revision is not recorded. This pinned upstream license/source reference is not asserted to be the original import version.",
-    "roots": [".agents/skills/agent-browser", ".agents/skills/dogfood", ".agents/skills/electron"],
+    "roots": [
+      ".agents/skills/agent-browser",
+      ".agents/skills/dogfood",
+      ".agents/skills/electron"
+    ],
     "scope": "Upstream-derived instructions, reference documents and shell templates; locally adapted for the ZCode workspace. Reference release v0.20.0 contains all three skills.",
     "license": "Apache-2.0",
     "modifiedFiles": [
@@ -246,7 +258,9 @@
     "referenceRevision": "063bee94c3f4df8453406c830b0a7df0f2860278",
     "source": "https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278",
     "importRevision": null,
-    "roots": [".agents/skills/react-best-practices"],
+    "roots": [
+      ".agents/skills/react-best-practices"
+    ],
     "license": "MIT",
     "scope": "Vendored React/Next.js guidance and local adaptations; local README preserves Shu Ding / Vercel attribution.",
     "reviewRequired": "Pinned upstream README and skill declare MIT, but a complete original copyright/license notice has not been obtained."
@@ -258,14 +272,66 @@
     "file": "third-party/upstream/28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea.txt",
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
-    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/docx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. Only a provenance notice was added to SKILL.md.",
-    "roots": [".agents/skills/docx"],
+    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/docx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the bundled docx CLI namespace/assembly and paths were renamed to YazOffice, host-proprietary agent-runtime wording in env/setup scripts and docs was neutralized, and sample revision-author strings were changed to yazcode. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import; pure path renames with unchanged contents are not listed.",
+    "roots": [
+      ".agents/skills/docx"
+    ],
     "scope": "DOCX create/template-apply/edit/read/repair/compare instructions, reference documents and the bundled .NET CLI sources. The skill declares GB/T 9704-2012 (Layout Standard for Official Documents) among its formatting references.",
     "license": "MIT",
     "modifiedFiles": [
       ".agents/skills/docx/SKILL.md",
-      ".agents/skills/docx/scripts/dotnet/MiniMaxAIDocx.Core/Commands/CreateCommand.cs",
-      ".agents/skills/docx/scripts/dotnet/MiniMaxAIDocx.Core/Typography/CjkHelper.cs"
+      ".agents/skills/docx/docs/backends.md",
+      ".agents/skills/docx/docs/index.md",
+      ".agents/skills/docx/docs/task-apply-template.md",
+      ".agents/skills/docx/docs/task-create.md",
+      ".agents/skills/docx/docs/task-read-structure.md",
+      ".agents/skills/docx/references/scenario_b_edit_content.md",
+      ".agents/skills/docx/references/track_changes_guide.md",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Cli/Program.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Cli/YazOffice.Cli.csproj",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/AnalyzeCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/ApplyTemplateCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/CreateCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/DiffCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/EditContentCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/FixOrderCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/MergeRunsCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Commands/ValidateCommand.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/CommentSynchronizer.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/ElementOrder.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/NamespaceConstants.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/RunMerger.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/StyleAnalyzer.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/TrackChangesHelper.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/OpenXml/UnitConverter.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples_Batch1.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples_Batch2.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples_Batch3.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples_Batch4.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/CharacterFormattingSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/DocumentCreationSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/FieldAndTocSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/FootnoteAndCommentSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/HeaderFooterSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/ImageSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/ListAndNumberingSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/ParagraphFormattingSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/StyleSystemSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/TableSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Samples/TrackChangesSamples.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Typography/CjkHelper.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Typography/FontDefaults.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Typography/PageSizes.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Validation/BusinessRuleValidator.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Validation/GateCheckValidator.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Validation/ValidationResult.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.Core/Validation/XsdValidator.cs",
+      ".agents/skills/docx/scripts/dotnet/YazOffice.slnx",
+      ".agents/skills/docx/scripts/env_check.ps1",
+      ".agents/skills/docx/scripts/env_check.sh",
+      ".agents/skills/docx/scripts/setup.ps1",
+      ".agents/skills/docx/scripts/setup.sh"
     ]
   },
   {
@@ -275,11 +341,23 @@
     "file": "third-party/upstream/28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea.txt",
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
-    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/xlsx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. Only a provenance notice was added to SKILL.md.",
-    "roots": [".agents/skills/xlsx"],
+    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/xlsx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: tracked-changes revision author defaults were changed to yazcode, and upstream host references in docs, script headers and skill instructions were neutralized. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
+    "roots": [
+      ".agents/skills/xlsx"
+    ],
     "scope": "Spreadsheet read/edit/create/convert instructions, conventions and recalculation guide, plus the bundled Python and LibreOffice helper scripts.",
     "license": "MIT",
-    "modifiedFiles": [".agents/skills/xlsx/SKILL.md"]
+    "modifiedFiles": [
+      ".agents/skills/xlsx/SKILL.md",
+      ".agents/skills/xlsx/docs/conventions-guide.md",
+      ".agents/skills/xlsx/docs/recalc-guide.md",
+      ".agents/skills/xlsx/scripts/office/helpers/simplify_redlines.py",
+      ".agents/skills/xlsx/scripts/office/pack.py",
+      ".agents/skills/xlsx/scripts/office/soffice.py",
+      ".agents/skills/xlsx/scripts/office/validate.py",
+      ".agents/skills/xlsx/scripts/office/validators/redlining.py",
+      ".agents/skills/xlsx/scripts/recalc.py"
+    ]
   },
   {
     "id": "minimax-code pptx skill",
@@ -288,11 +366,15 @@
     "file": "third-party/upstream/28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea.txt",
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
-    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pptx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. Only a provenance notice was added to SKILL.md.",
-    "roots": [".agents/skills/pptx"],
-    "scope": "PowerPoint read/create/edit instructions, element map and preview writeback references, plus the bundled helper scripts. Includes the optional upstream .mavis-ppt-map.json sidecar protocol, which is inert in ZCode.",
+    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pptx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the optional upstream sidecar element-map protocol (host-proprietary preview-edit tooling, inert without its host runtime) was removed together with its helper script and reference documents. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
+    "roots": [
+      ".agents/skills/pptx"
+    ],
+    "scope": "PowerPoint read/create/edit instructions and the bundled helper scripts. The optional upstream sidecar element-map protocol (host-proprietary preview-edit tooling) was removed in the 2026-10 de-branding.",
     "license": "MIT",
-    "modifiedFiles": [".agents/skills/pptx/SKILL.md"]
+    "modifiedFiles": [
+      ".agents/skills/pptx/SKILL.md"
+    ]
   },
   {
     "id": "minimax-code pdf skill",
@@ -301,10 +383,27 @@
     "file": "third-party/upstream/28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea.txt",
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
-    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pdf in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. Only a provenance notice was added to SKILL.md.",
-    "roots": [".agents/skills/pdf"],
+    "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pdf in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the host-proprietary vision-read helper (which POSTed rendered pages to a local agent-runtime endpoint) was deleted together with its guide and an archived upstream README; scanned-page reading now relies on poppler rendering plus the agent's native image reading; remaining host references in docs, templates and script headers were neutralized. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
+    "roots": [
+      ".agents/skills/pdf"
+    ],
     "scope": "PDF generate/reformat/fill/read instructions, route guides, LaTeX and brand-guide templates, and the bundled Python helper scripts.",
     "license": "MIT",
-    "modifiedFiles": [".agents/skills/pdf/SKILL.md"]
+    "modifiedFiles": [
+      ".agents/skills/pdf/SKILL.md",
+      ".agents/skills/pdf/docs/advanced-reference.md",
+      ".agents/skills/pdf/docs/annual-report-financial-digest-latex-case.md",
+      ".agents/skills/pdf/docs/create-guide.md",
+      ".agents/skills/pdf/docs/docx-contract-roundtrip-professional-case.md",
+      ".agents/skills/pdf/docs/pitfalls-index.md",
+      ".agents/skills/pdf/docs/read-guide.md",
+      ".agents/skills/pdf/scripts/lib/acroform_io.py",
+      ".agents/skills/pdf/scripts/lib/cli_utils.py",
+      ".agents/skills/pdf/scripts/lib/geometry.py",
+      ".agents/skills/pdf/scripts/make.sh",
+      ".agents/skills/pdf/templates/INDEX.md",
+      ".agents/skills/pdf/templates/brand-guide-2page/README.md",
+      ".agents/skills/pdf/templates/latex-technical-book/source.tex"
+    ]
   }
 ]

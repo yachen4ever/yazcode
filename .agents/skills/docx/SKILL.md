@@ -4,7 +4,7 @@ metadata:
   version: "4.0.0"
   category: document-processing
   status: stable
-  author: MiniMaxAI
+  author: yazcode (vendored from MiniMaxAI/minimax-code)
   sources:
     - "ECMA-376 Office Open XML File Formats"
     - "GB/T 9704-2012 Layout Standard for Official Documents"
@@ -34,7 +34,7 @@ triggers:
 Copied from MiniMaxAI/minimax-code (packages/local-runtime/assets/skills/docx)
 at revision 564e9166d81f87b0b767b005e4779d4697b512be.
 Copyright (c) 2026 MiniMax Code. Licensed under MIT.
-Modified by ZCode: added this provenance notice only; skill content is otherwise unchanged.
+Modified by ZCode: 2026-10 de-branding — vendored CLI renamed to YazOffice, host-specific wording neutralized, track-changes author defaults set to yazcode.
 See THIRD-PARTY-NOTICES.md in the repository root for license and provenance.
 -->
 
@@ -146,7 +146,7 @@ anything on `MINGW*/MSYS*/CYGWIN*` and tell you to switch to `powershell.exe` / 
 > - `references/typography_guide.md`
 > - `references/design_principles.md`
 > - `references/cjk_typography.md`
-> - `scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples*.cs`
+> - `scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples*.cs`
 >
 > These are not optional decoration. They are the quality-preserving recipe layer.
 
@@ -218,19 +218,19 @@ Use these after `CREATE_DOCX` / `APPLY_TEMPLATE` is selected:
 | `references/typography_guide.md` | font pairings, sizes, spacing, page layout, table rules |
 | `references/design_principles.md` | visual judgment rules when exact specs are missing |
 | `references/cjk_typography.md` | CJK fonts, 字号, mixed-script rules, 公文 defaults |
-| `scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples*.cs` | benchmarked recipe families; choose one instead of inventing values |
+| `scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples*.cs` | benchmarked recipe families; choose one instead of inventing values |
 
 ## Runtime shorthands
 
 ```bash
 # macOS / Linux / WSL
-CLI="dotnet run --project <skill_dir>/scripts/dotnet/MiniMaxAIDocx.Cli --"
+CLI="dotnet run --project <skill_dir>/scripts/dotnet/YazOffice.Cli --"
 TMPDIR_DOCX="${TMPDIR:-/tmp}"
 ```
 
 ```powershell
 # Windows PowerShell
-$CLI = "dotnet run --project <skill_dir>\scripts\dotnet\MiniMaxAIDocx.Cli --"
+$CLI = "dotnet run --project <skill_dir>\scripts\dotnet\YazOffice.Cli --"
 $TmpDocx = $env:TEMP
 ```
 

@@ -1,3 +1,4 @@
+# Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized.
 #!/usr/bin/env bash
 # make.sh — pdf unified CLI (HTML → PDF)
 # Usage: bash make.sh <command> [options]
@@ -13,7 +14,7 @@
 #                                        scan / rasterize / preview / overlay / lint (visual)
 #
 # For READ / extract existing PDFs, see docs/read-guide.md (pdfplumber default,
-#   scripts/read_pdf_vision.py for vision escalation).
+#   page rasterise + Read tool for vision escalation).
 # For PDF mutation (merge / split / rotate / watermark / annotate), see
 # docs/advanced-reference.md (qpdf / pypdf / reportlab cookbook).
 #

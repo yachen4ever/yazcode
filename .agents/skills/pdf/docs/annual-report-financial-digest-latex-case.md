@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # Case: Long annual-report PDF → compact LaTeX financial digest
 
 Use this case when the user supplies a long listed-company annual report PDF (100–300+ pages) and asks for a Chinese financial summary/report with accurate key tables, segment revenue, charts, and a professional broker-research / academic feel. This case is especially relevant when the user later rejects decorative layouts and wants a **compact, dense, data-table-first LaTeX PDF**.
@@ -73,15 +74,13 @@ PY
 
 ### 3.2 Vision per page for complex financial tables / charts
 
-For complex annual-report financial tables, run `read_pdf_vision.py` one page at a time. Do not pass ranges for these target pages.
+For complex annual-report financial tables, render each page to PNG and read it natively — one page per call. Do not stitch ranges for these target pages.
 
 ```bash
-cd "$MINIMAX_PDF_SKILL"
-python3 -m scripts.read_pdf_vision \
-  --input "$PDF" \
-  --pages 7 \
-  --prompt "请逐字提取本页‘主要财务数据/会计数据和财务指标摘要’表格，保留所有行名、年份和数值，输出 Markdown 表格。" \
-  --max-stdout-bytes 12000
+mkdir -p ./pages
+pdftoppm -png -r 200 -f 7 -l 7 "$PDF" ./pages/page-7
+# 产出文件名 = 前缀-页码（页码按 PDF 总页数位数补零）。
+# 然后用 Read 工具逐页读取 PNG，配合下方的分段提示词让模型逐字提取表格。
 ```
 
 Segment prompts used in this run:
@@ -98,7 +97,7 @@ Segment prompts used in this run:
 请逐字提取本页分部业绩中的‘天然气销售’部分，以及资产负债权益表关键数据，保留营业收入、经营支出、经营利润及同比描述，输出结构化中文。
 ```
 
-Recovery: `gemini analysis failed: unexpected end of JSON input` may occur. Retry once; if it repeats and the text layer is clean, use pdfplumber output for that page and cross-check against adjacent segment tables.
+Recovery: if a page render fails or the extracted table looks wrong, re-render that page at a higher DPI and read it again with a more explicit prompt; if the text layer is clean, fall back to pdfplumber output for that page and cross-check against adjacent segment tables.
 
 ## 4. Terminology and transformation rules
 
@@ -154,7 +153,7 @@ If using only the compact LaTeX template, place the generated PNGs in the same w
 Use the case source as the editable deliverable:
 
 ```bash
-cp "$MINIMAX_PDF_SKILL/templates/data-viz-report/cases/annual-report-financial-digest-latex/source.tex" ./report.tex
+cp "$PDF_SKILL/templates/data-viz-report/cases/annual-report-financial-digest-latex/source.tex" ./report.tex
 # edit company name, dates, tables, source notes, chart paths
 tectonic -X compile report.tex --outdir ./out
 cp ./out/report.pdf ./company_annual_report_digest.pdf

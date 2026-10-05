@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 de-branding, host-specific names and references removed or neutralized. -->
 # Case: DOC/DOCX legal contract → professional PDF + MD/HTML + round-trip DOCX
 
 Use this case when a user asks to convert a Word contract/template into PDF, Markdown, HTML, and back to DOCX, and the PDF must be a professional legal/contract deliverable rather than a mechanical office export.
@@ -269,11 +270,11 @@ Also run docx validation when available:
 
 ```bash
 export PATH="$HOME/.dotnet:$PATH"
-dotnet run --project "$DOCX_SKILL/scripts/dotnet/MiniMaxAIDocx.Cli" -- \
+dotnet run --project "$DOCX_SKILL/scripts/dotnet/YazOffice.Cli" -- \
   validate --input "$OUTPUT_DIR/contract_roundtrip.docx" --business \
   | tee "$OUTPUT_DIR/roundtrip_validate.txt"
 
-dotnet run --project "$DOCX_SKILL/scripts/dotnet/MiniMaxAIDocx.Cli" -- \
+dotnet run --project "$DOCX_SKILL/scripts/dotnet/YazOffice.Cli" -- \
   analyze --input "$OUTPUT_DIR/contract_roundtrip.docx" --json \
   > "$OUTPUT_DIR/roundtrip_analyze.json"
 ```

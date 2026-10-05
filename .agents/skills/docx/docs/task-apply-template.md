@@ -1,3 +1,4 @@
+<!-- Modified by ZCode: 2026-10 vendored de-branding, namespace/assembly/paths renamed to YazOffice. -->
 # Task: APPLY_TEMPLATE
 
 Use this task family when source content should survive but the visual or institutional template
@@ -35,7 +36,7 @@ The generation core that must stay active here is:
 - `<skill_dir>/references/typography_guide.md`
 - `<skill_dir>/references/design_principles.md`
 - `<skill_dir>/references/cjk_typography.md` when CJK / 公文 / thesis formatting is involved
-- `<skill_dir>/scripts/dotnet/MiniMaxAIDocx.Core/Samples/AestheticRecipeSamples*.cs`
+- `<skill_dir>/scripts/dotnet/YazOffice.Core/Samples/AestheticRecipeSamples*.cs`
 
 Template work is not “style by vibes”. Use these to anchor the visual system before backend work.
 
@@ -134,7 +135,7 @@ Reuse the bundled template knowledge under:
 - `<skill_dir>/references/typography_guide.md`
 - `<skill_dir>/references/design_principles.md`
 - `<skill_dir>/references/cjk_typography.md`
-- `<skill_dir>/scripts/dotnet/MiniMaxAIDocx.Core/Samples/*.cs`
+- `<skill_dir>/scripts/dotnet/YazOffice.Core/Samples/*.cs`
 
 ## After writing
 

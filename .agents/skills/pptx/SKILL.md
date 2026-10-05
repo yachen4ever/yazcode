@@ -11,7 +11,7 @@ descriptions:
 Copied from MiniMaxAI/minimax-code (packages/local-runtime/assets/skills/pptx)
 at revision 564e9166d81f87b0b767b005e4779d4697b512be.
 Copyright (c) 2026 MiniMax Code. Licensed under MIT.
-Modified by ZCode: added this provenance notice only; skill content is otherwise unchanged.
+Modified by ZCode: 2026-10 de-branding — the host-proprietary PPTX sidecar protocol (element map, preview selection writeback) was removed along with its references.
 See THIRD-PARTY-NOTICES.md in the repository root for license and provenance.
 -->
 
@@ -35,7 +35,6 @@ Replace `<skill_dir>` with the actual skill path shown by the loader.
 | Need | Workflow |
 | --- | --- |
 | Existing PPTX inspection, extraction, search, preview, or audit | Use the inspection commands below |
-| PPTX preview selection edit context (`mavis.ppt_artifact_edit_request.v1`) | Read `references/preview-selection-writeback.md`; use the targeted workflow there, not the template-wide editing workflow |
 | Existing PPTX provided and layout/style must be preserved | Follow `references/editing.md` |
 | Reference PPTX provided for style imitation, but content is new | Run the Template Imitation Workflow |
 | No source deck, or a fresh deck is acceptable | Run the From-Scratch Workflow |
@@ -99,23 +98,6 @@ Use these defaults unless the user specifies otherwise **and no template PPTX is
 
 When a template PPTX is provided for imitation, the template's actual colors and fonts override these defaults.
 
-## Editable Sidecar Metadata
-
-When creating a new PPTX from scratch for Mavis, also write an optional sidecar element map:
-
-```text
-slides/output/<descriptive-name>.mavis-ppt-map.json
-```
-
-This sidecar is editing metadata only. It must not replace the standard `.pptx` output, change
-visible slide layout, or change the `createSlide(pres, theme)` slide-module contract. Use
-`references/element-map.md` and `scripts/mavis-ppt-map.cjs` to record stable `elementId`, role,
-text, style, and `rectIn` / `normalizedRect` coordinates for meaningful editable elements.
-
-If the sidecar is unavailable for a deck, the PPTX is still valid and should be delivered after the
-normal QA process. Future artifact-edit flows can then fall back to preview text, screenshots, and
-coordinates as locator evidence.
-
 ## Hard Constraints
 
 These are mandatory unless the user explicitly overrides them:
@@ -146,8 +128,7 @@ Use this when no source PPTX must be preserved.
 4. Create `slides/slide-XX.js` modules and keep layout variety where the outline calls for it.
 5. Run the pre-compile lint in `references/pitfalls.md#pre-compile-lint` before compiling.
 6. Create `slides/compile.js`, load slide modules in final order, and write `slides/output/<descriptive-name>.pptx`.
-7. For Mavis-generated decks, write `slides/output/<descriptive-name>.mavis-ppt-map.json` as a sidecar using `references/element-map.md`.
-8. Run the QA process in `references/pitfalls.md#qa-process`, fix issues, and re-verify.
+7. Run the QA process in `references/pitfalls.md#qa-process`, fix issues, and re-verify.
 
 Minimal compile shape:
 
@@ -215,8 +196,7 @@ Do all of the following (these are the From-Scratch Workflow steps, adapted — 
 3. Create `slides/slide-XX.js` modules and keep layout variety where the outline calls for it.
 4. Run the pre-compile lint in `references/pitfalls.md#pre-compile-lint` before compiling.
 5. Create `slides/compile.js`, load slide modules in final order, and write `slides/output/<descriptive-name>.pptx`.
-6. For Mavis-generated decks, write `slides/output/<descriptive-name>.mavis-ppt-map.json` as a sidecar using `references/element-map.md`.
-7. Run the QA process in `references/pitfalls.md#qa-process`, fix issues, and re-verify. **Do NOT return the deck until QA passes.**
+6. Run the QA process in `references/pitfalls.md#qa-process`, fix issues, and re-verify. **Do NOT return the deck until QA passes.**
 
 Skip palette/font selection (step 2 of From-Scratch) because palette and fonts come from the template.
 
@@ -240,7 +220,6 @@ Use this when the user provides a source PPTX and expects structure or layout to
 - titles do not wrap awkwardly
 - repeated elements align consistently
 - final file is written successfully
-- generated decks include an element-map sidecar when available, without changing the `.pptx` output contract
 - inspection/editing tasks preserve the source file unless explicitly replacing it
 - template imitation background color matches the template's dark/light mode
 - template imitation fonts match the template's font families
@@ -272,8 +251,7 @@ uv run --with python-pptx scripts/extract_pptx.py file.pptx
 | `/tmp/` for temp writes | Git Bash maps `/tmp/` automatically |
 | `soffice` | Must be on PATH — `winget install TheDocumentFoundation.LibreOffice` |
 
-**If Git Bash or any tool is missing**, read the `mavis` skill's
-`references/windows-tool-bootstrap.md` for detection + auto-install commands.
+**If Git Bash or any tool is missing**, check that the tool is installed and on PATH; otherwise install it with the platform package manager (winget or choco on Windows, brew on macOS, or the system package manager on Linux).
 
 ## References
 
@@ -284,7 +262,6 @@ Read these **before writing any slide code**. Do not skip them even if you think
 - `references/pitfalls.md`: pre-compile lint, QA process, common PptxGenJS failures — **must run lint and QA**
 - `references/pptxgenjs.md`: PptxGenJS API, layout dimensions, text/shape/table options — **must verify canvas dimensions**
 - `references/slide-types.md`: page type classification and layout patterns — **must assign a type to each slide**
-- `references/element-map.md`: optional sidecar metadata for Mavis-generated decks — **must not replace the PPTX output contract**
 
 ### Load On Demand
 

@@ -112,9 +112,10 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 | 门禁 | 位置 | 拦什么 |
 | --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` |
+| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` |
 | `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
 | `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |
+| `check-skill-residue` | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤 | 拦 vendored skill 的宿主品牌/端口残留回流 |
 | `release` | `.github/workflows/release.yml` | 任一平台产物缺失则 release 保持 draft |
 | `upstream-audit` | `.github/workflows/upstream-audit.yml` | 上游同步的增量审计 |
 
