@@ -256,6 +256,13 @@ jobs:
           set -euo pipefail
           pnpm build:zcode -- --version "${RELEASE_TAG#v}"
 
+      # cli 包的类型检查必须在 CLI 依赖构建之后：其 tsconfig 经 workspace 链接解析
+      # 各依赖包的 dist 类型声明，干净检出时直接跑会 TS2307（根 typecheck 因此不覆盖
+      # cli——v1.0.2 缺 import 的回归正是从这个盲区漏出的，见 provider-runtime-env.ts）。
+      # build:zcode 已把依赖与 CLI 本体全部构建完，此处检查的是真实源码类型。
+      - name: Typecheck CLI package
+        run: pnpm run typecheck:cli
+
       - name: Upload assets to release
         env:
           GH_TOKEN: ${{ github.token }}
