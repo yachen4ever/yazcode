@@ -1,5 +1,17 @@
 import { existsSync, realpathSync } from "node:fs";
 import { readExternalEnvVar } from "@zcode/shared";
+// 修复依据：本文件引用的 provider-node 常量/类型/函数此前无任何 import 或
+// ambient 声明（cli 包不在根 typecheck 的 tsc -b 覆盖列表，回归未被门禁拦截），
+// esbuild 将其按未定义全局量原样打进产物，运行期 ReferenceError 使 app-server
+// 秒退——v1.0.2 桌面端主界面卡死与 PowerShell 进程扫描循环的根因。
+import {
+  materializeZCodeBuiltinProviderConfig,
+  PERSONAL_PROVIDER_CONFIG_FILE_NAME,
+  ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE_ENV,
+  ZCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV,
+  ZCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV,
+} from "@zcode/provider-node";
+import type { ZCodeBuiltinRefreshEvent } from "@zcode/provider-node";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { CliEnv } from "./env.js";
