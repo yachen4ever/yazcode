@@ -1,3 +1,6 @@
+/// <reference path="./node-forge.d.ts" />
+// 修复依据：该 ambient 声明只在 services 自身 tsconfig 的 include 内生效，
+// cli 包按源码引用本文件时声明不随 import 图传播（TS7016）；triple-slash 让声明随文件走。
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
