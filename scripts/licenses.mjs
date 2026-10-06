@@ -94,7 +94,10 @@ const WEAK_ALLOW = [[/^lightningcss/, "当前仅构建依赖；进入生产图�
 // （github.com/jhugman/uniffi-bindgen-react-native@0.31.0-3）即满足义务；
 // 未把 MPL 代码并入本仓库源码，不传染 MIT 主仓。
 const PROD_WEAK_ALLOW = [
-  [/^@ubjs\//, "CUA 驱动预编译绑定层（MPL-2.0）；未修改再分发 + 许可快照 + 上游公开源码，义务已核对"],
+  [
+    /^@(ubjs\/|trycua\/cua-driver-(darwin|linux|win32))/,
+    "CUA 驱动预编译绑定层（@ubjs 为 MPL-2.0，@trycua 平台包为 MIT AND MPL-2.0）；未修改再分发 + 许可快照 + 上游公开源码，义务已核对",
+  ],
 ];
 function weakAllowReason(r) {
   for (const [re, why] of PROD_WEAK_ALLOW) if (re.test(r.name)) return why;
