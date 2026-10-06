@@ -170,3 +170,54 @@ test("client 判定：缺 callTool 时报原因", () => {
   assert.equal(typeof assertCuaDriverClient({}), "string");
   assert.equal(assertCuaDriverClient({ callTool() {} }), undefined);
 });
+
+test("session_ended refusal 自动复活隐式会话并重试一次", async () => {
+  const ended = makeResult({
+    text: "this session has ended; call start_session explicitly to reuse its label",
+    isError: true,
+    structuredJson: JSON.stringify({ refusal: { code: "session_ended" }, status: "refused" }),
+  });
+  const revived = makeResult({
+    text: "ok",
+    structuredJson: JSON.stringify({ revived: true }),
+  });
+  const names = [];
+  const client = {
+    async callTool(name) {
+      names.push(name);
+      if (name === "start_session") {
+        return makeResult({ text: "started", structuredJson: JSON.stringify({ revived: true }) });
+      }
+      // 第一次 list_apps 返回 ended，重试（第二次）返回 revived
+      return names.filter((n) => n === "list_apps").length <= 1 ? ended : revived;
+    },
+  };
+  const runtime = createCuaDriverRuntime(client);
+  const result = await runtime.execute({ toolName: "list_apps", arguments: {}, context: CONTEXT });
+  assert.deepEqual(names, ["list_apps", "start_session", "list_apps"]);
+  assert.equal(result.isError, false);
+  // list_apps 走 surface 层重投影：复活结果的 structuredJson 无 apps 字段 → 投影为空列表。
+  // 这里的断言点是「重试结果穿透了完整投影链且不再是 refusal」，不是具体载荷。
+  assert.equal(result.content[0].text, "[]");
+});
+
+test("session_ended 但复活失败时原样透传 refusal", async () => {
+  const ended = makeResult({
+    text: "this session has ended; call start_session explicitly to reuse its label",
+    isError: true,
+    structuredJson: JSON.stringify({ refusal: { code: "session_ended" }, status: "refused" }),
+  });
+  const names = [];
+  const client = {
+    async callTool(name) {
+      names.push(name);
+      if (name === "start_session") throw new Error("lease gone");
+      return ended;
+    },
+  };
+  const runtime = createCuaDriverRuntime(client);
+  const result = await runtime.execute({ toolName: "list_apps", arguments: {}, context: CONTEXT });
+  assert.deepEqual(names, ["list_apps", "start_session"]);
+  assert.equal(result.isError, true);
+  assert.equal(result.structuredContent?.refusal?.code, "session_ended");
+});

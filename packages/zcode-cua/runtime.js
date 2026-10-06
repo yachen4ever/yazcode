@@ -119,10 +119,33 @@ export function createCuaDriverRuntime(client, options = {}) {
   // 兼容层（老 GNOME）只接管输入类工具；观察/语义始终走 cua-driver（见 §8.1 路由）。
   const compat = options.compat;
 
+  // node_repl 的 js 内核每次调用都是全新进程；内核退出后 cua-driver 会把「传输租约的
+  // 隐式会话」标记为 ended（refusal.code = session_ended），下一个内核带着同一租约连进来
+  // 就被拒。驱动合同原生支持显式复活：start_session 不带 session 参数即复活当前租约的
+  // 隐式会话（StartSessionOutput.revived）。这里在适配层自愈——复活后重试原调用一次，
+  // 对模型面不可见；复活失败或重试仍被拒才原样透传，让上层看到真实原因。
+  function isSessionEndedRefusal(result) {
+    const structured = parseJson(result?.structuredJson);
+    return structured?.refusal?.code === "session_ended";
+  }
+
   // 胶水：ZCode 模型面（14 工具）走 surface 映射层；原生工具名直接透传。
-  const callDriver = (toolName, args, signal) => {
+  const callDriver = async (toolName, args, signal) => {
     const argsJson = JSON.stringify(args ?? {});
-    return signal ? client.callTool(toolName, argsJson, { signal }) : client.callTool(toolName, argsJson);
+    const call = () =>
+      signal
+        ? client.callTool(toolName, argsJson, { signal })
+        : client.callTool(toolName, argsJson);
+    let result = await call();
+    if (isSessionEndedRefusal(result)) {
+      try {
+        await client.callTool("start_session", "{}");
+      } catch {
+        return result;
+      }
+      result = await call();
+    }
+    return result;
   };
   const surface = createSurfaceLayer({
     callDriver,
@@ -144,13 +167,10 @@ export function createCuaDriverRuntime(client, options = {}) {
       if (compat?.applies === true && COMPAT_INPUT_TOOLS.has(toolName)) {
         return compat.execute(input);
       }
-      const argsJson = JSON.stringify(input.arguments ?? {});
       try {
-        // cua-driver SDK 的第三个参数必须包含 signal；传空对象会在读取
-        // `signal.aborted` 时报错，因此无 signal 时不传第三个参数。
-        const result = input.signal
-          ? await client.callTool(toolName, argsJson, { signal: input.signal })
-          : await client.callTool(toolName, argsJson);
+        // 走 callDriver 以获得 session_ended 自愈；cua-driver SDK 的第三个参数必须包含
+        // signal；传空对象会在读取 `signal.aborted` 时报错，因此无 signal 时不传第三个参数。
+        const result = await callDriver(toolName, input.arguments, input.signal);
         return projectToolResult(result);
       } catch (error) {
         return projectDriverError(toolName, error);
