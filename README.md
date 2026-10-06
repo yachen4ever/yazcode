@@ -14,7 +14,7 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 | 项目 | 仓库 | 许可 | 与 yazcode 的关系 |
 | ---- | ---- | ---- | ---------------- |
 | **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | 开源（Z.ai） | 一切工作的源头：2026 年 9 月开源的编程 Agent。 |
-| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 社区审计 fork：移除约 2.6 万行监控遥测、官方服务默认关闭。yazcode 的底座；无争议的修复与小功能以 PR 回馈（[#31](https://github.com/ZCodium-project/ZCodium/pull/31)、[#33](https://github.com/ZCodium-project/ZCodium/pull/33)、[#35](https://github.com/ZCodium-project/ZCodium/pull/35)、[#37](https://github.com/ZCodium-project/ZCodium/pull/37)）。 |
+| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 社区审计 fork：移除约 2.6 万行监控遥测、官方服务默认关闭。yazcode 的底座；无争议的修复与小功能以 PR 形式回馈。 |
 | **ZCodium Exp.** | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 平行独立衍生：以开源组件补全官方发布包功能。yazcode 的 **Computer Use 运行时**移植自这里。 |
 | **MiniMax code** | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | **办公四件套技能**（docx / xlsx / pptx / pdf）的来源。 |
 | **trycua/cua** | [trycua/cua](https://github.com/trycua/cua) | MIT | CUA 原生引擎 `@trycua/cua-driver`：Rust 实现的跨平台桌面操控（Win32 E2E 122/122）。 |
@@ -148,7 +148,6 @@ yazcode 使用自己的版本线，从 `1.0.0` 起步，与上游 `3.14.x` 编�
 | 文档 | 内容 |
 | ---- | ---- |
 | [docs/README.md](docs/README.md) | 仓库导航：模块阅读包、spec 索引、可执行门禁清单 |
-| [docs/handoff-work-agent.md](docs/handoff-work-agent.md) | 工作使用侧的交接文档（技能生态、办公机部署、记忆层约定） |
 | [DESIGN.md](DESIGN.md) | UI 设计规范 |
 | [CONTEXT.md](CONTEXT.md) | 插件商店领域词汇 |
 | [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) | 第三方许可台账（含本文提到的全部来源） |
