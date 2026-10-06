@@ -17,6 +17,7 @@
 | 有没有没用到的依赖或导出 | `pnpm knip` |
 | 某项**契约**为什么是这样 | 下方「规格索引」 |
 | 提交前的完整门禁 | `pnpm verify:pre-push` |
+| 工作使用侧的技能生态与部署状态 | [handoff-work-agent.md](handoff-work-agent.md) |
 
 ## 模块阅读包
 
