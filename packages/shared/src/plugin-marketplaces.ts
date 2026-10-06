@@ -26,9 +26,9 @@ export const DEFAULT_ENABLED_OFFICIAL_PLUGIN_IDS: ReadonlySet<string> = new Set(
   "skill-creator@zcode-plugins-official",
   "plugin-creator@zcode-plugins-official",
   "zcode-guide@zcode-plugins-official",
-  // 电脑控制回退为默认关闭，故 computer-use 不在此名单内。
-  // 该集合必须与 official-plugin-definitions.ts 里标了 defaultEnabled 的插件逐一对应，
-  // bootstrap 的「Settings 默认启用集合与 CLI 的官方插件声明一致」单测机械对照两者。
+  // 电脑控制自 v1.0.4 起随包携带真实现（@trycua/cua-driver），默认开启（与
+  // official-plugin-definitions.ts 的 defaultEnabled 机械对照，两处必须同步改）。
+  "computer-use@zcode-plugins-official",
 ]);
 
 // 官方市场来源定义保留在这里；是否进入默认市场集合由 marketplace 开关决定

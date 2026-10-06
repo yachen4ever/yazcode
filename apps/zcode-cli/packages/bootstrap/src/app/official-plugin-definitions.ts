@@ -386,14 +386,14 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     version: "0.2.0",
   },
   {
-    // 产品决策：电脑控制回退为默认关闭，需用户在设置页显式开启。
-    // 因此这里不声明 defaultEnabled——computer-use 携带 MCP server 与系统 Helper 依赖，
-    // 默认开启意味着每个新用户首启即注入整套工具集并拉起 Helper。
-    // 「defaultEnabled 仅限内容型插件」的旧约定随之恢复完整。
-    // 判定式是 enabledPlugins[id] ?? defaultEnabled：曾在设置页手动开过的用户已落盘
-    // 显式 true，不受本次默认值变更影响。改回默认开启时，需同步
-    // packages/shared/src/plugin-marketplaces.ts 的名单（bootstrap 单测机械对照两者）、
-    // isZCodeCuaInternalFeatureEnabled（打包层默认 true）与输入框入口 hidden 默认值的联动语义。
+    // 产品决策（YazCode 私有构建，2026-10-06 起默认开启）：@zcode/zcode-cua 已随包携带
+    // 真实现（axiom-desu 移植的 @trycua/cua-driver，v1.0.4 起），不再是 fail-closed 占位，
+    // 上游「默认关闭防占位技能露出」的理由不再成立。上游若也接入真运行时，可同样回到默认开启，
+    // 届时需同步 plugin-marketplaces.ts 的 DEFAULT_ENABLED 名单（与 definitions 的
+    // defaultEnabled 机械对照）与输入框入口 hidden 默认值的联动语义。
+    // 判定式是 enabledPlugins[id] ?? defaultEnabled：曾在设置页手动关过的用户已落盘
+    // 显式 false，不受本次默认值变更影响。
+    defaultEnabled: true,
     name: "computer-use",
     hostMcpServerNames: ["node_repl"],
     // 用户露出名统一为「Computer Use / 电脑控制」。包名与 producer 仓库仍保持 zcode-cua，

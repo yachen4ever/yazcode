@@ -444,9 +444,10 @@ const appSettingsObjectSchema = z.object({
   embeddedBrowserViewportPreference: embeddedBrowserViewportPreferenceSchema.default(
     DEFAULT_EMBEDDED_BROWSER_VIEWPORT_PREFERENCE,
   ),
-  // 输入框电脑操作入口改为默认不展示，设置项保留、默认关闭。
-  // default 只对缺省字段生效，显式存过 false 的用户仍保持展示。
-  computerUseComposerEntryHidden: z.boolean().default(true),
+  // 输入框电脑操作入口默认展示（v1.0.4 起 CUA 真实现随包，入口随插件默认启用一起露出）。
+  // default 只对缺省字段生效；旧安装显式存过 true 的用户保持隐藏，需在设置页手动打开
+  // （或由升级迁移改写）。useCuaComposerEntry 的判定是 !== false，缺省即展示。
+  computerUseComposerEntryHidden: z.boolean().default(false),
   taskAutoArchiveEnabled: z.boolean().default(false),
   taskAutoArchiveOlderThanDays: z.number().int().positive().max(365).default(7),
   closeToTrayOnWindows: z.boolean().default(true),
