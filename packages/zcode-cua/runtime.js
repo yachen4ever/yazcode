@@ -124,24 +124,52 @@ export function createCuaDriverRuntime(client, options = {}) {
   // 就被拒。驱动合同原生支持显式复活：start_session 不带 session 参数即复活当前租约的
   // 隐式会话（StartSessionOutput.revived）。这里在适配层自愈——复活后重试原调用一次，
   // 对模型面不可见；复活失败或重试仍被拒才原样透传，让上层看到真实原因。
+  // refusal 有两种到达形态：SDK 返回的 ToolResult（structuredJson.refusal.code）与
+  // SDK 抛出的 DriverError.Tool（message 带 "session has ended"，见 projectDriverError），
+  // 两条路都要接住。
   function isSessionEndedRefusal(result) {
     const structured = parseJson(result?.structuredJson);
     return structured?.refusal?.code === "session_ended";
+  }
+  function isSessionEndedError(error) {
+    return String(error?.message ?? error ?? "").includes("session has ended");
   }
 
   // 胶水：ZCode 模型面（14 工具）走 surface 映射层；原生工具名直接透传。
   const callDriver = async (toolName, args, signal) => {
     const argsJson = JSON.stringify(args ?? {});
-    const call = () =>
-      signal
-        ? client.callTool(toolName, argsJson, { signal })
-        : client.callTool(toolName, argsJson);
-    let result = await call();
-    if (isSessionEndedRefusal(result)) {
+    const call = async () => {
+      try {
+        return await (signal
+          ? client.callTool(toolName, argsJson, { signal })
+          : client.callTool(toolName, argsJson));
+      } catch (error) {
+        if (isSessionEndedError(error)) {
+          const ended = new Error(String(error?.message ?? error));
+          ended.isSessionEnded = true;
+          throw ended;
+        }
+        throw error;
+      }
+    };
+    let result;
+    let endedThrown = false;
+    try {
+      result = await call();
+    } catch (error) {
+      if (!error?.isSessionEnded) throw error;
+      endedThrown = true;
+    }
+    if (endedThrown || isSessionEndedRefusal(result)) {
       try {
         await client.callTool("start_session", "{}");
       } catch {
+        // 复活失败时把原始 refusal 透传，让上层看到真实原因。
+        if (endedThrown) throw new Error("this session has ended; start_session revival failed");
         return result;
+      }
+      if (endedThrown) {
+        return await call();
       }
       result = await call();
     }

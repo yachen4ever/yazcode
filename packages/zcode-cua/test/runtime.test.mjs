@@ -221,3 +221,43 @@ test("session_ended 但复活失败时原样透传 refusal", async () => {
   assert.equal(result.isError, true);
   assert.equal(result.structuredContent?.refusal?.code, "session_ended");
 });
+
+test("session_ended 以 DriverError 抛出时同样复活并重试（throw 路径）", async () => {
+  const names = [];
+  let listAppsCount = 0;
+  const client = {
+    async callTool(name) {
+      names.push(name);
+      if (name === "start_session") {
+        return makeResult({ text: "started", structuredJson: JSON.stringify({ revived: true }) });
+      }
+      listAppsCount += 1;
+      if (listAppsCount === 1) {
+        const err = new Error("this session has ended; call start_session explicitly to reuse its label");
+        err.errorCode = "session_ended";
+        throw err;
+      }
+      return makeResult({ text: "apps" });
+    },
+  };
+  const runtime = createCuaDriverRuntime(client);
+  const result = await runtime.execute({ toolName: "list_apps", arguments: {}, context: CONTEXT });
+  assert.deepEqual(names, ["list_apps", "start_session", "list_apps"]);
+  assert.equal(result.isError, false);
+  // list_apps 走 surface 重投影：假结果的 structuredJson 无 apps 字段 → 投影为空列表。
+  assert.equal(result.content[0].text, "[]");
+});
+
+test("throw 路径的复活失败原样透传错误", async () => {
+  const client = {
+    async callTool(name) {
+      if (name === "start_session") throw new Error("revive lease gone");
+      const err = new Error("this session has ended; call start_session explicitly to reuse its label");
+      throw err;
+    },
+  };
+  const runtime = createCuaDriverRuntime(client);
+  const result = await runtime.execute({ toolName: "list_apps", arguments: {}, context: CONTEXT });
+  assert.equal(result.isError, true);
+  assert.match(result.content[0].text, /session has ended/);
+});
