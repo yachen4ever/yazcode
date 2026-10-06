@@ -87,7 +87,17 @@ for (const r of installed.values()) r.bucket = classify(r.license);
 
 // ---------- 构建工具许可标识复核（不是二进制发行义务豁免） ----------
 const WEAK_ALLOW = [[/^lightningcss/, "当前仅构建依赖；进入生产图时需重新核对 MPL 源码提供义务"]];
+// 生产依赖的 yellow 豁免（逐包人工复核结论，登记即声明义务已核对）：
+// @ubjs/* 是 @trycua/cua-driver 的预编译绑定层（CUA 运行时随包分发，见 4c7e696），
+// MPL-2.0 为文件级弱 copyleft——未修改的 npm 原包再分发 + 保留许可文本
+// （third-party/upstream/d1cc4c0a*.txt 快照）+ 上游源码公开
+// （github.com/jhugman/uniffi-bindgen-react-native@0.31.0-3）即满足义务；
+// 未把 MPL 代码并入本仓库源码，不传染 MIT 主仓。
+const PROD_WEAK_ALLOW = [
+  [/^@ubjs\//, "CUA 驱动预编译绑定层（MPL-2.0）；未修改再分发 + 许可快照 + 上游公开源码，义务已核对"],
+];
 function weakAllowReason(r) {
+  for (const [re, why] of PROD_WEAK_ALLOW) if (re.test(r.name)) return why;
   if (r.isProd) return null;
   for (const [re, why] of WEAK_ALLOW) if (re.test(r.name)) return why;
   return null;
