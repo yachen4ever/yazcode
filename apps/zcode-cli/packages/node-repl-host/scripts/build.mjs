@@ -1,7 +1,8 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { cp, mkdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
+import { stageCuaDriverRuntimeFiles } from "../../../../../scripts/cua-driver-runtime-assets.mjs";
 
 const packageRoot = resolve(import.meta.dirname, "..");
 
@@ -55,6 +56,9 @@ export const buildNodeReplHostBundle = async ({
     outfile,
     platform: "node",
     target: "node24",
+    // cua-driver 是 Rust 原生模块（平台 .node + 动态库），绝不能内联进 bundle；
+    // 运行时由 dist/mcp/node_modules（stageCuaDriverRuntimeFiles）按标准解析加载。
+    external: ["@trycua/cua-driver"],
   });
   // 构建期守卫：define 名一旦漂移（改名、被 createSharedDefines 之类重构吞掉），
   // 产物会静默退回空串，而症状只在正式包出现且表现为超时。这里立刻失败，别再让它溜到用户手上。
@@ -67,6 +71,23 @@ export const buildNodeReplHostBundle = async ({
       );
     }
   }
+  // 兼容层 GJS helper 是外部脚本（gjs 运行）与 Shell 扩展，不参与 esbuild 打包；
+  // 但 helper-client 以 `new URL("./helper/cua-wayland-input.js", import.meta.url)` 定位它，
+  // bundle 部署后 import.meta.url 指向 dist/mcp/server.js，所以必须整目录拷到 dist/mcp/helper/。
+  const cuaHelperDirSource = resolve(
+    packageRoot,
+    "../../../..",
+    "packages",
+    "zcode-cua",
+    "compatible",
+    "helper",
+  );
+  const cuaHelperDirTarget = resolve(dirname(outfile), "helper");
+  await mkdir(cuaHelperDirTarget, { recursive: true });
+  await cp(cuaHelperDirSource, cuaHelperDirTarget, { recursive: true });
+  // @trycua/cua-driver（JS SDK + 平台原生库）随宿主 dist/mcp/node_modules 分发；
+  // 缺文件或版本错配在这里直接失败，不留给首启 seed。
+  await stageCuaDriverRuntimeFiles(dirname(outfile));
   return { outfile, cuaHelperBuildId };
 };
 

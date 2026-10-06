@@ -51,6 +51,12 @@ export interface OfficialPluginDefinition {
   rootCandidates: readonly string[];
   /** Extra top-level paths intentionally staged as plugin runtime assets. */
   runtimeTopLevelPaths?: readonly string[];
+  /**
+   * 允许 seed 携带的顶层之下依赖子树（相对插件根）。seed 的目录遍历默认裁掉一切
+   * `node_modules` 目录；node_repl 宿主随包分发的 @trycua/cua-driver 原生运行时
+   * 位于 `dist/mcp/node_modules`，必须显式放行，否则首启 seed 会把它裁掉。
+   */
+  runtimeSubtrees?: readonly string[];
   version: string;
 }
 
@@ -58,7 +64,53 @@ const ZAI_AUTHOR = { name: "Z.ai", url: "https://z.ai" } as const;
 // 审计版不连接官方 CDN；使用内嵌图标，保留本地插件定义。
 const OFFICIAL_PLUGIN_ICON = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23666%22/%3E%3C/svg%3E";
 
-const OFFICIAL_NODE_REPL_HOST_REQUIRED_SEED_PATHS = ["dist/mcp/server.js"] as const;
+// ---------------------------------------------------------------------------
+// CUA 原生运行时（@trycua/cua-driver）的 seed 契约。
+// 逻辑与 scripts/cua-driver-runtime-assets.mjs（桌面打包暂存）保持一致；两边必须
+// 同步维护。 来源：axiom-desu/ZCodium@main packages/shared/src/builtinPluginAssets.ts
+// （Apache-2.0）；本仓库 bootstrap 未引入该共享模块，故内联最小子集。
+// ---------------------------------------------------------------------------
+
+/** node_repl 宿主内为 CUA 运行时保留的依赖子树。 */
+const CUA_RUNTIME_MODULES_PATH = "dist/mcp/node_modules";
+
+function cuaNativePackage(platform: string, arch: string): string {
+  if (!["linux", "win32", "darwin"].includes(platform) || !["x64", "arm64"].includes(arch)) {
+    throw new Error(`Unsupported CUA target: ${platform}-${arch}`);
+  }
+  const suffix = platform === "linux" ? "-gnu" : platform === "win32" ? "-msvc" : "";
+  return `@trycua/cua-driver-${platform}-${arch}${suffix}`;
+}
+
+function cuaRuntimeRequiredPaths(platform: string, arch: string): string[] {
+  const native = cuaNativePackage(platform, arch);
+  const library =
+    platform === "win32"
+      ? "cua_driver_sdk.dll"
+      : platform === "darwin"
+        ? "libcua_driver_sdk.dylib"
+        : "libcua_driver_sdk.so";
+  return [
+    ...[
+      "@trycua/cua-driver/package.json",
+      "@trycua/cua-driver/dist/index.js",
+      "@trycua/cua-driver/dist/native/node-runtime.js",
+      "@ubjs/core/package.json",
+      "@ubjs/core/dist/esm/index.js",
+      "@ubjs/node/package.json",
+      "@ubjs/node/typescript/dist/resolve-lib.js",
+      `${native}/package.json`,
+      `${native}/${library}`,
+      `${native}/cua_driver_node_runtime.node`,
+      `${native}/node-runtime-NOTICE.md`,
+    ].map((path) => `${CUA_RUNTIME_MODULES_PATH}/${path}`),
+  ];
+}
+
+export const OFFICIAL_NODE_REPL_HOST_REQUIRED_SEED_PATHS = [
+  "dist/mcp/server.js",
+  ...cuaRuntimeRequiredPaths(process.platform, process.arch),
+] as const;
 
 export const OFFICIAL_BROWSER_USE_REQUIRED_SEED_PATHS = [
   "docs/api.json",
@@ -75,6 +127,12 @@ export const OFFICIAL_BROWSER_USE_REQUIRED_SEED_PATHS = [
 const OFFICIAL_CUA_REQUIRED_SEED_PATHS = [
   "docs/computer-use.md",
   "scripts/computer-use-client.mjs",
+  // client 的 4 个子模块缺任何一个都会装出「看得见 computer-use 却调不到方法」的残缺插件
+  //（scripts/check-sdk.mjs 就是为这类残缺冒烟而存在），因此与 client 一起钉住。
+  "scripts/computer-use-errors.mjs",
+  "scripts/computer-use-envelope.mjs",
+  "scripts/computer-use-keys.mjs",
+  "scripts/computer-use-target.mjs",
   "skills/computer-use/SKILL.md",
 ] as const;
 
@@ -97,6 +155,9 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     // 进模型工具池由两个能力插件的启停决定，Helper 由 SDK 首次调用时才拉起。
     defaultEnabled: true,
     name: OFFICIAL_NODE_REPL_HOST_PLUGIN_NAME,
+    // 随宿主分发的 @trycua/cua-driver 原生运行时子树；缺了它 Computer Use 在打包态
+    // 只能 fail-closed（真实现经 dist/mcp/node_modules 标准解析加载）。
+    runtimeSubtrees: [CUA_RUNTIME_MODULES_PATH],
     requiredSeedPaths: OFFICIAL_NODE_REPL_HOST_REQUIRED_SEED_PATHS,
     rootCandidates: [
       "packages/node-repl-host",
@@ -356,7 +417,8 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       "../../../zcode-cua-plugin",
     ],
     requiredSeedPaths: OFFICIAL_CUA_REQUIRED_SEED_PATHS,
-    // 当前 CUA 为不可用占位包，无需复制 native runtime；避免把本地旧依赖继续带入缓存。
+    // 本插件只携带 skill/docs/client script；@trycua/cua-driver 原生运行时由
+    // node-repl-host 的 runtimeSubtrees 承载（两插件共同启用同一个宿主）。
     runtimeTopLevelPaths: [],
     // 这里的 version 追踪上游 zcode-cua runtime 版本，使插件 UI 展示、缓存路径、
     // marketplace 条目都对齐；具体版本由原子 producer bump 工作流维护。

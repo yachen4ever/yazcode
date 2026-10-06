@@ -17,6 +17,7 @@ import { basename, dirname, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runCommand } from "../../../scripts/spawn-command.mjs";
+import { stageCuaDriverRuntime } from "../../../scripts/cua-driver-runtime-assets.mjs";
 import { stageAgentBundle } from "./stage-agent-bundle.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -111,6 +112,26 @@ const officialPluginPackages = [
     requiredRuntimePaths: ["dist/mcp/server.js"],
     runtimeBuildScript: "scripts/build.mjs",
     stagedPath: "packages/node-repl-host",
+  },
+
+  {
+    // Computer Use 模型可见面（skill/docs/client script）。无独立 dist runtime：
+    // 原生执行由共享 node_repl host 携带（见上方条目 + stageOfficialPlugins 里的
+    // @trycua/cua-driver 暂存），权威归属见 bootstrap/official-plugin-definitions.ts。
+    packageName: "@zcode/zcode-cua-plugin",
+    relativePath: "apps/zcode-cli/packages/zcode-cua-plugin",
+    requiresRuntime: false,
+    requiredRuntimePaths: [],
+    requiredSeedPaths: [
+      "docs/computer-use.md",
+      "scripts/computer-use-client.mjs",
+      "scripts/computer-use-errors.mjs",
+      "scripts/computer-use-envelope.mjs",
+      "scripts/computer-use-keys.mjs",
+      "scripts/computer-use-target.mjs",
+      "skills/computer-use/SKILL.md",
+    ],
+    stagedPath: "packages/zcode-cua-plugin",
   },
 ];
 // 随 CLI 内置的技能包（不是插件）：bootstrap 的 resolveBundledSkillRoots 沿官方插件同款候选目录
@@ -234,7 +255,7 @@ function stageBundle() {
   stageAgentBundle({ repoRoot, platformKey });
 }
 
-function stageOfficialPlugins() {
+async function stageOfficialPlugins() {
   for (const plugin of officialPluginPackages) {
     const sourceRoot = resolve(repoRoot, plugin.relativePath);
     const manifestPath = resolve(sourceRoot, ".zcode-plugin", "plugin.json");
@@ -251,6 +272,12 @@ function stageOfficialPlugins() {
         recursive: true,
         filter: shouldCopyOfficialPluginAsset,
       });
+    }
+    // node_repl 宿主补齐 @trycua/cua-driver 原生运行时（按目标平台/架构，支持交叉打包）。
+    // 放在 cpSync 之后直写 targetRoot，绕过 shouldCopyOfficialPluginAsset 对
+    // node_modules 目录名的过滤。
+    if (plugin.packageName === "@zcode/node-repl-host") {
+      await stageCuaDriverRuntime(targetRoot, { platform, arch });
     }
     for (const relativePath of plugin.requiredSeedPaths ?? []) {
       const stagedAssetPath = resolve(targetRoot, ...relativePath.split("/"));
@@ -291,5 +318,5 @@ async function stageBundledSkillPack() {
 buildCliBundle();
 buildOfficialPluginRuntimes();
 stageBundle();
-stageOfficialPlugins();
+await stageOfficialPlugins();
 await stageBundledSkillPack();

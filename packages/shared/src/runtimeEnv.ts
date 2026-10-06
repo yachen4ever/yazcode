@@ -33,6 +33,9 @@ export function isCuaDevModeRequested(env: EnvRecord = process.env): boolean {
 
 export function isZCodeCuaInternalFeatureEnabled(env: EnvRecord = process.env): boolean {
   // CUA 现已默认打包进正式版（plugin staged + Helper enabled），不再需要显式 env flag。
+  // YazCode 私有构建默认开启的依据：@zcode/zcode-cua 已随包携带 axiom-desu/ZCodium
+  // 移植的 @trycua/cua-driver 真实现（fail-closed 占位包已替换），plugin 产物与
+  // node_repl 宿主的 CUA runtime 资产也随打包链路分发。
   // DEV_MODE 仍然 implied（开发一键），PRODUCT_HELPER=0/off/false 可显式关闭。
   if (isCuaDevModeRequested(env)) return true;
   const explicit = env[ZCODE_CUA_PRODUCT_HELPER_ENV_KEY]?.trim().toLowerCase();

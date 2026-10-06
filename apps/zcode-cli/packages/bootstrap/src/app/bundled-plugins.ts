@@ -361,7 +361,11 @@ function collectFilesystemPluginFiles(
     ...includedTopLevelPaths,
     ...(definition.runtimeTopLevelPaths ?? []),
   ]);
-  for (const sourcePath of walkFiles(rootPath, allowedTopLevelPaths)) {
+  for (const sourcePath of walkFiles(
+    rootPath,
+    allowedTopLevelPaths,
+    new Set(definition.runtimeSubtrees ?? []),
+  )) {
     const relativePath = toPosixPath(sourcePath.slice(rootPath.length + 1));
     if (!shouldIncludePluginFile(relativePath, allowedTopLevelPaths)) continue;
     const bytes = readFileSync(sourcePath);
@@ -378,13 +382,17 @@ function collectFilesystemPluginFiles(
 function* walkFiles(
   directory: string,
   allowedTopLevelPaths: ReadonlySet<string>,
-  depth = 0,
+  allowedSubtrees: ReadonlySet<string>,
+  relativeDirectory = "",
 ): Generator<string> {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (shouldSkipDirectory(entry.name, depth, allowedTopLevelPaths)) continue;
+    const relativePath = relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name;
+    if (shouldSkipDirectory(entry.name, relativePath, allowedTopLevelPaths, allowedSubtrees)) {
+      continue;
+    }
     const fullPath = join(directory, entry.name);
     if (entry.isDirectory()) {
-      yield* walkFiles(fullPath, allowedTopLevelPaths, depth + 1);
+      yield* walkFiles(fullPath, allowedTopLevelPaths, allowedSubtrees, relativePath);
       continue;
     }
     if (entry.isFile()) yield fullPath;
@@ -450,6 +458,8 @@ function readSeedPluginDescription(
 }
 
 function isSeedCurrent(targetRoot: string, plugin: OfficialPluginSeedPluginSource): boolean {
+  // 修复：标记只证明曾发布过这个版本，磁盘清理或损坏丢失必需库时仍需重新 seed。
+  if (!isSeedUsable(targetRoot, plugin.definition)) return false;
   const markerPath = join(targetRoot, SEED_MARKER_FILE);
   if (!existsSync(markerPath)) return false;
   try {
@@ -648,13 +658,21 @@ function entrypointDir(): string | undefined {
 
 function shouldSkipDirectory(
   name: string,
-  depth: number,
+  relativePath: string,
   allowedTopLevelPaths: ReadonlySet<string>,
+  allowedSubtrees: ReadonlySet<string>,
 ): boolean {
   if (name === ".turbo" || name === "coverage" || name === ".venv" || name === "__pycache__") {
     return true;
   }
-  return name === "node_modules" && !(depth === 0 && allowedTopLevelPaths.has(name));
+  // 默认裁掉一切 node_modules；只有显式声明的 runtimeSubtrees（如 node-repl-host 的
+  // dist/mcp/node_modules —— 随包分发的 @trycua/cua-driver 原生运行时）与顶层 node_modules
+  //（历史行为）放行，否则首启 seed 会把已打包的 CUA 原生库裁掉。
+  return (
+    name === "node_modules" &&
+    !allowedSubtrees.has(relativePath) &&
+    !(relativePath === name && allowedTopLevelPaths.has(name))
+  );
 }
 
 function shouldIncludePluginFile(
