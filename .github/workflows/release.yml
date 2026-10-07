@@ -323,10 +323,9 @@ jobs:
             target: mac
             arch: arm64
             glob: "*.dmg"
-          - runner: macos-15-intel
-            target: mac
-            arch: x64
-            glob: "*.dmg"
+          # mac x64（Intel）构建移除：GitHub 的 macos-15-intel runner 明显拖慢整条
+          # release 流水线（2026-10-07 v1.0.8 其余平台全绿后它独自多跑半小时），
+          # Intel Mac 用户占比趋零，不再为其单独出包（用户拍板）。
           - runner: windows-latest
             target: win
             arch: x64
