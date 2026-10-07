@@ -2258,6 +2258,8 @@ Original copyright, license and NOTICE text is retained below. Identical text is
 
 - yauzl@3.3.0 — MIT
 
+- yauzl@3.4.0 — MIT
+
 - yazl@3.3.1 — MIT
 
 - yjs@13.6.30 — MIT
@@ -37068,6 +37070,8 @@ THE SOFTWARE.
 ### Notice b303783d5eb7ca50b853ffa5f145e4e7998fab339831d848f507ca6cd970577a
 
 - yauzl@3.3.0: LICENSE
+
+- yauzl@3.4.0: LICENSE
 
 - yazl@3.3.1: LICENSE
 
