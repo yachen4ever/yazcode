@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type IMemoryService, type ProjectMemoryWorkspaceSummary } from "@zcode/services";
-import { TID_SETTINGS_MEMORY_SWITCH } from "@zcode/shared";
-import { Switch } from "@/components/ui/switch.js";
+import {
+  TID_SETTINGS_MEMORY_SWITCH,
+  type MemoryProvider,
+  type OpenVikingConnection,
+} from "@zcode/shared";
+import { Input } from "@/components/ui/input.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import {
   MemorySettingsViewer,
@@ -43,15 +54,17 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function MemorySettingsSection({
-  memoryEnabled,
+  memoryProvider,
+  openvikingConnection,
   memoryService,
-  onMemoryEnabledChange,
+  onMemoryProviderChange,
   projectMemoryViewerAvailable,
   workspaceDisplayNames = [],
 }: {
-  memoryEnabled: boolean;
+  memoryProvider: MemoryProvider;
+  openvikingConnection?: OpenVikingConnection;
   memoryService: MemoryCatalogService;
-  onMemoryEnabledChange: (enabled: boolean) => Promise<void>;
+  onMemoryProviderChange: (provider: MemoryProvider) => Promise<void>;
   projectMemoryViewerAvailable: boolean;
   workspaceDisplayNames?: readonly string[];
 }) {
@@ -88,7 +101,7 @@ export function MemorySettingsSection({
   }, [memoryService]);
 
   useEffect(() => {
-    if (memoryEnabled && projectMemoryViewerAvailable) {
+    if (memoryProvider === "local" && projectMemoryViewerAvailable) {
       void refreshCatalog();
       return;
     }
@@ -98,7 +111,7 @@ export function MemorySettingsSection({
     setCatalogError(null);
     setWorkspaces([]);
     setSelectedWorkspaceId(null);
-  }, [memoryEnabled, projectMemoryViewerAvailable, refreshCatalog]);
+  }, [memoryProvider, projectMemoryViewerAvailable, refreshCatalog]);
 
   const displayWorkspaces = useMemo(() => {
     const displayNameBySlug = buildWorkspaceDisplayNameMap(workspaceDisplayNames);
@@ -150,31 +163,74 @@ export function MemorySettingsSection({
       <SettingsGroupCard>
         <SettingsRow
           label={intl.formatMessage({
-            id: "settings.memory.workspaceMemory",
+            id: "settings.memory.provider",
           })}
           description={intl.formatMessage({
-            id: "settings.memoryDescription",
+            id: "settings.memory.providerDescription",
           })}
           control={
-            <Switch
-              aria-label={intl.formatMessage({
-                id: "settings.memory.workspaceMemory",
-              })}
-              checked={memoryEnabled}
-              data-testid={TID_SETTINGS_MEMORY_SWITCH}
-              onCheckedChange={(checked) => {
-                void onMemoryEnabledChange(checked);
-              }}
-            />
+            <Select value={memoryProvider} onValueChange={(value) => {
+                void onMemoryProviderChange(value as MemoryProvider);
+              }}>
+              <SelectTrigger
+                aria-label={intl.formatMessage({ id: "settings.memory.provider" })}
+                data-testid={TID_SETTINGS_MEMORY_SWITCH}
+                className="w-56"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="disable">
+                  {intl.formatMessage({ id: "settings.memory.provider.disable" })}
+                </SelectItem>
+                <SelectItem value="local">
+                  {intl.formatMessage({ id: "settings.memory.provider.local" })}
+                </SelectItem>
+                <SelectItem value="openviking">
+                  {intl.formatMessage({ id: "settings.memory.provider.openviking" })}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           }
         />
       </SettingsGroupCard>
+
+      {memoryProvider === "openviking" ? (
+        <SettingsGroupCard>
+          <SettingsRow
+            label={intl.formatMessage({ id: "settings.memory.ov.url" })}
+            description={intl.formatMessage({ id: "settings.memory.ov.urlDescription" })}
+            control={
+              <Input
+                aria-label={intl.formatMessage({ id: "settings.memory.ov.url" })}
+                defaultValue={openvikingConnection?.url ?? ""}
+                placeholder="http://127.0.0.1:1933"
+                className="w-72"
+                readOnly
+              />
+            }
+          />
+          <SettingsRow
+            label={intl.formatMessage({ id: "settings.memory.ov.userKey" })}
+            description={intl.formatMessage({ id: "settings.memory.ov.userKeyDescription" })}
+            control={
+              <Input
+                aria-label={intl.formatMessage({ id: "settings.memory.ov.userKey" })}
+                defaultValue={openvikingConnection?.userKey ?? ""}
+                placeholder="user key"
+                className="w-72"
+                readOnly
+              />
+            }
+          />
+        </SettingsGroupCard>
+      ) : null}
 
       {!projectMemoryViewerAvailable ? (
         <div className="rounded-xl border border-dashed border-border bg-transparent px-4 py-8 text-center text-ui-base text-foreground-subtle">
           {intl.formatMessage({ id: "settings.memory.viewer.localOnly" })}
         </div>
-      ) : !memoryEnabled ? null : (
+      ) : memoryProvider !== "local" ? null : (
         <MemorySettingsViewer
           catalogError={catalogError}
           catalogState={catalogState}

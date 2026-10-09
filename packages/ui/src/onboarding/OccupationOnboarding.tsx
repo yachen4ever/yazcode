@@ -209,7 +209,9 @@ export function OccupationOnboarding({
         // settings 侧保持既有语义：跳过落保守默认值（职业 other / 偏好关），
         // "跳过也算答案"的区分度只体现在 onboarding-record.json 里。
         onboardingOccupation: occupation ?? "other",
-        memoryEnabled: skip ? false : memory,
+        // 引导只回答「要不要内置文件记忆」，映射到 local / disable 两档；
+        // openviking 需要连接配置，不在引导范围内。
+        memoryProvider: skip || !memory ? "disable" : "local",
         proactiveSuggestionsEnabled: !skip && mode === "office" && suggestions,
       });
       // 保存成功就是本次引导的终点；本地记录失败也应结束引导页面。

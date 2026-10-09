@@ -2163,6 +2163,17 @@ const enUS: Record<string, string> = {
     "Use enhanced Find and Grep in new sessions and sessions restored after an app restart. Active sessions keep their current setting; Find remains unchanged on Windows.",
   "settings.memory": "Memory",
   "settings.memory.workspaceMemory": "Workspace Memory",
+  "settings.memory.provider": "Memory provider",
+  "settings.memory.providerDescription":
+    "Choose whether memory lives in local files or in an OpenViking service. Switching never deletes existing memories from either side, and an unreachable OpenViking reports an error instead of falling back to local.",
+  "settings.memory.provider.disable": "No memory",
+  "settings.memory.provider.local": "Local file memory",
+  "settings.memory.provider.openviking": "OpenViking service",
+  "settings.memory.ov.url": "OpenViking server URL",
+  "settings.memory.ov.urlDescription": "Base URL of the OpenViking server.",
+  "settings.memory.ov.userKey": "User key",
+  "settings.memory.ov.userKeyDescription":
+    "Must be a user key; a root key is admin-only and cannot read or write memories.",
   "settings.memoryDescription":
     "Save and reuse long-term context in workspaces. Applies to new sessions and may increase model requests and token costs.",
   "settings.memory.viewer.disabled": "Enable Workspace Memory to view saved memories.",

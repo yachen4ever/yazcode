@@ -36,12 +36,16 @@ import { wslUserSchema } from "./wslUserValidation.js";
 export { WSL_USER_MAX_LENGTH, isValidWslUser, wslUserSchema } from "./wslUserValidation.js";
 export { zcodeTaskModeSchema } from "./zcode-task-mode-schema.js";
 export {
+  MEMORY_PROVIDER_VALUES,
   appSettingsOccupationEnum,
   appSettingsPatchSchema,
   appSettingsSchema,
   localeSchema,
+  memoryProviderSchema,
+  openvikingConnectionSchema,
   postUpdateReleaseNotesPayloadSchema,
 } from "./validationAppSettings.js";
+export type { MemoryProvider, OpenVikingConnection } from "./validationAppSettings.js";
 
 export function formatZodError(error: z.ZodError): string {
   return error.issues

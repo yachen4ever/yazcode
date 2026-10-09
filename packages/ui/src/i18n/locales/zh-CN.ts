@@ -2028,6 +2028,17 @@ const zhCN: Record<string, string> = {
     "在新建会话或应用重启后恢复的会话中使用增强 Find 和 Grep。当前会话保持现有设置；Windows 的 Find 保持不变。",
   "settings.memory": "记忆",
   "settings.memory.workspaceMemory": "工作区记忆",
+  "settings.memory.provider": "记忆提供方",
+  "settings.memory.providerDescription":
+    "选择记忆由本地文件还是 OpenViking 服务承担。切换不会删除任何一方的已有记忆；OpenViking 不可达时会直接报错，不会回落到本地。",
+  "settings.memory.provider.disable": "不启用记忆",
+  "settings.memory.provider.local": "本地文件记忆",
+  "settings.memory.provider.openviking": "OpenViking 服务",
+  "settings.memory.ov.url": "OpenViking 服务地址",
+  "settings.memory.ov.urlDescription": "OpenViking 服务端的 base URL。",
+  "settings.memory.ov.userKey": "用户密钥",
+  "settings.memory.ov.userKeyDescription":
+    "必须是 user key；root key 只能用于管理面，无法读写记忆。",
   "settings.memoryDescription":
     "在工作区中保存并复用长期上下文，新会话生效。开启后可能增加模型调用和 Token 成本。",
   "settings.memory.viewer.localOnly":

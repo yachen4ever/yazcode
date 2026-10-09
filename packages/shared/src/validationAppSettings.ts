@@ -283,8 +283,19 @@ function migrateLegacyWorkspaceSession(value: unknown): unknown {
     lastOpenTabs?: unknown;
     lastWorkspaceSession?: unknown;
     remoteWorkspaceHistory?: unknown;
+    memoryEnabled?: unknown;
+    memoryProvider?: unknown;
   };
   const migrated = { ...raw } as Record<string, unknown>;
+
+  // 记忆提供方从布尔切到三态：存量 memoryEnabled 直接映射，写入新字段后移除旧字段，
+  // 避免同一语义有两个真相源。用户已选的 memoryProvider 优先，不被旧字段覆盖。
+  if (typeof migrated.memoryProvider !== "string") {
+    if (typeof migrated.memoryEnabled === "boolean") {
+      migrated.memoryProvider = migrated.memoryEnabled ? "local" : "disable";
+    }
+  }
+  delete migrated.memoryEnabled;
   const lastWorkspaceSession = Array.isArray(raw.lastWorkspaceSession)
     ? raw.lastWorkspaceSession
     : [];
@@ -428,6 +439,28 @@ export const officialServiceSwitchesSchema = z.object({
   clientConfig: z.boolean().optional(),
 });
 
+/**
+ * 记忆提供方。三态互斥且**无兜底**：选了 openviking 但服务不可达时显式报错，
+ * 不回落到 local——静默降级会让用户以为 OpenViking 生效，实际召回来源已变。
+ *
+ * local 与 openviking 完全互斥，不存在「本地记忆 + OpenViking 压缩」的组合：
+ * 压缩接管是独立维度（compactionProvider），不复用本枚举。
+ */
+export const memoryProviderSchema = z.enum(["disable", "local", "openviking"]);
+export type MemoryProvider = z.infer<typeof memoryProviderSchema>;
+export const MEMORY_PROVIDER_VALUES = memoryProviderSchema.options;
+
+/** OpenViking 连接配置。仅 memoryProvider === "openviking" 时有意义。 */
+export const openvikingConnectionSchema = z.object({
+  /** 服务端 base URL，如 http://192.168.5.7:1933 */
+  url: z.string().trim().min(1),
+  /** user key；root key 不能用于记忆读写（仅管理面），校验时会被服务端拒绝 */
+  userKey: z.string().trim().min(1),
+  /** 最近一次校验通过的时间戳；用于设置页显示，不参与运行时判定 */
+  verifiedAt: z.number().int().nonnegative().optional(),
+});
+export type OpenVikingConnection = z.infer<typeof openvikingConnectionSchema>;
+
 const appSettingsObjectSchema = z.object({
   recentProjects: z.array(z.string()).default([]),
   locale: localeSchema.default("zh-CN"),
@@ -473,7 +506,8 @@ const appSettingsObjectSchema = z.object({
   nativeSearchEnhancementsEnabled: z.boolean().default(true),
   onboardingOccupation: appSettingsOccupationSchema.nullish(),
   proactiveSuggestionsEnabled: z.boolean().optional(),
-  memoryEnabled: z.boolean().default(false),
+  memoryProvider: memoryProviderSchema.default("disable"),
+  openvikingConnection: openvikingConnectionSchema.optional(),
   lastWorkspaceSession: z.array(appWorkspaceSessionEntrySchema).default([]),
   lastActiveTabIndex: z.number().int().nonnegative().default(0),
   lastActiveTaskByWorkspace: z.record(z.string(), z.string()).optional(),
@@ -562,7 +596,8 @@ export const appSettingsPatchSchema = z.object({
     ])
     .nullish(),
   proactiveSuggestionsEnabled: z.boolean().optional(),
-  memoryEnabled: z.boolean().optional(),
+  memoryProvider: memoryProviderSchema.optional(),
+  openvikingConnection: openvikingConnectionSchema.optional(),
   lastWorkspaceSession: z.array(appWorkspaceSessionEntrySchema).optional(),
   lastActiveTabIndex: z.number().int().nonnegative().optional(),
   lastActiveTaskByWorkspace: z.record(z.string(), z.string()).optional(),

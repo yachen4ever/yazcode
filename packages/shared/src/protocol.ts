@@ -328,8 +328,13 @@ export interface AppSettings {
   providerFamilyDomainMigrated?: boolean;
   /** 新建或冷恢复 Session 是否为 Bash 注入 bfs/ugrep 增强；默认启用。 */
   nativeSearchEnhancementsEnabled?: boolean;
-  /** 新建或冷恢复 Session 是否启用 Memory；默认关闭。 */
-  memoryEnabled?: boolean;
+  /**
+   * 新建或冷恢复 Session 使用的记忆提供方；默认 disable。
+   * 三态互斥无兜底：openviking 不可达时报错，不回落 local。
+   */
+  memoryProvider?: "disable" | "local" | "openviking";
+  /** OpenViking 连接配置；仅 memoryProvider === "openviking" 时有意义。 */
+  openvikingConnection?: { url: string; userKey: string };
   onboardingOccupation?:
     | "office"
     | "developer"

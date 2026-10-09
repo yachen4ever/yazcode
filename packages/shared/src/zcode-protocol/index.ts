@@ -1703,7 +1703,15 @@ export type ZCodeModelContextBudgetStrategy = z.infer<typeof zcodeModelContextBu
 export const zcodeSessionRuntimePreferencesResultSchema = z
   .object({
     nativeSearchEnhancementsEnabled: z.boolean(),
-    memoryEnabled: z.boolean().default(false),
+    /**
+     * 记忆提供方三态。旧 Host 只会下发 memoryEnabled，故保留它并按布尔推导：
+     * true → local，false → disable。新 Host 下发 memoryProvider 时优先。
+     */
+    memoryEnabled: z.boolean().optional(),
+    memoryProvider: z.enum(["disable", "local", "openviking"]).optional(),
+    openvikingConnection: z
+      .object({ url: z.string().min(1), userKey: z.string().min(1) })
+      .optional(),
     askUserQuestionAutoResolutionEnabled: z.boolean().default(true),
     integratedTerminalShell: integratedTerminalShellSelectionSchema.optional(),
     // 兼容旧 Host：缺少字段时在协议解析边界使用当前默认策略。

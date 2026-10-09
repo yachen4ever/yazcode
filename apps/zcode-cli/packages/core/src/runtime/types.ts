@@ -298,6 +298,12 @@ export interface EnqueueSubagentMessageInput {
 
 export interface MemoryRuntimeConfig {
   cliStorageRoot?: string;
+  /**
+   * 记忆提供方。三态互斥：内置层只在 "local" 档位启用；"openviking" 档位内置层
+   * 完全不跑，由服务端承担抽取与召回。压缩接管是独立维度，不复用本字段。
+   */
+  provider?: "disable" | "local" | "openviking";
+  /** 内置层开关；等价于 provider === "local"，保留布尔形状供既有判定使用。 */
   enabled?: boolean;
   /** 是否调度成功 Main turn 后的自动 Extraction；缺省按 true 处理。 */
   extractionEnabled?: boolean;

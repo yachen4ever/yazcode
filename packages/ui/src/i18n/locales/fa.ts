@@ -2116,6 +2116,17 @@ const faIR: Record<string, string> = {
     "در نشست‌های جدید و نشست‌های بازیابی‌شده پس از راه‌اندازی دوباره برنامه، از Find و Grep تقویت‌شده استفاده می‌شود. نشست‌های فعال تنظیم فعلی خود را حفظ می‌کنند؛ Find در Windows بدون تغییر می‌ماند.",
   "settings.memory": "حافظه",
   "settings.memory.workspaceMemory": "حافظه فضای کاری",
+  "settings.memory.provider": "ارائه‌دهنده حافظه",
+  "settings.memory.providerDescription":
+    "انتخاب کنید حافظه در فایل‌های محلی نگهداری شود یا در سرویس OpenViking. تغییر ارائه‌دهنده هیچ حافظه‌ای را از هیچ طرف حذف نمی‌کند؛ اگر OpenViking در دسترس نباشد خطا گزارش می‌شود و به حافظه محلی بازگشتی انجام نمی‌شود.",
+  "settings.memory.provider.disable": "بدون حافظه",
+  "settings.memory.provider.local": "حافظه فایل محلی",
+  "settings.memory.provider.openviking": "سرویس OpenViking",
+  "settings.memory.ov.url": "نشانی سرویس OpenViking",
+  "settings.memory.ov.urlDescription": "نشانی پایه سرویس OpenViking.",
+  "settings.memory.ov.userKey": "کلید کاربر",
+  "settings.memory.ov.userKeyDescription":
+    "باید کلید کاربر باشد؛ کلید root فقط برای مدیریت است و نمی‌تواند حافظه‌ها را بخواند یا بنویسد.",
   "settings.memoryDescription":
     "ذخیره و استفاده دوباره از زمینه بلندمدت در فضاهای کاری. روی نشست‌های جدید اعمال می‌شود و ممکن است تعداد درخواست‌های مدل و هزینه توکن‌ها را افزایش دهد.",
   "settings.memory.viewer.disabled": "برای مشاهده حافظه‌های ذخیره‌شده، حافظه فضای کاری را فعال کنید.",

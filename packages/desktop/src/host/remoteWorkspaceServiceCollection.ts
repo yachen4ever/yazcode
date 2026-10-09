@@ -268,7 +268,10 @@ export function createRemoteWorkspaceServiceCollection(params: {
               askUserQuestionAutoResolutionEnabled:
                 settings.askUserQuestionAutoResolutionEnabled !== false,
               nativeSearchEnhancementsEnabled: settings.nativeSearchEnhancementsEnabled !== false,
-              memoryEnabled: settings.memoryEnabled === true,
+              memoryProvider: settings.memoryProvider ?? "disable",
+              ...(settings.openvikingConnection
+                ? { openvikingConnection: settings.openvikingConnection }
+                : {}),
               modelContextBudgetStrategy,
               // remote workspace 与本地 Host 保持同一 scope 边界，首次执行不得再次等待 client config。
               ...(request.scope === "user-execution" && settings.integratedTerminalShell

@@ -17,6 +17,7 @@ import type {
   UserInfo,
   ZCodeInteractionBehavior,
   OfficialServiceKey,
+  MemoryProvider,
 } from "@zcode/shared";
 import { normalizeOfficialServiceSwitches } from "@zcode/shared";
 import {
@@ -650,7 +651,7 @@ export function SettingsPage({
     }
     return [...names];
   }, [sharedSettings?.recentProjects, workspaceTabs]);
-  const memoryEnabled = sharedSettings?.memoryEnabled === true;
+  const memoryProvider = sharedSettings?.memoryProvider ?? "disable";
   const nativeSearchEnhancementsEnabled = sharedSettings?.nativeSearchEnhancementsEnabled !== false;
   const askUserQuestionAutoResolutionEnabled =
     sharedSettings?.askUserQuestionAutoResolutionEnabled !== false;
@@ -843,13 +844,13 @@ export function SettingsPage({
     },
     [updateSharedSettings],
   );
-  const handleMemoryEnabledChange = useCallback(
-    async (enabled: boolean) => {
+  const handleMemoryProviderChange = useCallback(
+    async (provider: MemoryProvider) => {
       await (async () => {
-        await updateSharedSettings({ memoryEnabled: enabled });
+        await updateSharedSettings({ memoryProvider: provider });
         // 手动修改反向回写 record，换号同步不会复活旧值；失败不阻塞开关。
         await onboardingRecordService
-          ?.updateRecordPreferences({ memoryEnabled: enabled })
+          ?.updateRecordPreferences({ memoryEnabled: provider === "local" })
           .catch((cause: unknown) => {
             console.warn("[settings] 回写引导记录失败", String(cause));
           });
@@ -1471,9 +1472,10 @@ export function SettingsPage({
                           <ServiceProvider services={localHostServices}>
                             {/* Memory catalog 始终使用本地 Host，避免远程 workspace 误读本机数据。 */}
                             <MemorySettingsSection
-                              memoryEnabled={memoryEnabled}
+                              memoryProvider={memoryProvider}
+                              openvikingConnection={sharedSettings?.openvikingConnection}
                               memoryService={localHostServices.memoryService}
-                              onMemoryEnabledChange={handleMemoryEnabledChange}
+                              onMemoryProviderChange={handleMemoryProviderChange}
                               projectMemoryViewerAvailable={Boolean(isDesktop)}
                               workspaceDisplayNames={memoryWorkspaceDisplayNames}
                             />

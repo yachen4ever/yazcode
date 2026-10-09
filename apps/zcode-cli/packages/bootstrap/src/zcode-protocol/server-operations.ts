@@ -3351,9 +3351,14 @@ async function createRecord(
       toolDisallowlist: "toolDenylist" in params ? params.toolDenylist : undefined,
       nativeSearchEnhancementsEnabled: startupPreferences.nativeSearchEnhancementsEnabled,
       modelContextBudgetStrategy: startupPreferences.modelContextBudgetStrategy,
-      // Memory Settings 是现有 CLI features.memory/use 之外的总开关。只在关闭时
-      // 写入 override，避免开启值反向覆盖用户已有的 CLI 禁用配置。
-      ...(startupPreferences.memoryEnabled ? {} : { memory: { enabled: false } }),
+      // 记忆提供方三态：无内置层、local 文件记忆、openviking 外部接管。
+      // `enabled` 是内置层专属开关——只有 local 档位为 true；openviking 档位内置层
+      // 完全不跑（抽取与注入都交给服务端），由设置保存时的连接校验保证集成存在，
+      // 运行时不做回落检查。
+      memoryProvider: startupPreferences.memoryProvider ?? "disable",
+      ...(startupPreferences.memoryProvider === "local"
+        ? {}
+        : { memory: { enabled: false } }),
       // desktop-continuous session/create 由 UI 先解析 ~/.yazcode/.agents 的 enabled MCP，
       // 但 protocol app-server 自己不会读取 UI/main 侧的 MCP store；之前 createRecord 没把
       // params.mcpServers 注入 runtimeConfig，导致日志里 runtimeHasMcpConfig=false，工具永远不启动。
