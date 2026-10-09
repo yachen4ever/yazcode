@@ -76,3 +76,4 @@ packages/desktop/.e2e-network-capture/
 # 一份必然漂移的副本；且代码有 fallback-gitignore / fallback-builtin 降级链，
 # 缺它不影响功能。要团队共享一份定制范围时，再显式 force-add。
 .zcodeignore
+.tmp-*
