@@ -405,5 +405,20 @@
       ".agents/skills/pdf/templates/brand-guide-2page/README.md",
       ".agents/skills/pdf/templates/latex-technical-book/source.tex"
     ]
+  },
+  {
+    "id": "openviking-client-integration",
+    "referenceRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
+    "source": "https://raw.githubusercontent.com/volcengine/OpenViking/76511554eee2c2efb0ae08f9a2284041aed39840/examples/LICENSE",
+    "file": "third-party/upstream/ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831.txt",
+    "sha256": "ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831",
+    "importRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
+    "license": "Apache-2.0",
+    "provenance": "Vendored from OpenViking examples/ at revision 76511554eee2c2efb0ae08f9a2284041aed39840: agent-hook-plugin (trimmed to the zcode host) plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except integration.json, which is machine-specific and removed; no file-local modification notices are therefore required.",
+    "roots": [
+      "vendor/openviking/zcode",
+      "vendor/openviking/memory-plugin-shared"
+    ],
+    "scope": "Client-side agent integration runtime shipped inside the desktop bundle; only activated when the user selects the OpenViking memory provider."
   }
 ]
