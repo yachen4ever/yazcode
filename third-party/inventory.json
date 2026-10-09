@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "inputHashEncoding": "UTF-8 with CRLF normalized to LF; notice and source snapshot hashes remain byte-exact",
   "scope": "Production dependency union across current workspace projects, copied source/assets and native tools; not a per-installer SBOM or a certification of all licensing obligations.",
-  "noticesSha256": "e2a4520bebd00935d81c2bd72e9601ccd2143c69e9fd14153bbe4134efaebf67",
+  "noticesSha256": "2849cf36a674a289f3c241ee667411bfb8a8ee7ba2def3af429e8fee81a58a23",
   "inputs": {
     ".agents/skills/agent-browser/references/authentication.md": "e2c3b0f4a1dc1368dee821f03c000d818a48421d09f3872525dddffe73f2112b",
     ".agents/skills/agent-browser/references/commands.md": "17522fc56d742663f47231ff06c4811abc87e12c7f78e11f94d253ddd540a909",
@@ -516,7 +516,7 @@
     "apps/zcode-cli/packages/zcode-cua-plugin/package.json": "09f5fb7e3deef1953580342703157160fc7d9afb381a7406e04f56e9661aa9c9",
     "apps/zcode-cli/tools/prompt-trajectory/package.json": "7f161fc87f36691f01eb8c2034bd89cf28107da36db02bc20e76f059edd36af6",
     "apps/zcode-cli/tools/typescript/package.json": "23d7e50d2089d205ce3022c5bafbb6b3e31d000e41ac678a5934e0b72627cf3a",
-    "package.json": "72b86ea6677ead816fa3acd07955cbab55d416350a2ad667c7ebaf52c6503ad3",
+    "package.json": "9c45d2a0744117c579054339aa3ff44ced3f92084a08d5b043b6c9e3a522a1a8",
     "packages/client/package.json": "e76f441549130dc3e5e68072a36b6cb9044e19a6625f1e813f19a4def2b1b689",
     "packages/desktop/package.json": "eeaa6b19b20e502606cdd1f0721f1bcb055c20610433038ffa16d99edfe83055",
     "packages/desktop/src/renderer/public/material-icons/3d.svg": "9527b849f0fba57ca7640e2717b3a19cb5f5e046712cbbd8b75d73af338c68fb",
@@ -2944,7 +2944,7 @@
     "scripts/license-texts/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "scripts/native-search-tools-config.mjs": "281d368464f61363fa2d8ab74f416962fe730dd0a0572db5564475f876bb65aa",
     "scripts/remote-native-search-tools-config.mjs": "472322a66f84c7452f96aa9e16e9c4e0600f7c2588a03dc6bc869229161b1cb2",
-    "third-party/copied-components.json": "f2424764ddaa3348f8cf4ac7800a21e620ff0b667f3f6fddde6db0112678d68c",
+    "third-party/copied-components.json": "4b564e810f90a649f579d20e45209f124ca1a3a1bd9d1c912e556077e9db6b2a",
     "third-party/embedded-components.json": "9586ccca15897f56d4ca1d703dffe9e02880fedd766c1dff93f7ac1f52ea891a",
     "third-party/native-search/licenses/00373c9bf56a894b2ed67586596bc1e8b0630cabbaf1ab46c75fc754b6bcd1ce.txt": "00373c9bf56a894b2ed67586596bc1e8b0630cabbaf1ab46c75fc754b6bcd1ce",
     "third-party/native-search/licenses/01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f.txt": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
@@ -3128,6 +3128,7 @@
     "third-party/upstream/cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9.txt": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
     "third-party/upstream/cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c.txt": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
     "third-party/upstream/cdab3014d4f69b49dde2b85e81792208c72de613aa6aed7f7a9b5c6609b89670.txt": "cdab3014d4f69b49dde2b85e81792208c72de613aa6aed7f7a9b5c6609b89670",
+    "third-party/upstream/ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831.txt": "081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6",
     "third-party/upstream/cf81859d85e99ff2fad83d51d9dfd85ca5189b23c4442aacf1890c54665d92f4.txt": "cf81859d85e99ff2fad83d51d9dfd85ca5189b23c4442aacf1890c54665d92f4",
     "third-party/upstream/cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "third-party/upstream/d1cc4c0ada218e8a336dc8c3d8bb7d5b1c8dedfa31f5b25c9ea1759d21b8b62d.txt": "d1cc4c0ada218e8a336dc8c3d8bb7d5b1c8dedfa31f5b25c9ea1759d21b8b62d",
@@ -3140,7 +3141,68 @@
     "third-party/upstream/f18c12b8e7daf98d572518b7db133b2dc66a713921dac4825410dd656e0c1a1a.txt": "f18c12b8e7daf98d572518b7db133b2dc66a713921dac4825410dd656e0c1a1a",
     "third-party/upstream/f29b60ea39a2132e3baa98927c2d473b349a54143da44a0c6762b243e6459452.txt": "f29b60ea39a2132e3baa98927c2d473b349a54143da44a0c6762b243e6459452",
     "third-party/upstream/f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af.txt": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af",
-    "third-party/upstream/fc7d762e0ebf8720d0a03cf00058aaa3a198347e9651be2f50a25e3b3ec13985.txt": "fc7d762e0ebf8720d0a03cf00058aaa3a198347e9651be2f50a25e3b3ec13985"
+    "third-party/upstream/fc7d762e0ebf8720d0a03cf00058aaa3a198347e9651be2f50a25e3b3ec13985.txt": "fc7d762e0ebf8720d0a03cf00058aaa3a198347e9651be2f50a25e3b3ec13985",
+    "vendor/openviking/memory-plugin-shared/lib/agent-hook-runtime.mjs": "6aef5b91455a7c441dda21c0a1db12cdd852860997d1007484d001c53bf31d8a",
+    "vendor/openviking/memory-plugin-shared/lib/async-writer.mjs": "2e5415193020cd4ea8b23f820acf0063d5393289b4f06b582205153888fffda6",
+    "vendor/openviking/memory-plugin-shared/lib/batch-send.mjs": "2e5903703bb5c07a9d91fbd4e11020a7a5d8b677fd90f0c67170f17e9604a5bb",
+    "vendor/openviking/memory-plugin-shared/lib/capture-utils.mjs": "5d49fd7ea37135053b7ca99a9b70639f928c475bc3d0577e8ff17ad6538568c0",
+    "vendor/openviking/memory-plugin-shared/lib/config-schema.mjs": "d4051303644153964f64f36598947d86167431060a4c61626b52f8ccb4c16b14",
+    "vendor/openviking/memory-plugin-shared/lib/credentials.mjs": "a1a269319fc3d6b8a6079f05b9df4befce3c882ffcc2336814c5e567e768788f",
+    "vendor/openviking/memory-plugin-shared/lib/debug-log.mjs": "dddcccd257f46f39fe2197890957ae6d69f0f4436a902fd03c2153db6a48d91d",
+    "vendor/openviking/memory-plugin-shared/lib/doctor-core.mjs": "3f80e8514376fbe1ccc79cf702066c6783338cf3ec533cb9ba4ccf55098fe98b",
+    "vendor/openviking/memory-plugin-shared/lib/input-filters.mjs": "0d6eb1ebbb4bac21970d2eb9afd6b23f4167ade4d979c984be64927d480c619a",
+    "vendor/openviking/memory-plugin-shared/lib/install/host-json-config.mjs": "79d319607e69a6a47d4230ead238863101f6e1c13a5ace4b6a04e58eb17e56f2",
+    "vendor/openviking/memory-plugin-shared/lib/install/jsonc-edit.mjs": "b899177bd19fb023f9c2deebdeb3d003a4ed686e9052e170af47fc7216203c97",
+    "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.mjs": "134c6c88b1475ff0be0d298ae7635b4d42a389fcb8b2445e0f3fcd52e80a1869",
+    "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.test.mjs": "1a4ac6512581b9acf27f8f106adb775287edfef553681ab92bf301c7abd0b2ce",
+    "vendor/openviking/memory-plugin-shared/lib/MANIFEST": "35b32f3c12bde25b0ccbf0269dcf791b4792ed700f411769a3f8555d54e9e4b6",
+    "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-config.mjs": "1896a9998b9b884896a6d5b8e4fd2eb76a7ff90dbdea280942f3f6ea2b9516c4",
+    "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-core.mjs": "ae780035671e7d82f590371334318df02cc75a5d768b147aa97a84ba98a6c247",
+    "vendor/openviking/memory-plugin-shared/lib/ov-http.mjs": "01e908f6a1f53bc44da2dc00b7864959473bf1d0f383f8942fd35ef4188ce536",
+    "vendor/openviking/memory-plugin-shared/lib/pending-queue.mjs": "dbcc6aa01106bdd7a207d8eae3f595fd0fb8362439a0f0b8770c90ee8cb3ca89",
+    "vendor/openviking/memory-plugin-shared/lib/plugin-config.mjs": "ce1f48a474de3566daf902bcd08e09b343e8def92eeed8aec523f926c5af63c6",
+    "vendor/openviking/memory-plugin-shared/lib/profile-inject.mjs": "fd367549399670fc5b3e1a5dbf1b19a6178ad04ff5307b36eee7f73b038cba80",
+    "vendor/openviking/memory-plugin-shared/lib/recall-compress-core.mjs": "c1cc3d24bcc03e99f3e2d4f6e8f6a2334e554f7f2e7bc0a94d8fa2cb79095666",
+    "vendor/openviking/memory-plugin-shared/lib/recall-core.mjs": "d66405f9aba0fe2e47b8bb940bad241c5c529d6a8b3f01e8f46731e47ac88e46",
+    "vendor/openviking/memory-plugin-shared/lib/retryable.mjs": "e3e8b712d1d9930e102abf6d4f06324c886d690743babc10f23c34702c293fea",
+    "vendor/openviking/memory-plugin-shared/lib/session-model.mjs": "4a1f5951662e4a6df70d659e77e0de784882059b28db549b87bb3941e3001660",
+    "vendor/openviking/memory-plugin-shared/lib/uri-guard.mjs": "ff8a7921bb76128614685fc55ee47daac20a55ed38f0ff2ed432755ad95312ac",
+    "vendor/openviking/memory-plugin-shared/lib/workspace-config.mjs": "afaaa9cdf715d51ccb78b2d0bd384ac71e0710ae36ad3ceb5e715477fc703c0a",
+    "vendor/openviking/memory-plugin-shared/lib/workspace-identity.mjs": "8b4c2be78201300bd978c88c27f78d21dd982aae95331d78ceb20e7d80bd81b6",
+    "vendor/openviking/memory-plugin-shared/lib/workspace-peer.mjs": "45e61fe33a4e3117130379fb0c2466f0a99e22f3d4c30debb118cd2504d9d1fd",
+    "vendor/openviking/memory-plugin-shared/lib/workspace-registry.mjs": "6733e8dfebae4792bde7921e3db90bcf5f7a5b2b5a7b564d7f30f3ce0cebca70",
+    "vendor/openviking/zcode/DESIGN.md": "0184e8542d3c43708e2ecbde853505b81918efc448c8b96e0bc423812e6ef9a8",
+    "vendor/openviking/zcode/hosts/cursor-transcript.mjs": "c9e50a80742b2e440d9b7b8113b752214845b17c23ccf1c31edb375aae3a7c0d",
+    "vendor/openviking/zcode/hosts/cursor.mjs": "780a99d2f5c9e85f579d8ab15c106cc7a07d16568403aa51bccaedc651570dfb",
+    "vendor/openviking/zcode/hosts/incremental-turn-capture.mjs": "1a5953f2f5faf6b66a36c42bb2bde5c2ba725030e29b949f6a910145cd0739be",
+    "vendor/openviking/zcode/hosts/index.mjs": "bf16b461228fb2d670fa78e8e72c652ccbd335a100af8b0fc22096d960d88c3b",
+    "vendor/openviking/zcode/hosts/kimicode-turns.mjs": "2125629f9d4ffcc02f112c51c04dc25e9207fec8c615f3aa21cf4cfe94ce10d8",
+    "vendor/openviking/zcode/hosts/kimicode.mjs": "15814cd38562fb08d7ca8c833d853bec544fa750fa848a1c4088dbfb3df43165",
+    "vendor/openviking/zcode/hosts/trae-turns.mjs": "9ba8b2cc7147ecca051b5de2c5a95635e800b1a64cd62786e250ecf50c89e999",
+    "vendor/openviking/zcode/hosts/trae.mjs": "ffd2ea4b5609f3fe23507cc561c05b48ec99f424d56dd551de6748178bb77526",
+    "vendor/openviking/zcode/hosts/zcode-capture.mjs": "e0d5b4650c935a83e363cfb49bbbfe515d220726938461009cb69cad528f0ebe",
+    "vendor/openviking/zcode/hosts/zcode-turns.mjs": "1838cc187ac09baca811ffea89e8f54368c1d15956cf26c4d5b3960964da3a4e",
+    "vendor/openviking/zcode/hosts/zcode.mjs": "91b6782b49ef7c67fa4cc7ab8b4c93b83cfcb91aa2a0499a9c3f769289c930ee",
+    "vendor/openviking/zcode/hosts/zcode/.mcp.json": "13157f7faf76430a04bf17c8e6c5ea987d7794b7e30e3c500368d84a13cd3238",
+    "vendor/openviking/zcode/hosts/zcode/hooks.json": "260335b0e520324458371902c48866719dd337ddf0ab4eaab5952ea5e3b489aa",
+    "vendor/openviking/zcode/hosts/zcode/openviking.integration.json": "d1d6faf324fdc98166b0207ea86daa1e0150be2a744201ce77b957a2488973e9",
+    "vendor/openviking/zcode/plugin.json": "195a8eac6e0932d09ef5012b4576537ada25ff8157a8af24495965e64f99810e",
+    "vendor/openviking/zcode/README_CN.md": "8838553d66341a3c876dcb9bc911a6a52347686179b945f8495be62576ffef56",
+    "vendor/openviking/zcode/README.md": "d5152388222dfdaf3b2c7d4140d8b156e32ed7d41446a1ef1ac070b8e04526bb",
+    "vendor/openviking/zcode/scripts/hook.mjs": "b8902983924b7673ef8f29afd061063928acb860b997114fa6c3b2bab21ccf75",
+    "vendor/openviking/zcode/scripts/ov-memory-doctor.mjs": "88847f954b2ddbed75baa0146aadc6b2c5c8b33d2255f519f94ce682330ad8eb",
+    "vendor/openviking/zcode/scripts/request-budget.mjs": "e63b832c9b31ebfb2875d99cd55b4676bda1c3620f85621ba280db9cd0e1886c",
+    "vendor/openviking/zcode/scripts/uri-guard.mjs": "e18d747685ac1a9fe6e30b68413b48d8b07dc801895fa7d7aa87ceeba33c9a3e",
+    "vendor/openviking/zcode/servers/mcp-proxy.mjs": "fe7c9e833887e28d909c7a32d8bdb463d092acc6c44963073e58fe44f0339b5a",
+    "vendor/openviking/zcode/tests/cursor.test.mjs": "68e1c1fb70530ca94940700cd45172ac7cd851dbb7bd083ef37b907c1bf9f5b9",
+    "vendor/openviking/zcode/tests/kimicode-turns.test.mjs": "4c2db6d23eefec812a7d30c800a0d4490b9863adbb0bcffbd5e1c35eec6532c6",
+    "vendor/openviking/zcode/tests/kimicode.test.mjs": "b12e268e784a0945e7a204a42ee5115ededab62f784b5812a5849726807f611b",
+    "vendor/openviking/zcode/tests/request-budget.test.mjs": "7aee0fe711b1a4622392027bc5a903ce099ffbd2e3b7fd1feca561fd79ccf646",
+    "vendor/openviking/zcode/tests/trae.test.mjs": "9783af4240fabeee028636616eaeaae6cc8202b98484030bb8209beea285b929",
+    "vendor/openviking/zcode/tests/zcode-async.test.mjs": "2aba3b77347a1155bbd066a3b313eb7394fc1c860fcd2762755935eca4f49ec3",
+    "vendor/openviking/zcode/tests/zcode-capture.test.mjs": "75246c25e784673227e3782470a599a2fe378ed180ca9379d72372dbd80a39fb",
+    "vendor/openviking/zcode/tests/zcode-turns.test.mjs": "e9184eb578250836cb439da9722d48f7d820655d534e02df186c788a8ea86127",
+    "vendor/openviking/zcode/tests/zcode.test.mjs": "fe8fe67001fb28ba0baeb5b69fb432d5c449cce23ad3b55d8c6dd46955a80551"
   },
   "packages": [
     {
@@ -30748,6 +30810,267 @@
         {
           "file": ".agents/skills/pdf/templates/translate-preserve-layout/terminology.template.json",
           "sha256": "71ec83e653cea9fcc65dbad396a886d61eb7a50f011a63d9b943bcaa78ce28e8"
+        }
+      ]
+    },
+    {
+      "id": "openviking-client-integration",
+      "referenceRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
+      "source": "https://raw.githubusercontent.com/volcengine/OpenViking/76511554eee2c2efb0ae08f9a2284041aed39840/examples/LICENSE",
+      "file": "third-party/upstream/ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831.txt",
+      "sha256": "ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831",
+      "importRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
+      "license": "Apache-2.0",
+      "provenance": "Vendored from OpenViking examples/ at revision 76511554eee2c2efb0ae08f9a2284041aed39840: agent-hook-plugin (trimmed to the zcode host) plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except integration.json, which is machine-specific and removed; no file-local modification notices are therefore required.",
+      "roots": [
+        "vendor/openviking/zcode",
+        "vendor/openviking/memory-plugin-shared"
+      ],
+      "scope": "Client-side agent integration runtime shipped inside the desktop bundle; only activated when the user selects the OpenViking memory provider.",
+      "files": [
+        {
+          "file": "vendor/openviking/zcode/DESIGN.md",
+          "sha256": "0184e8542d3c43708e2ecbde853505b81918efc448c8b96e0bc423812e6ef9a8"
+        },
+        {
+          "file": "vendor/openviking/zcode/README.md",
+          "sha256": "d5152388222dfdaf3b2c7d4140d8b156e32ed7d41446a1ef1ac070b8e04526bb"
+        },
+        {
+          "file": "vendor/openviking/zcode/README_CN.md",
+          "sha256": "8838553d66341a3c876dcb9bc911a6a52347686179b945f8495be62576ffef56"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/cursor-transcript.mjs",
+          "sha256": "c9e50a80742b2e440d9b7b8113b752214845b17c23ccf1c31edb375aae3a7c0d"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/cursor.mjs",
+          "sha256": "780a99d2f5c9e85f579d8ab15c106cc7a07d16568403aa51bccaedc651570dfb"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/incremental-turn-capture.mjs",
+          "sha256": "1a5953f2f5faf6b66a36c42bb2bde5c2ba725030e29b949f6a910145cd0739be"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/index.mjs",
+          "sha256": "bf16b461228fb2d670fa78e8e72c652ccbd335a100af8b0fc22096d960d88c3b"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/kimicode-turns.mjs",
+          "sha256": "2125629f9d4ffcc02f112c51c04dc25e9207fec8c615f3aa21cf4cfe94ce10d8"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/kimicode.mjs",
+          "sha256": "15814cd38562fb08d7ca8c833d853bec544fa750fa848a1c4088dbfb3df43165"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/trae-turns.mjs",
+          "sha256": "9ba8b2cc7147ecca051b5de2c5a95635e800b1a64cd62786e250ecf50c89e999"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/trae.mjs",
+          "sha256": "ffd2ea4b5609f3fe23507cc561c05b48ec99f424d56dd551de6748178bb77526"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode/.mcp.json",
+          "sha256": "13157f7faf76430a04bf17c8e6c5ea987d7794b7e30e3c500368d84a13cd3238"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode/hooks.json",
+          "sha256": "260335b0e520324458371902c48866719dd337ddf0ab4eaab5952ea5e3b489aa"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode/openviking.integration.json",
+          "sha256": "d1d6faf324fdc98166b0207ea86daa1e0150be2a744201ce77b957a2488973e9"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode-capture.mjs",
+          "sha256": "e0d5b4650c935a83e363cfb49bbbfe515d220726938461009cb69cad528f0ebe"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode-turns.mjs",
+          "sha256": "1838cc187ac09baca811ffea89e8f54368c1d15956cf26c4d5b3960964da3a4e"
+        },
+        {
+          "file": "vendor/openviking/zcode/hosts/zcode.mjs",
+          "sha256": "91b6782b49ef7c67fa4cc7ab8b4c93b83cfcb91aa2a0499a9c3f769289c930ee"
+        },
+        {
+          "file": "vendor/openviking/zcode/plugin.json",
+          "sha256": "195a8eac6e0932d09ef5012b4576537ada25ff8157a8af24495965e64f99810e"
+        },
+        {
+          "file": "vendor/openviking/zcode/scripts/hook.mjs",
+          "sha256": "b8902983924b7673ef8f29afd061063928acb860b997114fa6c3b2bab21ccf75"
+        },
+        {
+          "file": "vendor/openviking/zcode/scripts/ov-memory-doctor.mjs",
+          "sha256": "88847f954b2ddbed75baa0146aadc6b2c5c8b33d2255f519f94ce682330ad8eb"
+        },
+        {
+          "file": "vendor/openviking/zcode/scripts/request-budget.mjs",
+          "sha256": "e63b832c9b31ebfb2875d99cd55b4676bda1c3620f85621ba280db9cd0e1886c"
+        },
+        {
+          "file": "vendor/openviking/zcode/scripts/uri-guard.mjs",
+          "sha256": "e18d747685ac1a9fe6e30b68413b48d8b07dc801895fa7d7aa87ceeba33c9a3e"
+        },
+        {
+          "file": "vendor/openviking/zcode/servers/mcp-proxy.mjs",
+          "sha256": "fe7c9e833887e28d909c7a32d8bdb463d092acc6c44963073e58fe44f0339b5a"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/cursor.test.mjs",
+          "sha256": "68e1c1fb70530ca94940700cd45172ac7cd851dbb7bd083ef37b907c1bf9f5b9"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/kimicode-turns.test.mjs",
+          "sha256": "4c2db6d23eefec812a7d30c800a0d4490b9863adbb0bcffbd5e1c35eec6532c6"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/kimicode.test.mjs",
+          "sha256": "b12e268e784a0945e7a204a42ee5115ededab62f784b5812a5849726807f611b"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/request-budget.test.mjs",
+          "sha256": "7aee0fe711b1a4622392027bc5a903ce099ffbd2e3b7fd1feca561fd79ccf646"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/trae.test.mjs",
+          "sha256": "9783af4240fabeee028636616eaeaae6cc8202b98484030bb8209beea285b929"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/zcode-async.test.mjs",
+          "sha256": "2aba3b77347a1155bbd066a3b313eb7394fc1c860fcd2762755935eca4f49ec3"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/zcode-capture.test.mjs",
+          "sha256": "75246c25e784673227e3782470a599a2fe378ed180ca9379d72372dbd80a39fb"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/zcode-turns.test.mjs",
+          "sha256": "e9184eb578250836cb439da9722d48f7d820655d534e02df186c788a8ea86127"
+        },
+        {
+          "file": "vendor/openviking/zcode/tests/zcode.test.mjs",
+          "sha256": "fe8fe67001fb28ba0baeb5b69fb432d5c449cce23ad3b55d8c6dd46955a80551"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/MANIFEST",
+          "sha256": "35b32f3c12bde25b0ccbf0269dcf791b4792ed700f411769a3f8555d54e9e4b6"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/agent-hook-runtime.mjs",
+          "sha256": "6aef5b91455a7c441dda21c0a1db12cdd852860997d1007484d001c53bf31d8a"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/async-writer.mjs",
+          "sha256": "2e5415193020cd4ea8b23f820acf0063d5393289b4f06b582205153888fffda6"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/batch-send.mjs",
+          "sha256": "2e5903703bb5c07a9d91fbd4e11020a7a5d8b677fd90f0c67170f17e9604a5bb"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/capture-utils.mjs",
+          "sha256": "5d49fd7ea37135053b7ca99a9b70639f928c475bc3d0577e8ff17ad6538568c0"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/config-schema.mjs",
+          "sha256": "d4051303644153964f64f36598947d86167431060a4c61626b52f8ccb4c16b14"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/credentials.mjs",
+          "sha256": "a1a269319fc3d6b8a6079f05b9df4befce3c882ffcc2336814c5e567e768788f"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/debug-log.mjs",
+          "sha256": "dddcccd257f46f39fe2197890957ae6d69f0f4436a902fd03c2153db6a48d91d"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/doctor-core.mjs",
+          "sha256": "3f80e8514376fbe1ccc79cf702066c6783338cf3ec533cb9ba4ccf55098fe98b"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/input-filters.mjs",
+          "sha256": "0d6eb1ebbb4bac21970d2eb9afd6b23f4167ade4d979c984be64927d480c619a"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/host-json-config.mjs",
+          "sha256": "79d319607e69a6a47d4230ead238863101f6e1c13a5ace4b6a04e58eb17e56f2"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/jsonc-edit.mjs",
+          "sha256": "b899177bd19fb023f9c2deebdeb3d003a4ed686e9052e170af47fc7216203c97"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.mjs",
+          "sha256": "134c6c88b1475ff0be0d298ae7635b4d42a389fcb8b2445e0f3fcd52e80a1869"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.test.mjs",
+          "sha256": "1a4ac6512581b9acf27f8f106adb775287edfef553681ab92bf301c7abd0b2ce"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-config.mjs",
+          "sha256": "1896a9998b9b884896a6d5b8e4fd2eb76a7ff90dbdea280942f3f6ea2b9516c4"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-core.mjs",
+          "sha256": "ae780035671e7d82f590371334318df02cc75a5d768b147aa97a84ba98a6c247"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/ov-http.mjs",
+          "sha256": "01e908f6a1f53bc44da2dc00b7864959473bf1d0f383f8942fd35ef4188ce536"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/pending-queue.mjs",
+          "sha256": "dbcc6aa01106bdd7a207d8eae3f595fd0fb8362439a0f0b8770c90ee8cb3ca89"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/plugin-config.mjs",
+          "sha256": "ce1f48a474de3566daf902bcd08e09b343e8def92eeed8aec523f926c5af63c6"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/profile-inject.mjs",
+          "sha256": "fd367549399670fc5b3e1a5dbf1b19a6178ad04ff5307b36eee7f73b038cba80"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/recall-compress-core.mjs",
+          "sha256": "c1cc3d24bcc03e99f3e2d4f6e8f6a2334e554f7f2e7bc0a94d8fa2cb79095666"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/recall-core.mjs",
+          "sha256": "d66405f9aba0fe2e47b8bb940bad241c5c529d6a8b3f01e8f46731e47ac88e46"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/retryable.mjs",
+          "sha256": "e3e8b712d1d9930e102abf6d4f06324c886d690743babc10f23c34702c293fea"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/session-model.mjs",
+          "sha256": "4a1f5951662e4a6df70d659e77e0de784882059b28db549b87bb3941e3001660"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/uri-guard.mjs",
+          "sha256": "ff8a7921bb76128614685fc55ee47daac20a55ed38f0ff2ed432755ad95312ac"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/workspace-config.mjs",
+          "sha256": "afaaa9cdf715d51ccb78b2d0bd384ac71e0710ae36ad3ceb5e715477fc703c0a"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/workspace-identity.mjs",
+          "sha256": "8b4c2be78201300bd978c88c27f78d21dd982aae95331d78ceb20e7d80bd81b6"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/workspace-peer.mjs",
+          "sha256": "45e61fe33a4e3117130379fb0c2466f0a99e22f3d4c30debb118cd2504d9d1fd"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/workspace-registry.mjs",
+          "sha256": "6733e8dfebae4792bde7921e3db90bcf5f7a5b2b5a7b564d7f30f3ce0cebca70"
         }
       ]
     }
