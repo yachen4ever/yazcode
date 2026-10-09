@@ -141,7 +141,11 @@ type ZCodeSessionRecordParams = (
 ) & { taskType?: SessionTaskType };
 
 interface SessionStartupPreferences {
-  memoryEnabled: boolean;
+  /**
+   * 记忆提供方三态。`memoryEnabled` 是 session 级派生值（内置层是否启用），
+   * 只在 local 档位为 true；openviking 档位内置层完全不跑。
+   */
+  memoryProvider: "disable" | "local" | "openviking";
   modelContextBudgetStrategy: ZCodeModelContextBudgetStrategy;
   nativeSearchEnhancementsEnabled: boolean;
   resolveInitialBashShellSelection: () => Promise<ExecutionShellSelection | undefined>;
@@ -3240,7 +3244,7 @@ async function resolveSessionStartupPreferences(
   if (source.kind === "inherit") {
     const inheritedShellSelection = source.parent.app.runtime.getSessionShellSelection();
     return {
-      memoryEnabled: source.parent.memoryEnabled,
+      memoryProvider: source.parent.memoryEnabled ? "local" : "disable",
       modelContextBudgetStrategy: DEFAULT_ZCODE_MODEL_CONTEXT_BUDGET_STRATEGY,
       nativeSearchEnhancementsEnabled: source.parent.nativeSearchEnhancementsEnabled,
       resolveInitialBashShellSelection: async () => inheritedShellSelection,
@@ -3258,7 +3262,7 @@ async function resolveSessionStartupPreferences(
     runtimePreferences.askUserQuestionAutoResolutionEnabled,
   );
   return {
-    memoryEnabled: runtimePreferences.memoryEnabled,
+    memoryProvider: runtimePreferences.memoryProvider ?? "disable",
     modelContextBudgetStrategy: DEFAULT_ZCODE_MODEL_CONTEXT_BUDGET_STRATEGY,
     nativeSearchEnhancementsEnabled: runtimePreferences.nativeSearchEnhancementsEnabled,
     resolveInitialBashShellSelection: async () => {
@@ -3355,10 +3359,14 @@ async function createRecord(
       // `enabled` 是内置层专属开关——只有 local 档位为 true；openviking 档位内置层
       // 完全不跑（抽取与注入都交给服务端），由设置保存时的连接校验保证集成存在，
       // 运行时不做回落检查。
-      memoryProvider: startupPreferences.memoryProvider ?? "disable",
       ...(startupPreferences.memoryProvider === "local"
-        ? {}
-        : { memory: { enabled: false } }),
+        ? { memory: { provider: "local" as const } }
+        : {
+            memory: {
+              provider: startupPreferences.memoryProvider ?? "disable",
+              enabled: false,
+            },
+          }),
       // desktop-continuous session/create 由 UI 先解析 ~/.yazcode/.agents 的 enabled MCP，
       // 但 protocol app-server 自己不会读取 UI/main 侧的 MCP store；之前 createRecord 没把
       // params.mcpServers 注入 runtimeConfig，导致日志里 runtimeHasMcpConfig=false，工具永远不启动。
@@ -3414,7 +3422,7 @@ async function createRecord(
     app,
     createdAt: now,
     eventStore,
-    memoryEnabled: startupPreferences.memoryEnabled,
+    memoryEnabled: startupPreferences.memoryProvider === "local",
     modelContextBudgetStrategy: startupPreferences.modelContextBudgetStrategy,
     nativeSearchEnhancementsEnabled: startupPreferences.nativeSearchEnhancementsEnabled,
     ...(parentSessionId ? { parentSessionId } : {}),
