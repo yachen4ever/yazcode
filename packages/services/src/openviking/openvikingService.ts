@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { getZCodeDataRootDir } from "../paths.js";
 import {
   type IOpenVikingService,
   type OpenVikingVerifyResult,
@@ -38,10 +37,6 @@ function connectionFilePath(): string {
 /** CLI 配置路径。CLI 侧的 DEFAULT_BASE_DIR 固定为 ~/.yazcode/cli，不受数据根重定向影响。 */
 function cliConfigPath(): string {
   return path.join(os.homedir(), ".yazcode", "cli", "config.json");
-}
-
-function dataRootV2Dir(): string {
-  return path.join(getZCodeDataRootDir(), "v2");
 }
 
 /**
@@ -417,9 +412,4 @@ export function createOpenVikingService(): IOpenVikingService {
 /** 供测试与设置页复用：CLI 配置里当前是否已装载 openviking 段。 */
 export function isIntegrationConfigured(): boolean {
   return JSON.stringify(readJsonFile(cliConfigPath())).includes("openviking");
-}
-
-/** 桌面端设置页读写用的数据根 v2 目录（provider 配置同目录族）。 */
-export function settingsDataRootV2Dir(): string {
-  return dataRootV2Dir();
 }

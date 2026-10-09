@@ -16,7 +16,19 @@ import {
 let _dataBaseDir: string | null = null;
 export const ZCODE_WINDOWS_APP_INSTALL_DIR_ENV = "ZCODE_WINDOWS_APP_INSTALL_DIR";
 const envDataBaseDir = readExternalEnvVar(process.env, "ZCODE_DATA_BASE_DIR") ?? null;
-const defaultDataBaseDir = process.env.HOME?.trim() || homedir();
+/**
+ * 顶层惰性求值，刻意不写成模块级 const：本文件会被 renderer 打包图拉入
+ * （服务 descriptor 与设置类型的公共入口），而 renderer 里 node:os 是空壳
+ * stub，顶层调用 homedir() 会在模块初始化期直接 TypeError，整个前端停在
+ * 启动页（26.0.0 事故）。首次调用发生在 Node 侧运行期，此时 os 可用。
+ */
+let _defaultDataBaseDir: string | null = null;
+function defaultDataBaseDir(): string {
+  if (_defaultDataBaseDir === null) {
+    _defaultDataBaseDir = process.env.HOME?.trim() || homedir();
+  }
+  return _defaultDataBaseDir;
+}
 
 /**
  * 显式注入的 ZCODE_DATA_BASE_DIR 是 dev test / e2e 的数据目录隔离硬边界：
@@ -54,7 +66,7 @@ export function getDataBaseDir(): string {
   if (envDataBaseDir) return envDataBaseDir;
   // 服务实例会启动后台刷新任务；若每次调用都动态读取 HOME，
   // 测试或宿主切换环境变量后，旧实例可能把数据写到新实例目录。
-  return defaultDataBaseDir;
+  return defaultDataBaseDir();
 }
 
 /** {dataBaseDir}/.yazcode —— 与官方 ZCode 客户端的 ~/.zcode 命名空间隔离。 */
