@@ -566,6 +566,13 @@ export default {
     { from: resolve(workspaceRoot, "LICENSE-APACHE"), to: "LICENSE-APACHE" },
     { from: resolve(workspaceRoot, "NOTICE.md"), to: "NOTICE.md" },
     { from: resolve(workspaceRoot, "NOTICE.zh-CN.md"), to: "NOTICE.zh-CN.md" },
+    // OpenViking 客户端集成运行时（vendored，Apache-2.0）。桌面端在用户启用
+    // 「记忆提供方 = OpenViking」时把它释放到 <home>/.openviking/agent-integrations/；
+    // 缺失时安装服务 fail-closed 报错并拒绝启用，不做静默降级。
+    {
+      from: resolve(workspaceRoot, "vendor/openviking"),
+      to: "openviking",
+    },
     ...(targetPlatform.os === "darwin"
       ? [
           {

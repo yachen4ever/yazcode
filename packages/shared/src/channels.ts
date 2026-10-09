@@ -125,6 +125,8 @@ export const ServiceChannels = {
   Hooks: "hooks",
   /** Memory 管理服务 */
   Memory: "memory",
+  /** OpenViking 记忆集成（安装 / 卸载 / 连接校验） */
+  OpenViking: "openviking",
   /** 首次启动设置同步服务 */
   SettingsSync: "settings-sync",
   /** Bots 远程聊天控制服务 */

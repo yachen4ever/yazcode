@@ -227,6 +227,7 @@ export { createSubagentsService } from "./subagents/subagentsService.js";
 export { createCommandsService } from "./commands/commandsService.js";
 export { createHooksService } from "./hooks/hooksService.js";
 export { createMemoryService } from "./memory/memoryService.js";
+export { createOpenVikingService } from "./openviking/openvikingService.js";
 export { createSettingsSyncService } from "./settings-sync/settingsSyncService.js";
 export { createFeedbackDiagnosticArchive } from "./feedback/feedbackLogArchive.js";
 export { createFeedbackService } from "./feedback/feedbackService.js";
@@ -333,6 +334,7 @@ import { ISubagentsService } from "./subagents/subagents.js";
 import { ICommandsService } from "./commands/commands.js";
 import { IHooksService } from "./hooks/hooks.js";
 import { IMemoryService } from "./memory/memory.js";
+import { IOpenVikingService } from "./openviking/openviking.js";
 import { ISettingsSyncService } from "./settings-sync/settingsSync.js";
 import { IFeedbackService } from "./feedback/feedback.js";
 import { IPromptAttachmentTransferService } from "./prompt-attachment-transfer/promptAttachmentTransfer.js";
@@ -422,6 +424,7 @@ import { createSubagentsService } from "./subagents/subagentsService.js";
 import { createCommandsService } from "./commands/commandsService.js";
 import { createHooksService } from "./hooks/hooksService.js";
 import { createMemoryService } from "./memory/memoryService.js";
+import { createOpenVikingService } from "./openviking/openvikingService.js";
 import { createSettingsSyncService } from "./settings-sync/settingsSyncService.js";
 import {
   createFeedbackService,
@@ -2593,6 +2596,7 @@ export function createLocalServices(options: {
       }),
     )
     .register(IMemoryService, createMemoryService())
+    .register(IOpenVikingService, createOpenVikingService())
     .register(ISettingsSyncService, createSettingsSyncService({ settingService }))
     .register(
       IFeedbackService,

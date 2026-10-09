@@ -61,6 +61,9 @@
     ".agents/skills",
     "packages/formal-proof",
     "apps/zcode-cli",
-    "docs/electron"
+    "docs/electron",
+    // vendored 第三方运行时（OpenViking 客户端集成，Apache-2.0）：原样保留上游
+    // 源码不做本地风格改写，也不纳入本仓库的 lint / typecheck 门禁。
+    "vendor/openviking"
   ]
 }

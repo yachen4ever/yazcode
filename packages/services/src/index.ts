@@ -217,6 +217,15 @@ export {
 } from "./memory/memory.js";
 export type { ProjectMemoryFileSummary, ProjectMemoryWorkspaceSummary } from "./memory/memory.js";
 
+// OpenViking integration — IOpenVikingService is both a type (interface) and value (descriptor).
+export { IOpenVikingService } from "./openviking/openviking.js";
+export { createOpenVikingService } from "./openviking/openvikingService.js";
+export type {
+  OpenVikingIntegrationStatus,
+  OpenVikingVerifyFailureReason,
+  OpenVikingVerifyResult,
+} from "./openviking/openviking.js";
+
 export type { SessionRealtimePort } from "./session/sessionRealtimePort.js";
 
 // FileWatcher service — IFileWatcherService is both a type (interface) and value (descriptor)

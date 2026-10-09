@@ -36,6 +36,7 @@ import {
   ICommandsService,
   IHooksService,
   IMemoryService,
+  IOpenVikingService,
   ISettingsSyncService,
   IFeedbackService,
   IPromptAttachmentTransferService,
@@ -89,6 +90,7 @@ export class RemoteServiceAccess implements IServiceAccessor {
   readonly commandsService: ICommandsService;
   readonly hooksService: IHooksService;
   readonly memoryService: IMemoryService;
+  readonly openvikingService: IOpenVikingService;
   readonly settingsSyncService: ISettingsSyncService;
   readonly feedbackService: IFeedbackService;
   readonly promptAttachmentTransferService: IPromptAttachmentTransferService;
@@ -209,6 +211,9 @@ export class RemoteServiceAccess implements IServiceAccessor {
     );
     this.memoryService = ProxyChannel.toService<IMemoryService>(
       channelClient.getChannel(IMemoryService.channelName),
+    );
+    this.openvikingService = ProxyChannel.toService<IOpenVikingService>(
+      channelClient.getChannel(IOpenVikingService.channelName),
     );
     this.settingsSyncService = ProxyChannel.toService<ISettingsSyncService>(
       channelClient.getChannel(ISettingsSyncService.channelName),
