@@ -19,6 +19,9 @@ import {
 const AGENT_INTEGRATION_DIRS = ["zcode", "memory-plugin-shared"] as const;
 const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "Stop"] as const;
 const VERIFY_TIMEOUT_MS = 8000;
+/** 与官方 examples/agent-hook-plugin/hosts/zcode/openviking.integration.json 保持一致。 */
+const INTEGRATION_ID = "openviking-memory";
+const INTEGRATION_VERSION = "0.5.13";
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");
@@ -41,21 +44,31 @@ function dataRootV2Dir(): string {
   return path.join(getZCodeDataRootDir(), "v2");
 }
 
-/** 安装包内置运行时位置：打包后为 <resources>/openviking，开发态回退到仓库 vendor/。 */
+/**
+ * 安装包内置运行时位置。
+ *
+ * 生产环境由宿主给出 <resources>/openviking；开发态从 cwd 逐级上溯找仓库
+ * vendor/openviking。这里刻意不用 __dirname / import.meta 推导：服务被 ESM 与
+ * CJS 两种加载方式引用过，模块元数据在 top-level await 场景下不可用。
+ * 两者都找不到时返回空串，由 releaseRuntime fail-closed 报错。
+ */
 function resolvePackagedRuntimeRoot(): string {
-  const candidates: string[] = [];
+  const isRuntimeRoot = (candidate: string): boolean =>
+    fs.existsSync(path.join(candidate, "zcode", "scripts", "hook.mjs")) &&
+    fs.existsSync(path.join(candidate, "memory-plugin-shared", "lib", "MANIFEST"));
+
   const resourcesPath = (process as { resourcesPath?: string }).resourcesPath;
-  if (resourcesPath) candidates.push(path.join(resourcesPath, "openviking"));
-  // electron 未启动（如单测/CLI 场景）时按应用目录向上回退找仓库 vendor。
-  candidates.push(path.resolve(__dirname, "..", "..", "..", "vendor", "openviking"));
-  candidates.push(path.resolve(process.cwd(), "vendor", "openviking"));
-  for (const candidate of candidates) {
-    if (
-      fs.existsSync(path.join(candidate, "zcode", "scripts", "hook.mjs")) &&
-      fs.existsSync(path.join(candidate, "memory-plugin-shared", "lib", "MANIFEST"))
-    ) {
-      return candidate;
-    }
+  if (resourcesPath) {
+    const packaged = path.join(resourcesPath, "openviking");
+    if (isRuntimeRoot(packaged)) return packaged;
+  }
+  let dir = process.cwd();
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = path.join(dir, "vendor", "openviking");
+    if (isRuntimeRoot(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
   return "";
 }
@@ -145,11 +158,26 @@ function rewriteHookCommandForWindows(command: string): string {
 }
 
 /** 官方 host 模板：命令里的插件根与客户端 id 是占位符，安装时替换为绝对路径。 */
-function renderHooks(root: string): Record<string, unknown> {
-  const templatePath = path.join(root, "zcode", "hosts", "zcode", "hooks.json");
+/**
+ * 官方 host 模板渲染。
+ *
+ * `__OPENVIKING_PLUGIN_ROOT__` 指的是 **zcode host 目录本身**（agent-integrations/zcode），
+ * 不是 agent-integrations 根——官方 installer 就是这么传的。模板命令不带环境变量前缀，
+ * 前缀由官方 write 阶段追加；这里按同样语义补上 POSIX 形式，再交给
+ * rewriteHookCommandForWindows 转成 Windows 可执行形式。
+ */
+function renderHooks(hostRoot: string, integrationVersion: string): Record<string, unknown> {
+  const templatePath = path.join(hostRoot, "hosts", "zcode", "hooks.json");
   const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as {
     hooks: Record<string, Array<{ matcher?: string; hooks: Array<Record<string, unknown>> }>>;
   };
+  const envPrefix = [
+    ["OPENVIKING_INTEGRATION_ID", INTEGRATION_ID],
+    ["OPENVIKING_INTEGRATION_VERSION", integrationVersion],
+    ["OPENVIKING_HOOK_SOURCE", "zcode"],
+  ]
+    .map(([name, value]) => `${name}='${value}'`)
+    .join(" ");
   const rendered: Record<string, unknown> = {};
   for (const [event, groups] of Object.entries(template.hooks)) {
     if (!(HOOK_EVENTS as readonly string[]).includes(event)) continue;
@@ -157,12 +185,12 @@ function renderHooks(root: string): Record<string, unknown> {
       ...(group.matcher === undefined ? {} : { matcher: group.matcher }),
       hooks: (group.hooks ?? []).map((hook) => {
         const command = String(hook.command ?? "")
-          .replaceAll("__OPENVIKING_PLUGIN_ROOT__", root.replace(/\\/gu, "/"))
+          .replaceAll("__OPENVIKING_PLUGIN_ROOT__", hostRoot.replace(/\\/gu, "/"))
           .replaceAll("__OPENVIKING_CLIENT_ID__", "zcode")
           .trim();
         return {
           type: "command",
-          command: rewriteHookCommandForWindows(command),
+          command: rewriteHookCommandForWindows(`${envPrefix} ${command}`),
           timeout: hook.timeout,
         };
       }),
@@ -212,7 +240,7 @@ function mergeCliConfig(hooks: Record<string, unknown>): void {
     command: nodeBin,
     args: [path.join(agentIntegrationsRoot(), "zcode", "servers", "mcp-proxy.mjs")],
     env: {
-      OPENVIKING_INTEGRATION_ID: "openviking-memory",
+      OPENVIKING_INTEGRATION_ID: INTEGRATION_ID,
       OPENVIKING_HOOK_SOURCE: "zcode",
     },
   };
@@ -358,7 +386,7 @@ export function createOpenVikingService(): IOpenVikingService {
       releaseRuntime();
       const root = agentIntegrationsRoot();
       writeConnectionFile({ url: url.trim(), userKey: userKey.trim() });
-      mergeCliConfig(renderHooks(root));
+      mergeCliConfig(renderHooks(path.join(root, "zcode"), INTEGRATION_VERSION));
       // 设置侧把 provider 切到 openviking 前会先跑一次 install；这里再确认配置确实落盘。
       const config = readJsonFile(cliConfigPath());
       if (!JSON.stringify(config).includes("openviking")) {

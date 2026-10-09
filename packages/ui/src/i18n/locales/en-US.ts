@@ -2174,6 +2174,18 @@ const enUS: Record<string, string> = {
   "settings.memory.ov.userKey": "User key",
   "settings.memory.ov.userKeyDescription":
     "Must be a user key; a root key is admin-only and cannot read or write memories.",
+  "settings.memory.ov.test":
+    "Test connection",
+  "settings.memory.ov.activate":
+    "Save and enable",
+  "settings.memory.ov.uninstall":
+    "Uninstall",
+  "settings.memory.ov.actions":
+    "OpenViking integration",
+  "settings.memory.ov.verified":
+    "Connection verified (server version {version}). The built-in memory layer stays off; OpenViking carries all memory.",
+  "settings.memory.ov.notVerified":
+    "Connection not verified yet. An unreachable OpenViking reports an error instead of falling back to local memory.",
   "settings.memoryDescription":
     "Save and reuse long-term context in workspaces. Applies to new sessions and may increase model requests and token costs.",
   "settings.memory.viewer.disabled": "Enable Workspace Memory to view saved memories.",

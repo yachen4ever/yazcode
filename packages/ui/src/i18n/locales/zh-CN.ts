@@ -2039,6 +2039,18 @@ const zhCN: Record<string, string> = {
   "settings.memory.ov.userKey": "用户密钥",
   "settings.memory.ov.userKeyDescription":
     "必须是 user key；root key 只能用于管理面，无法读写记忆。",
+  "settings.memory.ov.test":
+    "测试连接",
+  "settings.memory.ov.activate":
+    "保存并启用",
+  "settings.memory.ov.uninstall":
+    "卸载集成",
+  "settings.memory.ov.actions":
+    "OpenViking 集成",
+  "settings.memory.ov.verified":
+    "连接正常（服务端版本 {version}）。内置记忆层保持关闭，记忆全部由 OpenViking 承担。",
+  "settings.memory.ov.notVerified":
+    "尚未通过连接校验。OpenViking 不可用时本档位不会回落到本地记忆，而是直接报错。",
   "settings.memoryDescription":
     "在工作区中保存并复用长期上下文，新会话生效。开启后可能增加模型调用和 Token 成本。",
   "settings.memory.viewer.localOnly":

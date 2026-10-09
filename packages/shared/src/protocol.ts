@@ -333,8 +333,11 @@ export interface AppSettings {
    * 三态互斥无兜底：openviking 不可达时报错，不回落 local。
    */
   memoryProvider?: "disable" | "local" | "openviking";
-  /** OpenViking 连接配置；仅 memoryProvider === "openviking" 时有意义。 */
-  openvikingConnection?: { url: string; userKey: string };
+  /**
+   * OpenViking 连接配置；仅 memoryProvider === "openviking" 时有意义。
+   * verifiedAt 只用于设置页展示最近一次校验时间，不参与运行时判定。
+   */
+  openvikingConnection?: { url: string; userKey: string; verifiedAt?: number };
   onboardingOccupation?:
     | "office"
     | "developer"

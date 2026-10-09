@@ -2127,6 +2127,18 @@ const faIR: Record<string, string> = {
   "settings.memory.ov.userKey": "کلید کاربر",
   "settings.memory.ov.userKeyDescription":
     "باید کلید کاربر باشد؛ کلید root فقط برای مدیریت است و نمی‌تواند حافظه‌ها را بخواند یا بنویسد.",
+  "settings.memory.ov.test":
+    "آزمون اتصال",
+  "settings.memory.ov.activate":
+    "ذخیره و فعال‌سازی",
+  "settings.memory.ov.uninstall":
+    "حذف یکپارچه‌سازی",
+  "settings.memory.ov.actions":
+    "یکپارچه‌سازی OpenViking",
+  "settings.memory.ov.verified":
+    "اتصال تأیید شد (نسخه سرور {version}). لایه حافظه داخلی خاموش می‌ماند و تمام حافظه بر عهده OpenViking است.",
+  "settings.memory.ov.notVerified":
+    "اتصال هنوز تأیید نشده است. اگر OpenViking در دسترس نباشد، خطا گزارش می‌شود و به حافظه محلی بازگشتی انجام نمی‌شود.",
   "settings.memoryDescription":
     "ذخیره و استفاده دوباره از زمینه بلندمدت در فضاهای کاری. روی نشست‌های جدید اعمال می‌شود و ممکن است تعداد درخواست‌های مدل و هزینه توکن‌ها را افزایش دهد.",
   "settings.memory.viewer.disabled": "برای مشاهده حافظه‌های ذخیره‌شده، حافظه فضای کاری را فعال کنید.",

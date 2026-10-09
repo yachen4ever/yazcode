@@ -844,6 +844,36 @@ export function SettingsPage({
     },
     [updateSharedSettings],
   );
+  // OpenViking 集成：连接校验与安装/卸载都走本地 Host 的服务，与设置页其余
+  // 本地全局设置同一边界；远端 workspace 激活时也经 ProxyChannel 转发到本地 Host。
+  const handleOpenVikingVerify = useCallback(
+    async (params: { url: string; userKey: string }) =>
+      localHostServices.openvikingService.verifyConnection(params),
+    [localHostServices.openvikingService],
+  );
+
+  const handleOpenVikingActivate = useCallback(
+    async (params: { url: string; userKey: string }) => {
+      // 先安装（释放运行时 + 写配置），再落设置；安装失败时 provider 保持原值。
+      await localHostServices.openvikingService.install(params);
+      await updateSharedSettings({
+        memoryProvider: "openviking",
+        openvikingConnection: {
+          url: params.url.trim(),
+          userKey: params.userKey.trim(),
+          verifiedAt: Date.now(),
+        },
+      });
+    },
+    [localHostServices.openvikingService, updateSharedSettings],
+  );
+
+  const handleOpenVikingUninstall = useCallback(async () => {
+    await localHostServices.openvikingService.uninstall();
+    // 卸载后 provider 退回 disable：openviking 档位依赖运行时，没有它就没有记忆。
+    await updateSharedSettings({ memoryProvider: "disable" });
+  }, [localHostServices.openvikingService, updateSharedSettings]);
+
   const handleMemoryProviderChange = useCallback(
     async (provider: MemoryProvider) => {
       await (async () => {
@@ -1476,6 +1506,9 @@ export function SettingsPage({
                               openvikingConnection={sharedSettings?.openvikingConnection}
                               memoryService={localHostServices.memoryService}
                               onMemoryProviderChange={handleMemoryProviderChange}
+                              onVerifyConnection={handleOpenVikingVerify}
+                              onActivate={handleOpenVikingActivate}
+                              onUninstall={handleOpenVikingUninstall}
                               projectMemoryViewerAvailable={Boolean(isDesktop)}
                               workspaceDisplayNames={memoryWorkspaceDisplayNames}
                             />

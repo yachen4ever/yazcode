@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { type IMemoryService, type ProjectMemoryWorkspaceSummary } from "@zcode/services";
+import {
+  type IMemoryService,
+  type OpenVikingVerifyResult,
+  type ProjectMemoryWorkspaceSummary,
+} from "@zcode/services";
 import {
   TID_SETTINGS_MEMORY_SWITCH,
   type MemoryProvider,
   type OpenVikingConnection,
 } from "@zcode/shared";
+import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import {
   Select,
@@ -58,6 +63,9 @@ export function MemorySettingsSection({
   openvikingConnection,
   memoryService,
   onMemoryProviderChange,
+  onVerifyConnection,
+  onActivate,
+  onUninstall,
   projectMemoryViewerAvailable,
   workspaceDisplayNames = [],
 }: {
@@ -65,6 +73,9 @@ export function MemorySettingsSection({
   openvikingConnection?: OpenVikingConnection;
   memoryService: MemoryCatalogService;
   onMemoryProviderChange: (provider: MemoryProvider) => Promise<void>;
+  onVerifyConnection: (params: { url: string; userKey: string }) => Promise<OpenVikingVerifyResult>;
+  onActivate: (params: { url: string; userKey: string }) => Promise<void>;
+  onUninstall: () => Promise<void>;
   projectMemoryViewerAvailable: boolean;
   workspaceDisplayNames?: readonly string[];
 }) {
@@ -158,6 +169,84 @@ export function MemorySettingsSection({
     await refreshCatalog();
   }, [refreshCatalog]);
 
+  // OpenViking 表单：地址与 user key 由用户现场填写，校验通过才允许启用。
+  // 记忆提供方是三态无兜底的，错误的连接配置必须在保存前拦住，不能留到开会话才炸。
+  const [ovUrl, setOvUrl] = useState(openvikingConnection?.url ?? "");
+  const [ovUserKey, setOvUserKey] = useState(openvikingConnection?.userKey ?? "");
+  const [ovChecking, setOvChecking] = useState(false);
+  const [ovVerified, setOvVerified] = useState(false);
+  const [ovError, setOvError] = useState<string | null>(null);
+  const [ovVersion, setOvVersion] = useState<string | null>(null);
+
+  // 已保存的连接发生变化时（例如从设置文件载入）重新同步表单初值。
+  useEffect(() => {
+    setOvUrl(openvikingConnection?.url ?? "");
+    setOvUserKey(openvikingConnection?.userKey ?? "");
+  }, [openvikingConnection?.url, openvikingConnection?.userKey]);
+
+  const resetCheck = useCallback(() => {
+    setOvVerified(false);
+    setOvVersion(null);
+    setOvError(null);
+  }, []);
+
+  const handleVerify = useCallback(async () => {
+    resetCheck();
+    setOvChecking(true);
+    try {
+      const result = await onVerifyConnection({ url: ovUrl.trim(), userKey: ovUserKey.trim() });
+      if (result.ok) {
+        setOvVerified(true);
+        setOvVersion(result.version ?? null);
+      } else {
+        setOvError(result.message ?? "连接校验未通过。");
+      }
+    } catch (error) {
+      setOvError(getErrorMessage(error));
+    } finally {
+      setOvChecking(false);
+    }
+  }, [onVerifyConnection, ovUrl, ovUserKey, resetCheck]);
+
+  const handleActivate = useCallback(async () => {
+    setOvError(null);
+    setOvChecking(true);
+    try {
+      await onActivate({ url: ovUrl.trim(), userKey: ovUserKey.trim() });
+      setOvVerified(true);
+    } catch (error) {
+      setOvError(getErrorMessage(error));
+    } finally {
+      setOvChecking(false);
+    }
+  }, [onActivate, ovUrl, ovUserKey]);
+
+  const handleUninstall = useCallback(async () => {
+    setOvError(null);
+    setOvChecking(true);
+    try {
+      await onUninstall();
+      setOvVerified(false);
+      setOvVersion(null);
+    } catch (error) {
+      setOvError(getErrorMessage(error));
+    } finally {
+      setOvChecking(false);
+    }
+  }, [onUninstall]);
+
+  const handleProviderChange = useCallback(
+    (next: MemoryProvider) => {
+      // 切到 openviking 前必须已有校验通过的连接，避免保存一个装不上的档位。
+      if (next === "openviking" && !ovVerified) {
+        void handleVerify().then(() => undefined);
+        return;
+      }
+      void onMemoryProviderChange(next);
+    },
+    [handleVerify, onMemoryProviderChange, ovVerified],
+  );
+
   return (
     <div className="space-y-6">
       <SettingsGroupCard>
@@ -170,7 +259,7 @@ export function MemorySettingsSection({
           })}
           control={
             <Select value={memoryProvider} onValueChange={(value) => {
-                void onMemoryProviderChange(value as MemoryProvider);
+                handleProviderChange(value as MemoryProvider);
               }}>
               <SelectTrigger
                 aria-label={intl.formatMessage({ id: "settings.memory.provider" })}
@@ -203,10 +292,13 @@ export function MemorySettingsSection({
             control={
               <Input
                 aria-label={intl.formatMessage({ id: "settings.memory.ov.url" })}
-                defaultValue={openvikingConnection?.url ?? ""}
+                value={ovUrl}
                 placeholder="http://127.0.0.1:1933"
                 className="w-72"
-                readOnly
+                onChange={(event) => {
+                  setOvUrl(event.target.value);
+                  resetCheck();
+                }}
               />
             }
           />
@@ -216,11 +308,50 @@ export function MemorySettingsSection({
             control={
               <Input
                 aria-label={intl.formatMessage({ id: "settings.memory.ov.userKey" })}
-                defaultValue={openvikingConnection?.userKey ?? ""}
+                type="password"
+                value={ovUserKey}
                 placeholder="user key"
                 className="w-72"
-                readOnly
+                onChange={(event) => {
+                  setOvUserKey(event.target.value);
+                  resetCheck();
+                }}
               />
+            }
+          />
+          <SettingsRow
+            label={intl.formatMessage({
+              id: "settings.memory.ov.actions",
+            })}
+            description={
+              ovError
+                ? ovError
+                : ovVerified
+                  ? intl.formatMessage(
+                      { id: "settings.memory.ov.verified" },
+                      { version: ovVersion ?? "-" },
+                    )
+                  : intl.formatMessage({ id: "settings.memory.ov.notVerified" })
+            }
+            control={
+              <div className="flex items-center gap-2">
+                <Button variant="outline" disabled={ovChecking} onClick={() => void handleVerify()}>
+                  {intl.formatMessage({ id: "settings.memory.ov.test" })}
+                </Button>
+                <Button
+                  disabled={ovChecking || !ovVerified}
+                  onClick={() => void handleActivate()}
+                >
+                  {intl.formatMessage({ id: "settings.memory.ov.activate" })}
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={ovChecking}
+                  onClick={() => void handleUninstall()}
+                >
+                  {intl.formatMessage({ id: "settings.memory.ov.uninstall" })}
+                </Button>
+              </div>
             }
           />
         </SettingsGroupCard>
