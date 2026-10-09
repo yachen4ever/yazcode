@@ -18,6 +18,7 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 | **ZCodium Exp.** | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 平行独立衍生：以开源组件补全官方发布包功能。yazcode 的 **Computer Use 运行时**移植自这里。 |
 | **MiniMax code** | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | **办公四件套技能**（docx / xlsx / pptx / pdf）的来源。 |
 | **trycua/cua** | [trycua/cua](https://github.com/trycua/cua) | MIT | CUA 原生引擎 `@trycua/cua-driver`：Rust 实现的跨平台桌面操控（Win32 E2E 122/122）。 |
+| **OpenViking** | [volcengine/OpenViking](https://github.com/volcengine/OpenViking) | AGPLv3（服务端）/ Apache-2.0（`examples/`） | 可选的**外部记忆服务**（语义召回 + 自动抽取沉淀）。yazcode 内置其 Apache-2.0 的客户端集成运行时（`vendor/openviking/`）；服务端作为独立服务自行部署，两者不耦合。 |
 
 另有社区审计文档线：[ZCodium 项目网站](https://zcodium-project.github.io/)；英文版说明见 [README_EN.md](README_EN.md)（已停止跟进，以本文件为准）。
 
@@ -30,7 +31,7 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - **多智能体协作**：子代理、动态工作流、技能与定时自动化。
 - **插件、技能与 MCP**：内置技能与插件体系，各自独立开关；支持第三方插件市场。
 - **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义端点（Chat Completions / Responses / Anthropic Messages），并可从供应商的 `/models` 端点自动检测可用模型。
-- **原生记忆层**：Agent 跨会话自动提炼并记忆操作事实（`~/.yazcode/cli/memories/`，按项目隔离，索引随会话注入），可一键关闭。
+- **记忆提供方三选一**：内置文件记忆（跨会话自动提炼操作事实，按项目隔离）、[OpenViking](https://openviking.ai)（语义召回 + 自动沉淀的外部记忆服务）或不启用记忆。三态互斥、不做静默回落——选了 OpenViking 而服务不可达时会直接报错，不会悄悄退回本地记忆。
 
 ## 继承自 ZCodium 的加固
 
@@ -56,7 +57,7 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - **去智谱**：移除智谱订阅体系（Coding Plan / Start Plan 供应商、`zhipu-account` 访问类型、首启套餐引导）——Z.AI / BigModel 保留为普通 API-Key 预设。官方 CDN builtin 配置源停用，builtin 供应商只来自本仓库经审计的 `config/provider/zcode-builtin.json`。
 - **硬数据根边界**：显式设置数据根环境变量后即为硬边界——桌面启动引导不再回读真实 HOME 的设置文件。
 - **模型检测**：给自定义 Provider 添加模型时，可查询该供应商的 `/models` 端点，从检测结果中点选回填模型 ID。
-- **版本号可见**：侧栏底部应用名旁直接展示当前版本（`v1.0.5` 样式）。
+- **版本号可见**：侧栏底部应用名旁直接展示当前版本（`v26.0.0` 样式）。
 
 ### Computer Use 桌面操控
 
@@ -137,11 +138,12 @@ Release 由本仓库的 [Release workflow](https://github.com/yachen4ever/yazcod
 
 ## 版本体系
 
-yazcode 使用自己的版本线，从 `1.0.0` 起步，与上游 `3.14.x` 编号无关：
+yazcode 使用**年份号段** `26.y.z`，与上游 `3.14.x` 及社区 fork 的 `1.y.z` 都不重叠，便于一眼分辨构建来源：
 
 - **y（次版本）——同步上游**：某个 release 包含经审计后同步的上游 ZCode/ZCodium 变更时递增。对应的上游 commit 记录在该 release 说明里。
 - **z（修订号）——yazcode 自身迭代**：yazcode 自己的功能、修复与产品变更时递增。
 - 同日重复构建追加 `-audit.<日期>[.n]` 后缀；破坏性变更（如数据目录迁移）会在 release 说明中显式标注。
+- 版本号不编码上游 revision——每个 release 基于的上游 commit 以其 release 说明为准。
 
 ## 仓库文档
 
