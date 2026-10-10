@@ -70,6 +70,12 @@ export const completeProviderApiDataSchema = z
     allowInsecureTls: z.boolean().nullable().optional(),
     /** 证书钉扎：网关自签证书/CA 的文件路径（.pem/.crt/.der）。与 allowInsecureTls 互斥，优先级更高。 */
     tlsCaPath: z.string().nullable().optional(),
+    /**
+     * 已废弃（26.0.5 改为 tlsCaPath 文件路径）。仅作解析容忍：strict schema
+     * 若拒绝这个旧键，携带它的整份 Provider 配置会被判定失效（模型全消失）。
+     * 序列化不回写该字段，下次保存即自然迁移。
+     */
+    tlsCaPem: z.string().nullable().optional(),
   })
   .strict();
 export const providerApiDataSchema = z
