@@ -199,6 +199,9 @@ export function InlineEditableProviderCard({
     provider.config.api?.type ?? "anthropic-messages",
   );
   const [baseUrlValue, setBaseUrlValue] = useState(provider.config.api?.baseUrl ?? "");
+  const [allowInsecureTlsValue, setAllowInsecureTlsValue] = useState(
+    provider.config.api?.allowInsecureTls === true,
+  );
   const [apiKeyValue, setApiKeyValue] = useState(getProviderFormApiKey(provider));
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [savingEnabled, setSavingEnabled] = useState(false);
@@ -241,6 +244,7 @@ export function InlineEditableProviderCard({
     nameValue: getProviderFormLabel(provider),
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
+    allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true,
     apiKeyValue: getProviderFormApiKey(provider),
   });
 
@@ -767,6 +771,7 @@ export function InlineEditableProviderCard({
             apiType: apiFormat,
             baseUrl: baseUrlValue,
             apiKey: apiKeyValue,
+            ...(allowInsecureTlsValue ? { allowInsecureTls: true } : {}),
             ...(provider.config.api?.headers ? { headers: provider.config.api.headers } : {}),
           })
       : undefined;
@@ -840,6 +845,13 @@ export function InlineEditableProviderCard({
             readOnly={readOnlyEndpoints}
             apiFormat={apiFormat}
             baseUrlValue={baseUrlValue}
+            allowInsecureTlsValue={allowInsecureTlsValue}
+            onAllowInsecureTlsChange={(checked) => {
+              markDraftDirty("allowInsecureTlsValue");
+              draftRef.current.allowInsecureTlsValue = checked;
+              setAllowInsecureTlsValue(checked);
+              saveConnection();
+            }}
             onApiFormatChange={handleApiFormatChange}
             onBaseUrlChange={handleBaseUrlValueChange}
             onBaseUrlBlur={saveConnection}

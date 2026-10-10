@@ -66,6 +66,8 @@ export const completeProviderApiDataSchema = z
     type: providerApiTypeDataSchema,
     baseUrl: nonBlankRequiredString.pipe(z.string().url()),
     headers: z.record(z.string(), z.string()).readonly().nullable().optional(),
+    /** 自签名证书网关：对该 Provider 的请求跳过 TLS 校验（仅 https 且逐 Provider 生效）。 */
+    allowInsecureTls: z.boolean().nullable().optional(),
   })
   .strict();
 export const providerApiDataSchema = z

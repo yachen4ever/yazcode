@@ -18,7 +18,7 @@ import {
   type ModelProviderId,
   type ModelRequestAuth,
 } from "@zcode/contracts";
-import type { RegistryProviderConfig } from "@zcode/provider";
+import { createInsecureTlsFetch, type RegistryProviderConfig } from "@zcode/provider";
 import { withOpenRouterAttributionHeaders } from "@zcode/shared";
 import { createAnthropicCompatFetch } from "./anthropic-stream-compat.js";
 import { createOpenAIResponsesJsonCompatFetch } from "./openai-responses-json-compat.js";
@@ -40,6 +40,8 @@ interface AiSdkProviderConfig {
   headers?: Record<string, string>;
   providerOptions?: Record<string, unknown>;
   name?: string;
+  /** 自签名证书网关：该 Provider 的请求走跳过 TLS 校验的 dispatcher。 */
+  allowInsecureTls?: boolean;
 }
 
 export interface AiSdkModelExecutionConfig {
@@ -262,7 +264,11 @@ export class AiSdkModelExecution {
   ): LanguageModelFactory {
     const apiKey = this.resolveApiKey(providerConfig);
     const headers = providerConfig.headers;
-    const providerTransport = this.resolveProviderTransport(providerId);
+    const rawTransport = this.resolveProviderTransport(providerId);
+    // 自签证书网关：仅对该 Provider 的 origin 放行，其余请求不受影响。
+    const providerTransport = providerConfig.allowInsecureTls
+      ? createInsecureTlsFetch(rawTransport, providerConfig.baseURL)
+      : rawTransport;
     const fetch = createProviderBusinessErrorFetch({
       fetch: providerTransport,
       providerId,
@@ -358,6 +364,7 @@ function toAiSdkProviderConfig(
     baseURL: config.api.baseUrl,
     ...(config.api.headers ? { headers: { ...config.api.headers } } : {}),
     providerOptions: { apiFormat: config.api.type },
+    ...(config.api.allowInsecureTls ? { allowInsecureTls: true } : {}),
     access: config.access,
   };
   switch (config.api.type) {

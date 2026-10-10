@@ -25,6 +25,7 @@ import {
 import { InfoIcon, LockKeyholeIcon, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
+import { Checkbox } from "@/components/ui/checkbox.js";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -182,6 +183,8 @@ export function ProviderConnectionSection({
   readOnly,
   apiFormat,
   baseUrlValue,
+  allowInsecureTlsValue,
+  onAllowInsecureTlsChange,
   onApiFormatChange,
   onBaseUrlChange,
   onBaseUrlBlur,
@@ -193,6 +196,8 @@ export function ProviderConnectionSection({
   readOnly?: boolean;
   apiFormat: ProviderApiType;
   baseUrlValue: string;
+  allowInsecureTlsValue: boolean;
+  onAllowInsecureTlsChange: (value: boolean) => void;
   onApiFormatChange: (value: ProviderApiType) => void;
   onBaseUrlChange: (value: string) => void;
   onBaseUrlBlur: () => void;
@@ -263,6 +268,23 @@ export function ProviderConnectionSection({
           onCompositionEnd={onBaseUrlCompositionEnd}
         />
       </div>
+      {baseUrlValue.trim().toLowerCase().startsWith("https://") ? (
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="provider-allow-insecure-tls"
+            checked={allowInsecureTlsValue}
+            onCheckedChange={(checked) => onAllowInsecureTlsChange(checked === true)}
+          />
+          <div>
+            <label htmlFor="provider-allow-insecure-tls" className="text-ui-base">
+              {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTls" })}
+            </label>
+            <p className="text-ui-sm text-foreground-subtle">
+              {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTlsDescription" })}
+            </p>
+          </div>
+        </div>
+      ) : null}
       {showApiFormat ? (
         <div>
           <label className="mb-1 block text-ui-base text-foreground-subtle">

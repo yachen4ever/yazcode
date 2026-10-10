@@ -6,6 +6,8 @@ export interface RemoteModelCatalogRequest {
   readonly baseUrl: string;
   readonly apiKey?: string | null;
   readonly headers?: Record<string, string> | null;
+  /** 该 Provider 启用了自签证书 TLS 放行时，检测请求同样跳过校验。 */
+  readonly allowInsecureTls?: boolean | null;
 }
 
 /** 一次可执行的模型列表 HTTP 请求。URL/头语义必须与正式模型执行链一致。 */

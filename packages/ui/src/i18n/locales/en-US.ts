@@ -2826,6 +2826,10 @@ const enUS: Record<string, string> = {
     "Add at least one model before adding the provider.",
   "settings.modelProvider.baseUrl": "Base URL",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
+  "settings.modelProvider.allowInsecureTls":
+    "Skip TLS certificate verification (self-signed)",
+  "settings.modelProvider.allowInsecureTlsDescription":
+    "Applies to this provider only: connections to self-signed intranet gateways skip certificate verification. Enable only on trusted networks; affects model requests only.",
   "settings.modelProvider.readOnlyField": "{field} (read only)",
   "settings.modelProvider.endpointPath": "Endpoint path: {format}",
   "settings.modelProvider.apiFormat": "API format",

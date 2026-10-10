@@ -2639,6 +2639,10 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.addProviderModelReminder": "添加供应商前，请至少添加一个模型。",
   "settings.modelProvider.baseUrl": "Base URL",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
+  "settings.modelProvider.allowInsecureTls":
+    "跳过 TLS 证书校验（自签名证书）",
+  "settings.modelProvider.allowInsecureTlsDescription":
+    "仅对该服务商生效：连接自签名证书的内网网关时不再校验证书。启用前请确认网络可信；仅影响模型请求，其他连接不受影响。",
   "settings.modelProvider.readOnlyField": "{field}（只读）",
   "settings.modelProvider.endpointPath": "接口路径：{format}",
   "settings.modelProvider.apiFormat": "API 格式",

@@ -1,5 +1,6 @@
 import {
   buildRemoteModelListRequest,
+  createInsecureTlsFetch,
   parseRemoteModelListPage,
   type RemoteModelCatalogRequest,
   type RemoteModelCatalogResult,
@@ -29,10 +30,15 @@ export function createRemoteModelCatalogExecutor(dependencies: {
   return async (input) => {
     try {
       let request = buildRemoteModelListRequest(input);
+      // 自签证书网关：检测请求与正式执行链同样跳过 TLS 校验（按 baseUrl 的 origin 生效）。
+      const requestFetch =
+        input.allowInsecureTls === true
+          ? createInsecureTlsFetch(doFetch, input.baseUrl)
+          : doFetch;
       const modelIds: string[] = [];
       const seen = new Set<string>();
       for (let page = 0; page < MAX_PAGES; page += 1) {
-        const response = await doFetch(request.url, {
+        const response = await requestFetch(request.url, {
           headers: request.headers,
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });

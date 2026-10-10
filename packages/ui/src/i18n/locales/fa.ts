@@ -2773,6 +2773,10 @@ const faIR: Record<string, string> = {
     "پیش از افزودن فراهم‌کننده، حداقل یک مدل اضافه کنید.",
   "settings.modelProvider.baseUrl": "URL پایه",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
+  "settings.modelProvider.allowInsecureTls":
+    "رد کردن تأیید گواهی TLS (امضای خودی)",
+  "settings.modelProvider.allowInsecureTlsDescription":
+    "فقط برای همین ارائه‌دهنده اعمال می‌شود: اتصال به دروازه‌های داخلی با گواهی امضای خودی بدون تأیید گواهی برقرار می‌شود. فقط در شبکه‌های مورد اعتماد فعال کنید؛ فقط درخواست‌های مدل را تحت تأثیر قرار می‌دهد.",
   "settings.modelProvider.readOnlyField": "{field} (فقط‌خواندنی)",
   "settings.modelProvider.endpointPath": "مسیر نقطه پایانی: {format}",
   "settings.modelProvider.apiFormat": "قالب API",
