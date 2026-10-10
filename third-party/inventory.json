@@ -516,7 +516,7 @@
     "apps/zcode-cli/packages/zcode-cua-plugin/package.json": "09f5fb7e3deef1953580342703157160fc7d9afb381a7406e04f56e9661aa9c9",
     "apps/zcode-cli/tools/prompt-trajectory/package.json": "7f161fc87f36691f01eb8c2034bd89cf28107da36db02bc20e76f059edd36af6",
     "apps/zcode-cli/tools/typescript/package.json": "23d7e50d2089d205ce3022c5bafbb6b3e31d000e41ac678a5934e0b72627cf3a",
-    "package.json": "89f39375652d2aefa5acbff95bf9b17519d69eb1c51e241e6ea84e59822a2547",
+    "package.json": "6f139f736fe235950a1b32c31e291267c5cffd7d0bb71ad746cfdcd2791ff98e",
     "packages/client/package.json": "e76f441549130dc3e5e68072a36b6cb9044e19a6625f1e813f19a4def2b1b689",
     "packages/desktop/package.json": "eeaa6b19b20e502606cdd1f0721f1bcb055c20610433038ffa16d99edfe83055",
     "packages/desktop/src/renderer/public/material-icons/3d.svg": "9527b849f0fba57ca7640e2717b3a19cb5f5e046712cbbd8b75d73af338c68fb",
