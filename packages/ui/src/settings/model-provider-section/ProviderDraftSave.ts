@@ -9,7 +9,7 @@ export interface ProviderDraftValues {
   apiFormat: ProviderApiType;
   baseUrlValue: string;
   allowInsecureTlsValue: boolean;
-  tlsCaPemValue: string;
+  tlsCaPathValue: string;
   apiKeyValue: string;
 }
 
@@ -52,12 +52,12 @@ export function resolvePendingProviderDraftSave({
   const typeChanged =
     !readOnlyEndpoints && draft.apiFormat !== (provider.config.api?.type ?? "anthropic-messages");
   const urlChanged = !readOnlyEndpoints && baseURL !== (provider.config.api?.baseUrl ?? "");
-  const tlsCaPemChanged =
-    !readOnlyEndpoints && draft.tlsCaPemValue !== (provider.config.api?.tlsCaPem ?? "");
+  const tlsCaPathChanged =
+    !readOnlyEndpoints && draft.tlsCaPathValue !== (provider.config.api?.tlsCaPath ?? "");
   const tlsChanged =
     !readOnlyEndpoints &&
     (draft.allowInsecureTlsValue !== (provider.config.api?.allowInsecureTls === true) ||
-      tlsCaPemChanged);
+      tlsCaPathChanged);
   const keyChanged =
     isApiKeyAccess(provider.config.access) &&
     draft.apiKeyValue !== (provider.config.access.apiKey ?? "");
@@ -69,7 +69,7 @@ export function resolvePendingProviderDraftSave({
     ...(typeChanged || (urlChanged && !provider.config.api?.type) ? { type: draft.apiFormat } : {}),
     ...(urlChanged ? { baseUrl: baseURL || undefined } : {}),
     ...(draft.allowInsecureTlsValue ? { allowInsecureTls: true } : {}),
-    ...(tlsCaPemChanged ? { tlsCaPem: draft.tlsCaPemValue || undefined } : {}),
+    ...(tlsCaPathChanged ? { tlsCaPath: draft.tlsCaPathValue || undefined } : {}),
   };
   const api =
     typeChanged || urlChanged || tlsChanged

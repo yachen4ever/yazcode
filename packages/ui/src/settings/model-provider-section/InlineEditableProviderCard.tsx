@@ -14,6 +14,7 @@ import {
 } from "@zcode/provider";
 import { logger } from "@/logger.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useOptionalPlatform } from "@/hooks/usePlatform.js";
 import { useServices } from "@/hooks/useServices.js";
 import { Switch } from "@/components/ui/switch.js";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";
@@ -202,7 +203,8 @@ export function InlineEditableProviderCard({
   const [allowInsecureTlsValue, setAllowInsecureTlsValue] = useState(
     provider.config.api?.allowInsecureTls === true,
   );
-  const [tlsCaPemValue, setTlsCaPemValue] = useState(provider.config.api?.tlsCaPem ?? "");
+  const [tlsCaPathValue, setTlsCaPathValue] = useState(provider.config.api?.tlsCaPath ?? "");
+  const platform = useOptionalPlatform();
   const [apiKeyValue, setApiKeyValue] = useState(getProviderFormApiKey(provider));
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [savingEnabled, setSavingEnabled] = useState(false);
@@ -246,7 +248,7 @@ export function InlineEditableProviderCard({
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
     allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true,
-    tlsCaPemValue: provider.config.api?.tlsCaPem ?? "",
+    tlsCaPathValue: provider.config.api?.tlsCaPath ?? "",
     apiKeyValue: getProviderFormApiKey(provider),
   });
 
@@ -774,7 +776,7 @@ export function InlineEditableProviderCard({
             baseUrl: baseUrlValue,
             apiKey: apiKeyValue,
             ...(allowInsecureTlsValue ? { allowInsecureTls: true } : {}),
-            ...(tlsCaPemValue ? { tlsCaPem: tlsCaPemValue } : {}),
+            ...(tlsCaPathValue ? { tlsCaPath: tlsCaPathValue } : {}),
             ...(provider.config.api?.headers ? { headers: provider.config.api.headers } : {}),
           })
       : undefined;
@@ -849,27 +851,30 @@ export function InlineEditableProviderCard({
             apiFormat={apiFormat}
             baseUrlValue={baseUrlValue}
             allowInsecureTlsValue={allowInsecureTlsValue}
-            tlsCaPemValue={tlsCaPemValue}
-            onTlsCaPemChange={(pem) => {
-              markDraftDirty("tlsCaPemValue");
-              draftRef.current.tlsCaPemValue = pem;
-              setTlsCaPemValue(pem);
-              if (pem) {
-                // 导入证书与跳过校验互斥：证书钉扎更安全
-                markDraftDirty("allowInsecureTlsValue");
-                draftRef.current.allowInsecureTlsValue = false;
-                setAllowInsecureTlsValue(false);
-              }
+            tlsCaPathValue={tlsCaPathValue}
+            onTlsCaPathChange={(value) => {
+              markDraftDirty("tlsCaPathValue");
+              draftRef.current.tlsCaPathValue = value;
+              setTlsCaPathValue(value);
               saveConnection();
+            }}
+            onCertFilePicked={(file) => {
+              const resolved = platform?.getPathForFile?.(file)?.trim();
+              if (resolved) {
+                markDraftDirty("tlsCaPathValue");
+                draftRef.current.tlsCaPathValue = resolved;
+                setTlsCaPathValue(resolved);
+                saveConnection();
+              }
             }}
             onAllowInsecureTlsChange={(checked) => {
               markDraftDirty("allowInsecureTlsValue");
               draftRef.current.allowInsecureTlsValue = checked;
               setAllowInsecureTlsValue(checked);
               if (checked) {
-                markDraftDirty("tlsCaPemValue");
-                draftRef.current.tlsCaPemValue = "";
-                setTlsCaPemValue("");
+                markDraftDirty("tlsCaPathValue");
+                draftRef.current.tlsCaPathValue = "";
+                setTlsCaPathValue("");
               }
               saveConnection();
             }}

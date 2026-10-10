@@ -2649,6 +2649,16 @@ const zhCN: Record<string, string> = {
     "导入自签证书（推荐）",
   "settings.modelProvider.importCertDescription":
     "导入网关的自签证书或其 CA（.pem / .crt / .der）。证书校验保持开启并按指纹钉扎，可防中间人；需重新选择文件时先取消勾选。",
+  "settings.modelProvider.sslAdvanced":
+    "SSL 高级设置",
+  "settings.modelProvider.sslAdvancedActive":
+    "已启用",
+  "settings.modelProvider.certPath":
+    "证书文件路径",
+  "settings.modelProvider.certPathPlaceholder":
+    "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile":
+    "选择文件",
   "settings.modelProvider.certImported":
     "已导入证书，连接时按指纹钉扎校验。",
   "settings.modelProvider.readOnlyField": "{field}（只读）",

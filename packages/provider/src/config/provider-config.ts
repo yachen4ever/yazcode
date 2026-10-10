@@ -133,7 +133,7 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
   readonly baseUrl?: ProviderApiConfigInput["baseUrl"];
   readonly headers?: ProviderApiConfigInput["headers"];
   readonly allowInsecureTls?: ProviderApiConfigInput["allowInsecureTls"];
-  readonly tlsCaPem?: ProviderApiConfigInput["tlsCaPem"];
+  readonly tlsCaPath?: ProviderApiConfigInput["tlsCaPath"];
 
   constructor(input: ProviderApiConfigInput = {}) {
     super();
@@ -141,7 +141,7 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
     this.baseUrl = input.baseUrl;
     this.headers = input.headers ? Object.freeze({ ...input.headers }) : input.headers;
     this.allowInsecureTls = input.allowInsecureTls;
-    this.tlsCaPem = input.tlsCaPem;
+    this.tlsCaPath = input.tlsCaPath;
     Object.freeze(this);
   }
 
@@ -151,7 +151,7 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
       baseUrl: this.overlayValue(this.baseUrl, next.baseUrl),
       headers: this.overlayValue(this.headers, next.headers),
       allowInsecureTls: this.overlayValue(this.allowInsecureTls, next.allowInsecureTls),
-      tlsCaPem: this.overlayValue(this.tlsCaPem, next.tlsCaPem),
+      tlsCaPath: this.overlayValue(this.tlsCaPath, next.tlsCaPath),
     });
   }
 
@@ -166,7 +166,7 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
       baseUrl: this.baseUrl,
       headers: this.headers,
       allowInsecureTls: this.allowInsecureTls,
-      tlsCaPem: this.tlsCaPem,
+      tlsCaPath: this.tlsCaPath,
     });
   }
 }

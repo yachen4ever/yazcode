@@ -2836,6 +2836,16 @@ const enUS: Record<string, string> = {
     "Import self-signed certificate (recommended)",
   "settings.modelProvider.importCertDescription":
     "Import the gateway's self-signed certificate or its CA (.pem / .crt / .der). Certificate verification stays on with fingerprint pinning, which prevents man-in-the-middle; uncheck to pick another file.",
+  "settings.modelProvider.sslAdvanced":
+    "Advanced SSL settings",
+  "settings.modelProvider.sslAdvancedActive":
+    "Active",
+  "settings.modelProvider.certPath":
+    "Certificate file path",
+  "settings.modelProvider.certPathPlaceholder":
+    "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile":
+    "Choose file",
   "settings.modelProvider.certImported":
     "Certificate imported; connections are verified against its fingerprint.",
   "settings.modelProvider.readOnlyField": "{field} (read only)",

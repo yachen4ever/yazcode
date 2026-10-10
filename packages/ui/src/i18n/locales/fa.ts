@@ -2783,6 +2783,16 @@ const faIR: Record<string, string> = {
     "وارد کردن گواهی امضای خودی (توصیه‌شده)",
   "settings.modelProvider.importCertDescription":
     "گواهی امضای خودی دروازه یا CA آن را وارد کنید (.pem / .crt / .der). تأیید گواهی روشن می‌ماند و با اثرانگشت سنجاق می‌شود که از حملات میانجی جلوگیری می‌کند؛ برای انتخاب فایل دیگر، تیک را بردارید.",
+  "settings.modelProvider.sslAdvanced":
+    "تنظیمات پیشرفته SSL",
+  "settings.modelProvider.sslAdvancedActive":
+    "فعال",
+  "settings.modelProvider.certPath":
+    "مسیر فایل گواهی",
+  "settings.modelProvider.certPathPlaceholder":
+    "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile":
+    "انتخاب فایل",
   "settings.modelProvider.certImported":
     "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
   "settings.modelProvider.readOnlyField": "{field} (فقط‌خواندنی)",

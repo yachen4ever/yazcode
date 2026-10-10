@@ -36,8 +36,8 @@ export function createRemoteModelCatalogExecutor(dependencies: {
       // 自签证书网关：检测请求与正式执行链同源生效。优先证书钉扎（校验保持
       // 开启），其次才是跳过校验的兜底——两者互斥，钉扎更安全。
       const requestFetch =
-        input.tlsCaPem
-          ? createPinnedCertFetch(doFetch, input.baseUrl, input.tlsCaPem)
+        input.tlsCaPath
+          ? createPinnedCertFetch(doFetch, input.baseUrl, input.tlsCaPath)
           : input.allowInsecureTls === true
             ? createInsecureTlsFetch(doFetch, input.baseUrl)
             : doFetch;

@@ -22,7 +22,17 @@ import {
   TID_MODEL_PROVIDER_NAME_INPUT,
   testId,
 } from "@zcode/shared";
-import { ShieldCheckIcon, InfoIcon, LockKeyholeIcon, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ShieldCheckIcon,
+  InfoIcon,
+  LockKeyholeIcon,
+  Plus,
+  Pencil,
+  Trash2,
+  MoreHorizontal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { Checkbox } from "@/components/ui/checkbox.js";
@@ -179,31 +189,15 @@ export function ProviderCardHeader({
 }
 
 
-/** 证书文件读取：PEM 原样返回；DER 转 base64 PEM（renderer 无 node:crypto）。 */
-/** 证书文件读取：PEM 原样返回；DER 转 base64 PEM（renderer 无 node:crypto）。 */
-/** 证书文件读取：PEM 原样返回；DER 转 base64 PEM（renderer 无 node:crypto）。 */
-function derOrPemToPem(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  if (new TextDecoder().decode(bytes.slice(0, 11)).startsWith("-----BEGIN")) {
-    return new TextDecoder().decode(bytes);
-  }
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  const base64 = btoa(binary).replace(/(.{64})/g, "$1" + String.fromCharCode(10));
-  return ["-----BEGIN CERTIFICATE-----", base64, "-----END CERTIFICATE-----", ""].join(String.fromCharCode(10));
-}
-
 export function ProviderConnectionSection({
   provider,
   readOnly,
   apiFormat,
   baseUrlValue,
   allowInsecureTlsValue,
-  tlsCaPemValue,
-  onTlsCaPemChange,
+  tlsCaPathValue,
+  onTlsCaPathChange,
+  onCertFilePicked,
   onAllowInsecureTlsChange,
   onApiFormatChange,
   onBaseUrlChange,
@@ -217,8 +211,9 @@ export function ProviderConnectionSection({
   apiFormat: ProviderApiType;
   baseUrlValue: string;
   allowInsecureTlsValue: boolean;
-  tlsCaPemValue: string;
-  onTlsCaPemChange: (value: string) => void;
+  tlsCaPathValue: string;
+  onTlsCaPathChange: (value: string) => void;
+  onCertFilePicked: (file: File) => void;
   onAllowInsecureTlsChange: (value: boolean) => void;
   onApiFormatChange: (value: ProviderApiType) => void;
   onBaseUrlChange: (value: string) => void;
@@ -229,6 +224,7 @@ export function ProviderConnectionSection({
 }) {
   const { intl } = useZCodeIntl();
   const caFileInputRef = useRef<HTMLInputElement>(null);
+  const [tlsAdvancedOpen, setTlsAdvancedOpen] = useState(false);
   const showApiFormat = shouldShowProviderApiFormat(provider);
   const readOnlyBaseUrl = provider.config.api?.baseUrl ?? "";
   const resolvedApiFormat = provider.config.api?.type ?? "anthropic-messages";
@@ -292,70 +288,110 @@ export function ProviderConnectionSection({
         />
       </div>
       {baseUrlValue.trim().toLowerCase().startsWith("https://") ? (
-        <div className="space-y-3 rounded-lg border border-input-border bg-input/30 px-3 py-3">
-          <p className="text-ui-sm font-medium text-foreground-subtle">
-            {intl.formatMessage({ id: "settings.modelProvider.selfSigned" })}
-          </p>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="provider-allow-insecure-tls"
-              checked={allowInsecureTlsValue}
-              onCheckedChange={(checked) => {
-                onAllowInsecureTlsChange(checked === true);
-                if (checked) onTlsCaPemChange("");
-              }}
-            />
-            <div>
-              <label htmlFor="provider-allow-insecure-tls" className="text-ui-base">
-                {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTls" })}
-              </label>
+        <div className="rounded-lg border border-input-border">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+            onClick={() => setTlsAdvancedOpen((open) => !open)}
+            aria-expanded={tlsAdvancedOpen}
+          >
+            <span className="flex items-center gap-2 text-ui-sm font-medium">
+              <ShieldCheckIcon className="size-4 text-foreground-subtle" />
+              {intl.formatMessage({ id: "settings.modelProvider.sslAdvanced" })}
+              {(allowInsecureTlsValue || tlsCaPathValue) ? (
+                <span className="rounded bg-warning/15 px-1.5 py-0.5 text-ui-sm text-warning">
+                  {intl.formatMessage({ id: "settings.modelProvider.sslAdvancedActive" })}
+                </span>
+              ) : null}
+            </span>
+            {tlsAdvancedOpen ? (
+              <ChevronUpIcon className="size-4 text-foreground-subtle" />
+            ) : (
+              <ChevronDownIcon className="size-4 text-foreground-subtle" />
+            )}
+          </button>
+          {tlsAdvancedOpen ? (
+            <div className="space-y-3 border-t border-input-border px-3 pb-3 pt-3">
               <p className="text-ui-sm text-foreground-subtle">
-                {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTlsDescription" })}
+                {intl.formatMessage({ id: "settings.modelProvider.selfSigned" })}
               </p>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="provider-allow-insecure-tls"
+                  checked={allowInsecureTlsValue}
+                  onCheckedChange={(checked) => {
+                    onAllowInsecureTlsChange(checked === true);
+                    if (checked) onTlsCaPathChange("");
+                  }}
+                />
+                <div>
+                  <label htmlFor="provider-allow-insecure-tls" className="text-ui-base">
+                    {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTls" })}
+                  </label>
+                  <p className="text-ui-sm text-foreground-subtle">
+                    {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTlsDescription" })}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="provider-import-cert"
+                    checked={tlsCaPathValue !== ""}
+                    onCheckedChange={(checked) => {
+                      if (!checked) {
+                        onTlsCaPathChange("");
+                        return;
+                      }
+                      caFileInputRef.current?.click();
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="provider-import-cert" className="text-ui-base">
+                      {intl.formatMessage({ id: "settings.modelProvider.importCert" })}
+                    </label>
+                    <p className="text-ui-sm text-foreground-subtle">
+                      {intl.formatMessage({ id: "settings.modelProvider.importCertDescription" })}
+                    </p>
+                  </div>
+                </div>
+                {tlsCaPathValue !== "" ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      aria-label={intl.formatMessage({ id: "settings.modelProvider.certPath" })}
+                      value={tlsCaPathValue}
+                      placeholder={intl.formatMessage({ id: "settings.modelProvider.certPathPlaceholder" })}
+                      className="min-w-0 flex-1"
+                      onChange={(event) => onTlsCaPathChange(event.target.value)}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => caFileInputRef.current?.click()}
+                    >
+                      {intl.formatMessage({ id: "settings.modelProvider.chooseCertFile" })}
+                    </Button>
+                  </div>
+                ) : null}
+                {tlsCaPathValue ? (
+                  <p className="flex items-center gap-1 text-ui-sm text-foreground-subtle">
+                    <ShieldCheckIcon className="size-3.5" />
+                    {intl.formatMessage({ id: "settings.modelProvider.certPinned" })}
+                  </p>
+                ) : null}
+              </div>
+              <input
+                ref={caFileInputRef}
+                type="file"
+                accept=".pem,.crt,.cer,.der"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) onCertFilePicked(file);
+                }}
+              />
             </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="provider-import-cert"
-              checked={tlsCaPemValue !== ""}
-              onCheckedChange={(checked) => {
-                if (!checked) {
-                  onTlsCaPemChange("");
-                  return;
-                }
-                caFileInputRef.current?.click();
-                if (!tlsCaPemValue) return;
-              }}
-            />
-            <div className="min-w-0 flex-1">
-              <label htmlFor="provider-import-cert" className="text-ui-base">
-                {intl.formatMessage({ id: "settings.modelProvider.importCert" })}
-              </label>
-              <p className="text-ui-sm text-foreground-subtle">
-                {intl.formatMessage({ id: "settings.modelProvider.importCertDescription" })}
-              </p>
-            </div>
-          </div>
-          {tlsCaPemValue ? (
-            <p className="flex items-center gap-1 text-ui-sm text-foreground-subtle">
-              <ShieldCheckIcon className="size-3.5" />
-              {intl.formatMessage({ id: "settings.modelProvider.certImported" })}
-            </p>
           ) : null}
-          <input
-            ref={caFileInputRef}
-            type="file"
-            accept=".pem,.crt,.cer,.der"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (!file) return;
-              void file.arrayBuffer().then((buffer) => {
-                onTlsCaPemChange(derOrPemToPem(buffer));
-              });
-            }}
-          />
         </div>
       ) : null}
       {showApiFormat ? (

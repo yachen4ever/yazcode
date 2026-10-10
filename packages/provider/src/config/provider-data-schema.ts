@@ -68,8 +68,8 @@ export const completeProviderApiDataSchema = z
     headers: z.record(z.string(), z.string()).readonly().nullable().optional(),
     /** 自签名证书网关：对该 Provider 的请求跳过 TLS 校验（仅 https 且逐 Provider 生效）。 */
     allowInsecureTls: z.boolean().nullable().optional(),
-    /** 证书钉扎：导入的自签证书 PEM（可含 CA 链）。与 allowInsecureTls 互斥，优先级更高。 */
-    tlsCaPem: z.string().nullable().optional(),
+    /** 证书钉扎：网关自签证书/CA 的文件路径（.pem/.crt/.der）。与 allowInsecureTls 互斥，优先级更高。 */
+    tlsCaPath: z.string().nullable().optional(),
   })
   .strict();
 export const providerApiDataSchema = z

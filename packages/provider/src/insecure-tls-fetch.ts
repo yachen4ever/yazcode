@@ -1,3 +1,4 @@
+import { readFileSync, statSync } from "node:fs";
 import { X509Certificate, createHash } from "node:crypto";
 import type { PeerCertificate } from "node:tls";
 import { checkServerIdentity as tlsCheckServerIdentity } from "node:tls";
@@ -45,10 +46,13 @@ export function createInsecureTlsFetch<F extends (input: any, init?: any) => Pro
 
 
 /** 证书钉扎 fetch：校验保持开启，信任锚 = 导入的自签证书（含 CA 链）。 */
+const pinnedAgentCache = new Map<string, Agent>();
+
+/** 证书钉扎 fetch：校验保持开启，信任锚 = 证书路径指向的自签证书/CA。 */
 export function createPinnedCertFetch<F extends (input: any, init?: any) => Promise<Response>>(
   baseFetch: F,
   baseUrl: string,
-  caPem: string,
+  caPath: string,
 ): F {
   let origin: string;
   try {
@@ -58,21 +62,33 @@ export function createPinnedCertFetch<F extends (input: any, init?: any) => Prom
   } catch {
     return baseFetch;
   }
-  const pemKey = createHash("sha256").update(caPem).digest("hex");
-  let agent = pinnedAgents.get(pemKey);
+  // 缓存键含文件状态：证书文件原地换发新证书后无需重启。
+  let stat: { size: number; mtimeMs: number };
+  let caBytes: Buffer;
+  try {
+    stat = statSync(caPath);
+    caBytes = readFileSync(caPath);
+  } catch (error) {
+    // 文件不可读时返回显式失败的 fetch（可见错误优于静默回退到校验失败）。
+    const message = error instanceof Error ? error.message : String(error);
+    return ((_input: any, _init: any) =>
+      Promise.reject(new Error(`无法读取证书文件 ${caPath}: ${message}`))) as F;
+  }
+  const cacheKey = `${caPath}:${stat.size}:${stat.mtimeMs}`;
+  let agent = pinnedAgentCache.get(cacheKey);
   if (!agent) {
     // 网关地址常为 IP 且自签证书未必带 IP SAN——标准主机名校验会拒绝。
     // 回退到指纹比对：对方必须出示与导入证书完全一致的证书（私钥在手才可能），
     // 中间人伪造不出，安全性等同钉扎。
     let pinnedFingerprint: string | null = null;
     try {
-      pinnedFingerprint = new X509Certificate(caPem).fingerprint256;
+      pinnedFingerprint = new X509Certificate(caBytes).fingerprint256;
     } catch {
-      // PEM 解析失败时保持标准校验（ca 仍会传入 Node）
+      // 解析失败时保持标准校验（ca 仍会传入 Node）
     }
     agent = new Agent({
       connect: {
-        ca: caPem,
+        ca: caBytes,
         rejectUnauthorized: true,
         ...(pinnedFingerprint
           ? {
@@ -93,11 +109,8 @@ export function createPinnedCertFetch<F extends (input: any, init?: any) => Prom
           : {}),
       },
     });
-    pinnedAgents.set(pemKey, agent);
   }
   const wrapped = ((input: any, init: any) =>
     baseFetch(input, { ...(init ?? {}), dispatcher: agent })) as F;
   return wrapped;
 }
-
-const pinnedAgents = new Map<string, Agent>();
