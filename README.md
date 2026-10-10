@@ -30,7 +30,8 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - **会规划、会改、会跑、会验证**：文件改动用 diff 呈现，终端命令带上下文；每一次编辑、命令和工具调用都可以要求审批——仅本次允许、本项目内一直允许，或完全放行。
 - **多智能体协作**：子代理、动态工作流、技能与定时自动化。
 - **插件、技能与 MCP**：内置技能与插件体系，各自独立开关；支持第三方插件市场。
-- **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义端点（Chat Completions / Responses / Anthropic Messages），并可从供应商的 `/models` 端点自动检测可用模型。
+- **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义端点（Chat Completions / Responses / Anthropic Messages），并可从供应商的 `/models` 端点自动检测可用模型；自签名证书的内网网关可按服务商勾选「跳过 TLS 证书校验」（仅该服务商生效，无全局放行）。
+- **内嵌浏览器下载静默落盘**：内嵌浏览器（IAB）的附件下载不再弹「另存为」对话框，自动保存到 `Downloads/yazcode/`（重名自动加序号）；创建失败时回退默认对话框，下载不会丢。
 - **记忆提供方三选一**：内置文件记忆（跨会话自动提炼操作事实，按项目隔离）、[OpenViking](https://openviking.ai)（语义召回 + 自动沉淀的外部记忆服务）或不启用记忆。三态互斥、不做静默回落——选了 OpenViking 而服务不可达时会直接报错，不会悄悄退回本地记忆。
 
 ## 继承自 ZCodium 的加固
