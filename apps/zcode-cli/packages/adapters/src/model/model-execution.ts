@@ -19,7 +19,10 @@ import {
   type ModelRequestAuth,
 } from "@zcode/contracts";
 import { type RegistryProviderConfig } from "@zcode/provider";
-import { createInsecureTlsFetch } from "@zcode/provider/insecure-tls-fetch";
+import {
+  createInsecureTlsFetch,
+  createPinnedCertFetch,
+} from "@zcode/provider/insecure-tls-fetch";
 import { withOpenRouterAttributionHeaders } from "@zcode/shared";
 import { createAnthropicCompatFetch } from "./anthropic-stream-compat.js";
 import { createOpenAIResponsesJsonCompatFetch } from "./openai-responses-json-compat.js";
