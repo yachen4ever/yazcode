@@ -14,7 +14,7 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 | 项目 | 仓库 | 许可 | 与 yazcode 的关系 |
 | ---- | ---- | ---- | ---------------- |
 | **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | 开源（Z.ai） | 一切工作的源头：2026 年 9 月开源的编程 Agent。 |
-| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 社区审计 fork：移除约 2.6 万行监控遥测、官方服务默认关闭。yazcode 的底座；无争议的修复与小功能以 PR 形式回馈。 |
+| **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 社区审计 fork：移除约 2.6 万行监控遥测、官方服务默认关闭。yazcode 的**历史底座**——yazcode 已转为独立个人产品线，不再与其保持同源；有价值的通用改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium)，再以 PR 回馈上游。 |
 | **ZCodium Exp.** | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 平行独立衍生：以开源组件补全官方发布包功能。yazcode 的 **Computer Use 运行时**移植自这里。 |
 | **MiniMax code** | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | **办公四件套技能**（docx / xlsx / pptx / pdf）的来源。 |
 | **trycua/cua** | [trycua/cua](https://github.com/trycua/cua) | MIT | CUA 原生引擎 `@trycua/cua-driver`：Rust 实现的跨平台桌面操控（Win32 E2E 122/122）。 |
@@ -141,7 +141,7 @@ Release 由本仓库的 [Release workflow](https://github.com/yachen4ever/yazcod
 
 yazcode 使用**年份号段** `26.y.z`，与上游 `3.14.x` 及社区 fork 的 `1.y.z` 都不重叠，便于一眼分辨构建来源：
 
-- **y（次版本）——同步上游**：某个 release 包含经审计后同步的上游 ZCode/ZCodium 变更时递增。对应的上游 commit 记录在该 release 说明里。
+- **y（次版本）——重大功能批次**：包含完整功能集的 release 递增。上游同步不再是主线；值得共享的改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium)，再以 PR 回馈 [ZCodium-project](https://github.com/ZCodium-project/ZCodium)。
 - **z（修订号）——yazcode 自身迭代**：yazcode 自己的功能、修复与产品变更时递增。
 - 同日重复构建追加 `-audit.<日期>[.n]` 后缀；破坏性变更（如数据目录迁移）会在 release 说明中显式标注。
 - 版本号不编码上游 revision——每个 release 基于的上游 commit 以其 release 说明为准。
