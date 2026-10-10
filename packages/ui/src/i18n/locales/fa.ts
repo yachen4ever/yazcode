@@ -2793,6 +2793,8 @@ const faIR: Record<string, string> = {
     "C:\certs\gateway.crt",
   "settings.modelProvider.chooseCertFile":
     "انتخاب فایل",
+  "settings.modelProvider.certPinned":
+    "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
   "settings.modelProvider.certImported":
     "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
   "settings.modelProvider.readOnlyField": "{field} (فقط‌خواندنی)",

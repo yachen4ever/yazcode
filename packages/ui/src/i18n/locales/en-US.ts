@@ -2846,6 +2846,8 @@ const enUS: Record<string, string> = {
     "C:\certs\gateway.crt",
   "settings.modelProvider.chooseCertFile":
     "Choose file",
+  "settings.modelProvider.certPinned":
+    "Certificate imported; connections are verified against its fingerprint.",
   "settings.modelProvider.certImported":
     "Certificate imported; connections are verified against its fingerprint.",
   "settings.modelProvider.readOnlyField": "{field} (read only)",

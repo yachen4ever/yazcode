@@ -200,8 +200,9 @@ export function InlineEditableProviderCard({
     provider.config.api?.type ?? "anthropic-messages",
   );
   const [baseUrlValue, setBaseUrlValue] = useState(provider.config.api?.baseUrl ?? "");
+  // 互斥在初始化同样强制：历史配置可能两键并存，钉扎优先。
   const [allowInsecureTlsValue, setAllowInsecureTlsValue] = useState(
-    provider.config.api?.allowInsecureTls === true,
+    provider.config.api?.allowInsecureTls === true && !provider.config.api?.tlsCaPath,
   );
   const [tlsCaPathValue, setTlsCaPathValue] = useState(provider.config.api?.tlsCaPath ?? "");
   const platform = useOptionalPlatform();
@@ -247,7 +248,7 @@ export function InlineEditableProviderCard({
     nameValue: getProviderFormLabel(provider),
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
-    allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true,
+    allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true && !provider.config.api?.tlsCaPath,
     tlsCaPathValue: provider.config.api?.tlsCaPath ?? "",
     apiKeyValue: getProviderFormApiKey(provider),
   });

@@ -52,12 +52,13 @@ export function resolvePendingProviderDraftSave({
   const typeChanged =
     !readOnlyEndpoints && draft.apiFormat !== (provider.config.api?.type ?? "anthropic-messages");
   const urlChanged = !readOnlyEndpoints && baseURL !== (provider.config.api?.baseUrl ?? "");
-  const tlsCaPathChanged =
-    !readOnlyEndpoints && draft.tlsCaPathValue !== (provider.config.api?.tlsCaPath ?? "");
-  const tlsChanged =
-    !readOnlyEndpoints &&
-    (draft.allowInsecureTlsValue !== (provider.config.api?.allowInsecureTls === true) ||
-      tlsCaPathChanged);
+  const tlsCaPathActive = draft.tlsCaPathValue.trim() !== "";
+  const configAllowInsecure = provider.config.api?.allowInsecureTls === true;
+  const configTlsCaPath = (provider.config.api?.tlsCaPath ?? "").trim() !== "";
+  const tlsCaPathChanged = !readOnlyEndpoints && tlsCaPathActive !== configTlsCaPath;
+  const allowInsecureChanged =
+    !readOnlyEndpoints && (draft.allowInsecureTlsValue && !tlsCaPathActive) !== configAllowInsecure;
+  const tlsChanged = tlsCaPathChanged || allowInsecureChanged;
   const keyChanged =
     isApiKeyAccess(provider.config.access) &&
     draft.apiKeyValue !== (provider.config.access.apiKey ?? "");
@@ -68,8 +69,9 @@ export function resolvePendingProviderDraftSave({
   const apiChanges = {
     ...(typeChanged || (urlChanged && !provider.config.api?.type) ? { type: draft.apiFormat } : {}),
     ...(urlChanged ? { baseUrl: baseURL || undefined } : {}),
-    ...(draft.allowInsecureTlsValue ? { allowInsecureTls: true } : {}),
-    ...(tlsCaPathChanged ? { tlsCaPath: draft.tlsCaPathValue || undefined } : {}),
+    // 互斥在此强制：证书路径非空时跳过校验必为 false，两个档位不会同时生效。
+    ...(draft.allowInsecureTlsValue && !tlsCaPathActive ? { allowInsecureTls: true } : {}),
+    ...(tlsCaPathActive ? { tlsCaPath: draft.tlsCaPathValue } : {}),
   };
   const api =
     typeChanged || urlChanged || tlsChanged

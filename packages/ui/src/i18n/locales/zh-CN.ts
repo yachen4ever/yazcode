@@ -2659,6 +2659,8 @@ const zhCN: Record<string, string> = {
     "C:\certs\gateway.crt",
   "settings.modelProvider.chooseCertFile":
     "选择文件",
+  "settings.modelProvider.certPinned":
+    "已导入证书，连接时按指纹钉扎校验。",
   "settings.modelProvider.certImported":
     "已导入证书，连接时按指纹钉扎校验。",
   "settings.modelProvider.readOnlyField": "{field}（只读）",
