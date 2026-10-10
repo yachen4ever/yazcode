@@ -43,6 +43,8 @@ interface AiSdkProviderConfig {
   name?: string;
   /** 自签名证书网关：该 Provider 的请求走跳过 TLS 校验的 dispatcher。 */
   allowInsecureTls?: boolean;
+  /** 证书钉扎：导入的自签证书 PEM，校验保持开启。 */
+  tlsCaPem?: string;
 }
 
 export interface AiSdkModelExecutionConfig {
@@ -266,10 +268,13 @@ export class AiSdkModelExecution {
     const apiKey = this.resolveApiKey(providerConfig);
     const headers = providerConfig.headers;
     const rawTransport = this.resolveProviderTransport(providerId);
-    // 自签证书网关：仅对该 Provider 的 origin 放行，其余请求不受影响。
-    const providerTransport = providerConfig.allowInsecureTls
-      ? createInsecureTlsFetch(rawTransport, providerConfig.baseURL)
-      : rawTransport;
+    // 自签证书网关：仅对该 Provider 的 origin 生效。优先证书钉扎（校验保持
+    // 开启），allowInsecureTls 是无证书导入时的兜底，两者互斥。
+    const providerTransport = providerConfig.tlsCaPem
+      ? createPinnedCertFetch(rawTransport, providerConfig.baseURL, providerConfig.tlsCaPem)
+      : providerConfig.allowInsecureTls
+        ? createInsecureTlsFetch(rawTransport, providerConfig.baseURL)
+        : rawTransport;
     const fetch = createProviderBusinessErrorFetch({
       fetch: providerTransport,
       providerId,
@@ -366,6 +371,7 @@ function toAiSdkProviderConfig(
     ...(config.api.headers ? { headers: { ...config.api.headers } } : {}),
     providerOptions: { apiFormat: config.api.type },
     ...(config.api.allowInsecureTls ? { allowInsecureTls: true } : {}),
+    ...(config.api.tlsCaPem ? { tlsCaPem: config.api.tlsCaPem } : {}),
     access: config.access,
   };
   switch (config.api.type) {

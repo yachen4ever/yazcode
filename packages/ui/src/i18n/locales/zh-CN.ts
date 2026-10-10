@@ -2643,6 +2643,14 @@ const zhCN: Record<string, string> = {
     "跳过 TLS 证书校验（自签名证书）",
   "settings.modelProvider.allowInsecureTlsDescription":
     "仅对该服务商生效：连接自签名证书的内网网关时不再校验证书。启用前请确认网络可信；仅影响模型请求，其他连接不受影响。",
+  "settings.modelProvider.selfSigned":
+    "自签名证书的内网网关（二选一）",
+  "settings.modelProvider.importCert":
+    "导入自签证书（推荐）",
+  "settings.modelProvider.importCertDescription":
+    "导入网关的自签证书或其 CA（.pem / .crt / .der）。证书校验保持开启并按指纹钉扎，可防中间人；需重新选择文件时先取消勾选。",
+  "settings.modelProvider.certImported":
+    "已导入证书，连接时按指纹钉扎校验。",
   "settings.modelProvider.readOnlyField": "{field}（只读）",
   "settings.modelProvider.endpointPath": "接口路径：{format}",
   "settings.modelProvider.apiFormat": "API 格式",

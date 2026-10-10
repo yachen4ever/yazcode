@@ -2830,6 +2830,14 @@ const enUS: Record<string, string> = {
     "Skip TLS certificate verification (self-signed)",
   "settings.modelProvider.allowInsecureTlsDescription":
     "Applies to this provider only: connections to self-signed intranet gateways skip certificate verification. Enable only on trusted networks; affects model requests only.",
+  "settings.modelProvider.selfSigned":
+    "Self-signed intranet gateway (choose one)",
+  "settings.modelProvider.importCert":
+    "Import self-signed certificate (recommended)",
+  "settings.modelProvider.importCertDescription":
+    "Import the gateway's self-signed certificate or its CA (.pem / .crt / .der). Certificate verification stays on with fingerprint pinning, which prevents man-in-the-middle; uncheck to pick another file.",
+  "settings.modelProvider.certImported":
+    "Certificate imported; connections are verified against its fingerprint.",
   "settings.modelProvider.readOnlyField": "{field} (read only)",
   "settings.modelProvider.endpointPath": "Endpoint path: {format}",
   "settings.modelProvider.apiFormat": "API format",

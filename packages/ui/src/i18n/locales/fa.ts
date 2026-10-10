@@ -2777,6 +2777,14 @@ const faIR: Record<string, string> = {
     "رد کردن تأیید گواهی TLS (امضای خودی)",
   "settings.modelProvider.allowInsecureTlsDescription":
     "فقط برای همین ارائه‌دهنده اعمال می‌شود: اتصال به دروازه‌های داخلی با گواهی امضای خودی بدون تأیید گواهی برقرار می‌شود. فقط در شبکه‌های مورد اعتماد فعال کنید؛ فقط درخواست‌های مدل را تحت تأثیر قرار می‌دهد.",
+  "settings.modelProvider.selfSigned":
+    "دروازهٔ داخلی با گواهی امضای خودی (یک مورد را انتخاب کنید)",
+  "settings.modelProvider.importCert":
+    "وارد کردن گواهی امضای خودی (توصیه‌شده)",
+  "settings.modelProvider.importCertDescription":
+    "گواهی امضای خودی دروازه یا CA آن را وارد کنید (.pem / .crt / .der). تأیید گواهی روشن می‌ماند و با اثرانگشت سنجاق می‌شود که از حملات میانجی جلوگیری می‌کند؛ برای انتخاب فایل دیگر، تیک را بردارید.",
+  "settings.modelProvider.certImported":
+    "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
   "settings.modelProvider.readOnlyField": "{field} (فقط‌خواندنی)",
   "settings.modelProvider.endpointPath": "مسیر نقطه پایانی: {format}",
   "settings.modelProvider.apiFormat": "قالب API",

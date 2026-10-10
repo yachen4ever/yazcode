@@ -202,6 +202,7 @@ export function InlineEditableProviderCard({
   const [allowInsecureTlsValue, setAllowInsecureTlsValue] = useState(
     provider.config.api?.allowInsecureTls === true,
   );
+  const [tlsCaPemValue, setTlsCaPemValue] = useState(provider.config.api?.tlsCaPem ?? "");
   const [apiKeyValue, setApiKeyValue] = useState(getProviderFormApiKey(provider));
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [savingEnabled, setSavingEnabled] = useState(false);
@@ -245,6 +246,7 @@ export function InlineEditableProviderCard({
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
     allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true,
+    tlsCaPemValue: provider.config.api?.tlsCaPem ?? "",
     apiKeyValue: getProviderFormApiKey(provider),
   });
 
@@ -772,6 +774,7 @@ export function InlineEditableProviderCard({
             baseUrl: baseUrlValue,
             apiKey: apiKeyValue,
             ...(allowInsecureTlsValue ? { allowInsecureTls: true } : {}),
+            ...(tlsCaPemValue ? { tlsCaPem: tlsCaPemValue } : {}),
             ...(provider.config.api?.headers ? { headers: provider.config.api.headers } : {}),
           })
       : undefined;
@@ -846,10 +849,28 @@ export function InlineEditableProviderCard({
             apiFormat={apiFormat}
             baseUrlValue={baseUrlValue}
             allowInsecureTlsValue={allowInsecureTlsValue}
+            tlsCaPemValue={tlsCaPemValue}
+            onTlsCaPemChange={(pem) => {
+              markDraftDirty("tlsCaPemValue");
+              draftRef.current.tlsCaPemValue = pem;
+              setTlsCaPemValue(pem);
+              if (pem) {
+                // 导入证书与跳过校验互斥：证书钉扎更安全
+                markDraftDirty("allowInsecureTlsValue");
+                draftRef.current.allowInsecureTlsValue = false;
+                setAllowInsecureTlsValue(false);
+              }
+              saveConnection();
+            }}
             onAllowInsecureTlsChange={(checked) => {
               markDraftDirty("allowInsecureTlsValue");
               draftRef.current.allowInsecureTlsValue = checked;
               setAllowInsecureTlsValue(checked);
+              if (checked) {
+                markDraftDirty("tlsCaPemValue");
+                draftRef.current.tlsCaPemValue = "";
+                setTlsCaPemValue("");
+              }
               saveConnection();
             }}
             onApiFormatChange={handleApiFormatChange}
