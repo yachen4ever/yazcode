@@ -1,10 +1,10 @@
 import {
   buildRemoteModelListRequest,
-  createInsecureTlsFetch,
   parseRemoteModelListPage,
   type RemoteModelCatalogRequest,
   type RemoteModelCatalogResult,
 } from "@zcode/provider";
+import { createInsecureTlsFetch } from "@zcode/provider/insecure-tls-fetch";
 
 /** 模型列表拉取的分页与超时上限；异常网关的死循环在这里被截断。 */
 const MAX_PAGES = 10;
