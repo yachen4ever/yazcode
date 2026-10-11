@@ -133,6 +133,34 @@ const officialPluginPackages = [
     ],
     stagedPath: "packages/zcode-cua-plugin",
   },
+
+  // 26.1.0 引入的上游官方办公插件（Apache-2.0，纯 skills/agents 无 runtime），见
+  // docs/specs/office-plugins-introduction.md。与 scripts/prepare-prebuilds.mjs、
+  // packages/server/src/remote/zcodeAgentOfficialPluginAssets.ts 三份清单保持一致。
+  {
+    packageName: "@zcode/pdf-plugin",
+    relativePath: "apps/zcode-cli/packages/pdf-plugin",
+    requiresRuntime: false,
+    requiredRuntimePaths: [],
+    requiredSeedPaths: ["agents/visual-judge.md", "skills/pdf/SKILL.md"],
+    stagedPath: "packages/pdf-plugin",
+  },
+  {
+    packageName: "@zcode/documents-plugin",
+    relativePath: "apps/zcode-cli/packages/documents-plugin",
+    requiresRuntime: false,
+    requiredRuntimePaths: [],
+    requiredSeedPaths: ["agents/visual-judge.md", "skills/docx/SKILL.md"],
+    stagedPath: "packages/documents-plugin",
+  },
+  {
+    packageName: "@zcode/spreadsheets-plugin",
+    relativePath: "apps/zcode-cli/packages/spreadsheets-plugin",
+    requiresRuntime: false,
+    requiredRuntimePaths: [],
+    requiredSeedPaths: ["agents/visual-judge.md", "skills/xlsx/SKILL.md"],
+    stagedPath: "packages/spreadsheets-plugin",
+  },
 ];
 // 随 CLI 内置的技能包（不是插件）：bootstrap 的 resolveBundledSkillRoots 沿官方插件同款候选目录
 // 在 zcode.cjs 旁找 packages/bundled-skills 并原地读取。漏 stage 它，桌面包的 /workflow 会展开成

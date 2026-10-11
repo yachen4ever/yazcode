@@ -2,7 +2,15 @@ import { posix } from "node:path";
 
 export const REMOTE_AGENT_OFFICIAL_PLUGIN_DIR_NAME = "packages";
 
-export const REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES = ["browser-use-plugin"] as const;
+export const REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES = [
+  "browser-use-plugin",
+  // 26.1.0 引入的办公插件（Apache-2.0，纯 skills/agents），与
+  // scripts/prepare-prebuilds.mjs、packages/desktop/scripts/prepare-agent-node-bundle.mjs
+  // 三份清单保持一致；见 docs/specs/office-plugins-introduction.md。
+  "documents-plugin",
+  "pdf-plugin",
+  "spreadsheets-plugin",
+] as const;
 
 export const REMOTE_AGENT_OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS = [
   ".mcp.json",
@@ -46,6 +54,14 @@ export const REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS = [
   "browser-use-plugin/skills/control-browser/SKILL.md",
   "browser-use-plugin/skills/web-gui-tester/SKILL.md",
   // 仅校验 manifest 无法发现文档插件缺少技能正文或视觉评审 Agent。
+  "pdf-plugin/.zcode-plugin/plugin.json",
+  "pdf-plugin/agents/visual-judge.md",
+  "pdf-plugin/skills/pdf/SKILL.md",
+  "documents-plugin/.zcode-plugin/plugin.json",
+  "documents-plugin/agents/visual-judge.md",
+  "documents-plugin/skills/docx/SKILL.md",
+  "spreadsheets-plugin/.zcode-plugin/plugin.json",
+  "spreadsheets-plugin/skills/xlsx/SKILL.md",
 ] as const;
 
 export function buildRemoteAgentOfficialPluginDir(remoteProviderDir: string): string {
