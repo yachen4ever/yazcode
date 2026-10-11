@@ -58,6 +58,7 @@ import {
 import { sortModelProvidersForDisplay } from "@/lib/modelProviderOrdering.js";
 import { useSettings } from "@/hooks/useSettingService.js";
 import { resolveLogoutProviderFamilyDomain } from "@/lib/providerFamilyDomainSettings.js";
+import { VisionBridgeSettingsCard } from "@/settings/VisionBridgeSettingsCard.js";
 import {
   addPendingSettingsSectionListener,
   consumePendingSettingsModelProviderTarget,
@@ -1092,8 +1093,7 @@ export function ModelProviderSection({
         />
       ) : (
         <ModelProviderSectionDetail
-          providerListEmpty={!loading && navigationItems.length === 0}
-          connectionSelections={effectiveConnectionSelections}
+          providerListEmpty={!loading && navigationItems.length === 0}          connectionSelections={effectiveConnectionSelections}
           providerSettingsView={providerSettingsView}
           selectedNavItem={selectedNavItem}
           navigationItems={navigationItems}
@@ -1152,6 +1152,16 @@ export function ModelProviderSection({
           }}
         />
       )}
+      {/* 视觉桥接是模型设置区的全局配置卡，与具体 Provider 详情无关，固定在页面底部。 */}
+      <VisionBridgeSettingsCard
+        modelProviders={modelProviders}
+        value={sharedSettings?.visionFallback}
+        onChange={(next) => {
+          void updateSharedSettings({ visionFallback: next }).catch((error) => {
+            logger.error("[ModelProviderSection] 保存视觉桥接设置失败", error);
+          });
+        }}
+      />
     </ModelProviderSectionLayout>
   );
 }

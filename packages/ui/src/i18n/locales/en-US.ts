@@ -3087,6 +3087,20 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.modelId": "Model ID",
   "settings.modelProvider.detectModels": "Detect available models",
   "settings.modelProvider.detectModelsEmpty": "No available models detected",
+  "settings.visionBridge.title": "Vision bridge",
+  "settings.visionBridge.description":
+    "When the main model cannot accept image input, images in the conversation are automatically described by a fallback vision model and the request is retried. Useful for OpenAI-compatible gateways that expose no modality metadata.",
+  "settings.visionBridge.enable": "Enable vision bridge",
+  "settings.visionBridge.enableDesc":
+    "Automatically retries with bridged descriptions when the main model rejects multimodal requests",
+  "settings.visionBridge.provider": "Fallback provider",
+  "settings.visionBridge.providerPlaceholder": "Select a provider",
+  "settings.visionBridge.noProviders": "No eligible provider (API Key access required)",
+  "settings.visionBridge.model": "Fallback vision model",
+  "settings.visionBridge.modelDesc": "Pick from the provider's real model catalog",
+  "settings.visionBridge.modelPlaceholder": "Detect and pick a model first",
+  "settings.visionBridge.modelsEmpty":
+    "No models detected yet. Click \"Detect available models\".",
   "settings.modelProvider.modelDisplayName": "Display name",
   "settings.modelProvider.modelApiFormat.anthropic": "Anthropic messages",
   "settings.modelProvider.modelApiFormat.openaiCompatible": "OpenAI Compatible",
