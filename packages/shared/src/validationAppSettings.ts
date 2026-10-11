@@ -461,6 +461,17 @@ export const openvikingConnectionSchema = z.object({
 });
 export type OpenVikingConnection = z.infer<typeof openvikingConnectionSchema>;
 
+/**
+ * 视觉桥接配置。主模型拒绝多模态请求时，把消息中的图片交给 fallback 视觉模型
+ * 转成文字描述后重试。缺省（字段缺席）= 未启用，向后兼容旧配置。
+ */
+export const visionFallbackSettingsSchema = z.object({
+  enabled: z.boolean().optional(),
+  providerId: nonEmptyStringSchema.optional(),
+  modelId: nonEmptyStringSchema.optional(),
+});
+export type VisionFallbackSettings = z.infer<typeof visionFallbackSettingsSchema>;
+
 const appSettingsObjectSchema = z.object({
   recentProjects: z.array(z.string()).default([]),
   locale: localeSchema.default("zh-CN"),
@@ -508,6 +519,7 @@ const appSettingsObjectSchema = z.object({
   proactiveSuggestionsEnabled: z.boolean().optional(),
   memoryProvider: memoryProviderSchema.default("disable"),
   openvikingConnection: openvikingConnectionSchema.optional(),
+  visionFallback: visionFallbackSettingsSchema.optional(),
   lastWorkspaceSession: z.array(appWorkspaceSessionEntrySchema).default([]),
   lastActiveTabIndex: z.number().int().nonnegative().default(0),
   lastActiveTaskByWorkspace: z.record(z.string(), z.string()).optional(),
@@ -598,6 +610,7 @@ export const appSettingsPatchSchema = z.object({
   proactiveSuggestionsEnabled: z.boolean().optional(),
   memoryProvider: memoryProviderSchema.optional(),
   openvikingConnection: openvikingConnectionSchema.optional(),
+  visionFallback: visionFallbackSettingsSchema.optional(),
   lastWorkspaceSession: z.array(appWorkspaceSessionEntrySchema).optional(),
   lastActiveTabIndex: z.number().int().nonnegative().optional(),
   lastActiveTaskByWorkspace: z.record(z.string(), z.string()).optional(),

@@ -44,8 +44,13 @@ export {
   memoryProviderSchema,
   openvikingConnectionSchema,
   postUpdateReleaseNotesPayloadSchema,
+  visionFallbackSettingsSchema,
 } from "./validationAppSettings.js";
-export type { MemoryProvider, OpenVikingConnection } from "./validationAppSettings.js";
+export type {
+  MemoryProvider,
+  OpenVikingConnection,
+  VisionFallbackSettings,
+} from "./validationAppSettings.js";
 
 export function formatZodError(error: z.ZodError): string {
   return error.issues
