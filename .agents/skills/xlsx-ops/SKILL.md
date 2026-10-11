@@ -1,11 +1,12 @@
 ---
-name: xlsx
+name: xlsx-ops
 description: >-
-  Spreadsheet skill — read, edit, create, and convert .xlsx/.xlsm/.csv/.tsv files.
-  Trigger when a spreadsheet file is the primary input or output: editing columns, formulas, formatting, charting, cleaning messy data, or creating new spreadsheets.
-  Not for Word/HTML/PDF deliverables even if tabular data is involved.
+  Operations on EXISTING spreadsheet files (.xlsx/.xlsm/.csv/.tsv) — reading, editing, formula
+  work, data cleaning, validation, and format conversion. Trigger when a spreadsheet already
+  exists and the task modifies, cleans, or extracts from it. NOT for chart/VBA authoring or new
+  spreadsheet design — use the `xlsx` plugin skill for those.
 descriptions:
-  zh-Hans: "读取、编辑、创建和转换表格文件，支持 xlsx、xlsm、csv、tsv、公式、格式、图表和数据清洗。"
+  zh-Hans: "对已有表格文件的操作：读取、编辑、公式、数据清洗、校验与格式转换。图表与 VBA 制作请用 xlsx 插件。"
 license: MIT
 ---
 

@@ -1,12 +1,12 @@
 ---
-name: pdf
+name: pdf-ops
 description: >
-  Unified PDF skill — generate, reformat, fill, and read PDFs. Covers: text-to-PDF (reports,
-  resumes, proposals, 可视化报告), LaTeX thesis, Markdown→PDF conversion, PDF form filling, and PDF
-  reading/extraction/OCR. Trigger on any task with PDF as primary input or output. Not for DOCX or
-  PPT.
+  Operations on EXISTING PDF files — form filling (AcroForm/overlay), merge, split, text/table
+  extraction, OCR, inspection, and repair. Trigger when a PDF already exists and the task modifies
+  or extracts from it. NOT for creating PDFs, converting other formats to PDF (Office/HTML/
+  Markdown/LaTeX), or typesetting and visual design — use the `pdf` plugin skill for those.
 descriptions:
-  zh-Hans: '生成、重排、填写和读取 PDF，支持报告、简历、提案、Markdown/LaTeX 转 PDF、表单和 OCR。'
+  zh-Hans: '对已有 PDF 的操作：填表、合并、拆分、提取（文本/表格/OCR）、检查与修复。从零制作或格式转换请用 pdf 插件。'
 metadata:
   version: '3.0'
   category: document-pdf
@@ -144,6 +144,11 @@ route has its own guide in `docs/`. Read the guide before authoring or running a
 > confirm they land on the intended pages.
 
 ## Routes — pick by user intent, then read the guide
+
+> **Routing note (26.1.0):** for *creating or typesetting* a new PDF (reports, posters, resumes,
+> Office→PDF conversion), prefer the `pdf` plugin skill — it has the full production workflows and
+> visual QA. The CREATE / REFORMAT routes below are kept as an offline fallback with lightweight
+> dependencies; do not use them when the plugin skill is available.
 
 ### WRITE a PDF
 

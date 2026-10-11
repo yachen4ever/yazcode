@@ -121,6 +121,26 @@ const remoteOfficialPluginPackages = [
     runtimeBuildScript: "scripts/build.mjs",
     stagedPath: "packages/node-repl-host",
   },
+  // 26.1.0 引入的上游官方办公插件（Apache-2.0，纯 skills/agents 无 runtime），见
+  // docs/specs/office-plugins-introduction.md。
+  {
+    packageName: "@zcode/pdf-plugin",
+    relativePath: "apps/zcode-cli/packages/pdf-plugin",
+    requiresRuntime: false,
+    stagedPath: "packages/pdf-plugin",
+  },
+  {
+    packageName: "@zcode/documents-plugin",
+    relativePath: "apps/zcode-cli/packages/documents-plugin",
+    requiresRuntime: false,
+    stagedPath: "packages/documents-plugin",
+  },
+  {
+    packageName: "@zcode/spreadsheets-plugin",
+    relativePath: "apps/zcode-cli/packages/spreadsheets-plugin",
+    requiresRuntime: false,
+    stagedPath: "packages/spreadsheets-plugin",
+  },
 ];
 // 随 CLI 内置的技能包（不是插件）：远端 agent 的 bootstrap 沿官方插件同款候选目录在 zcode.cjs 旁
 // 找 packages/bundled-skills 并原地读取；与 packages/desktop/scripts/prepare-agent-node-bundle.mjs 同一份清单。
@@ -164,6 +184,15 @@ function shouldCopyOfficialPluginAsset(sourcePath) {
 const remoteOfficialPluginRequiredPaths = [
   "packages/browser-use-plugin/.zcode-plugin/plugin.json",
   "packages/node-repl-host/.zcode-plugin/plugin.json",
+  // 办公三插件：manifest 与必需 seed 资产都要校验，只验 manifest 会漏掉技能正文。
+  "packages/pdf-plugin/.zcode-plugin/plugin.json",
+  "packages/pdf-plugin/agents/visual-judge.md",
+  "packages/pdf-plugin/skills/pdf/SKILL.md",
+  "packages/documents-plugin/.zcode-plugin/plugin.json",
+  "packages/documents-plugin/agents/visual-judge.md",
+  "packages/documents-plugin/skills/docx/SKILL.md",
+  "packages/spreadsheets-plugin/.zcode-plugin/plugin.json",
+  "packages/spreadsheets-plugin/skills/xlsx/SKILL.md",
 ];
 
 function readZCodeAgentRuntimeVersion() {

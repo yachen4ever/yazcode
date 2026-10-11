@@ -424,6 +424,36 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     // marketplace 条目都对齐；具体版本由原子 producer bump 工作流维护。
     version: "0.6.3",
   },
+  // 26.1.0 引入的上游官方办公插件（Apache-2.0，见 docs/specs/office-plugins-introduction.md）。
+  // 按上游 3.15.1 同款工厂注册；图标用内联 SVG 而非上游 CDN 资源——办公机离线，CDN 图标必然 404。
+  ...(
+    [
+      ["documents", "docx", "Documents", "Word文档"],
+      ["pdf", "pdf", "PDF", "PDF"],
+      ["spreadsheets", "xlsx", "Spreadsheets", "电子表格"],
+    ] as const
+  ).map(
+    ([name, skill, displayName, chineseName]): OfficialPluginDefinition => ({
+      defaultEnabled: true,
+      listing: {
+        author: ZAI_AUTHOR,
+        category: "productivity",
+        displayName,
+        displayName_i18n: { "zh-CN": chineseName },
+        icon: OFFICIAL_PLUGIN_ICON,
+        description_i18n: { "zh-CN": `创建、编辑与审阅${chineseName}（${skill.toUpperCase()}）。` },
+      },
+      name,
+      requiredSeedPaths: ["agents/visual-judge.md", `skills/${skill}/SKILL.md`],
+      rootCandidates: [
+        `packages/${name}-plugin`,
+        `../${name}-plugin`,
+        `../../${name}-plugin`,
+        `../../../${name}-plugin`,
+      ],
+      version: "0.1.8",
+    }),
+  ),
 ];
 
 // 在 official plugin 定义里标了 defaultEnabled: true 的, 拼成 `<name>@<marketplace>` 形式,

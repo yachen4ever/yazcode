@@ -1,5 +1,5 @@
 ---
-name: docx
+name: docx-redline
 metadata:
   version: "4.0.0"
   category: document-processing
@@ -11,8 +11,10 @@ metadata:
     - "IEEE / ACM / APA / MLA / Chicago / Turabian Style Guides"
     - "Springer LNCS / Nature / HBR Document Templates"
 description: >
-  Unified DOCX skill — create, template-apply, edit/fill, read, repair, and compare Word documents.
-  Use for formal Word deliverables and DOCX diagnosis. Not for PDF/PPT or casual plain-text drafting.
+  Operations on EXISTING Word documents — tracked revisions (redlining), edits and fills,
+  format preservation, repair, compare, read, and DOCX→PDF/images conversion. Use for revising,
+  diagnosing, or converting an existing .docx. NOT for creating new documents from scratch or
+  template-based authoring — use the `docx` plugin skill for those.
 descriptions:
   zh-Hans: "创建、套模板、编辑、读取、修复和比较 Word DOCX 文档，适用于正式文档交付。"
 triggers:

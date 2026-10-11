@@ -420,5 +420,47 @@
       "vendor/openviking/memory-plugin-shared"
     ],
     "scope": "Client-side agent integration runtime shipped inside the desktop bundle; only activated when the user selects the OpenViking memory provider."
+  },
+  {
+    "id": "zai-pdf-plugin",
+    "referenceRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "source": "https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/pdf-plugin/skills/pdf/LICENSE.txt",
+    "file": "third-party/upstream/a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e.txt",
+    "sha256": "a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e",
+    "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "license": "Apache-2.0",
+    "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/pdf-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
+    "roots": [
+      "apps/zcode-cli/packages/pdf-plugin"
+    ],
+    "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
+  },
+  {
+    "id": "zai-documents-plugin",
+    "referenceRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "source": "https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/documents-plugin/skills/docx/LICENSE.txt",
+    "file": "third-party/upstream/a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e.txt",
+    "sha256": "a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e",
+    "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "license": "Apache-2.0",
+    "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/documents-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
+    "roots": [
+      "apps/zcode-cli/packages/documents-plugin"
+    ],
+    "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
+  },
+  {
+    "id": "zai-spreadsheets-plugin",
+    "referenceRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "source": "https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/spreadsheets-plugin/skills/xlsx/LICENSE.txt",
+    "file": "third-party/upstream/a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e.txt",
+    "sha256": "a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e",
+    "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "license": "Apache-2.0",
+    "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/spreadsheets-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
+    "roots": [
+      "apps/zcode-cli/packages/spreadsheets-plugin"
+    ],
+    "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
   }
 ]
