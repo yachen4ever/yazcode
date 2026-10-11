@@ -1,6 +1,20 @@
 import { beginLocalTurnPreparation } from "@zcode/contracts";
 import { runWithModelInvocationContext, traceContextToLogContext } from "../deps.js";
-import type { ModelReasoningContentBlock, ModelToolCall, ModelUsage, ToolCallId } from "../deps.js";
+import type {
+  ModelReasoningContentBlock,
+  ModelToolCall,
+  ModelUsage,
+  ToolCallId,
+  VisionBridgePort,
+} from "../deps.js";
+import type { NoVisionModelCache } from "../helpers/vision-fallback.js";
+import {
+  bridgeImageBlocksInMessages,
+  buildVisionFallbackGuidanceMessage,
+  isMultimodalRejectionError,
+  loadNoVisionModelCache,
+  messagesContainImageBlocks,
+} from "../helpers/vision-fallback.js";
 import {
   buildSuspiciousEmptyDiagnostics,
   finalizeSuspiciousEmptyModelResult,
@@ -34,6 +48,129 @@ function hasToolInputLineBreak(value: string): boolean {
 }
 
 export async function runModelTextRequest(
+  this: AgentRuntimeInternal,
+  options: RunModelTextRequestOptions,
+): Promise<RuntimeModelTextResult> {
+  const plan = await resolveVisionFallbackPlan(this);
+  let effectiveOptions = options;
+
+  // 缓存命中：该主模型已确认无视觉，跳过试错直接桥接（原始请求不发出）。
+  if (
+    plan?.bridge &&
+    plan.cache?.has(options.model.providerId, options.model.modelId) &&
+    !options.visionFallbackRetried &&
+    messagesContainImageBlocks(options.messages)
+  ) {
+    const bridged = await bridgeImageBlocksForFallback(this, plan, options.messages);
+    this.logger?.info("Vision fallback cache hit: bridging images before request", {
+      event: "model.vision_fallback.cache_hit",
+      fallbackModelId: plan.bridge.modelId,
+      imageCount: bridged.bridgedCount + bridged.failedCount,
+      modelId: options.model.modelId,
+      module: "core.runtime",
+      providerId: options.model.providerId,
+    });
+    effectiveOptions = { ...options, messages: bridged.messages };
+  }
+
+  try {
+    return await runModelTextRequestAttempt.call(this, effectiveOptions);
+  } catch (error) {
+    if (options.visionFallbackRetried) throw error;
+    if (!isMultimodalRejectionError(error)) throw error;
+    if (!messagesContainImageBlocks(effectiveOptions.messages)) throw error;
+
+    // 无视觉事实与 fallback 配置无关，识别命中即记录（未配置也记）。
+    plan?.cache?.add(options.model.providerId, options.model.modelId);
+    this.logger?.info("Model rejected multimodal request; vision fallback engaged", {
+      event: "model.vision_fallback.detected",
+      fallbackConfigured: Boolean(plan?.bridge),
+      modelId: options.model.modelId,
+      module: "core.runtime",
+      providerId: options.model.providerId,
+    });
+
+    if (!plan?.bridge) {
+      // 降级：不重试，但把错误增强为可操作指引（保留原文）。
+      throw createVisionFallbackGuidanceError(error);
+    }
+
+    const bridged = await bridgeImageBlocksForFallback(this, plan, effectiveOptions.messages);
+    this.logger?.info("Vision fallback bridged images; retrying model request", {
+      bridgedCount: bridged.bridgedCount,
+      event: "model.vision_fallback.retry",
+      failedCount: bridged.failedCount,
+      fallbackModelId: plan.bridge.modelId,
+      module: "core.runtime",
+    });
+    return runModelTextRequestAttempt.call(this, {
+      ...effectiveOptions,
+      messages: bridged.messages,
+      visionFallbackRetried: true,
+    });
+  }
+}
+
+interface VisionFallbackPlan {
+  /** fallback 视觉模型就绪信息；未启用或未配齐 providerId/modelId/端口时缺席。 */
+  bridge?: { modelId: string; port: VisionBridgePort; providerId: string };
+  /** 无视觉缓存；未配置 cacheFilePath 时缺席（只用进程内降级为无缓存）。 */
+  cache?: NoVisionModelCache;
+}
+
+async function resolveVisionFallbackPlan(
+  runtime: AgentRuntimeInternal,
+): Promise<VisionFallbackPlan | undefined> {
+  const config = runtime.config.visionFallback;
+  if (!config) return undefined;
+  const cache = config.cacheFilePath
+    ? await loadNoVisionModelCache(config.cacheFilePath)
+    : undefined;
+  if (config.enabled !== true || !config.providerId || !config.modelId) {
+    return { cache };
+  }
+  const port = runtime.visionBridgePort;
+  if (!port) return { cache };
+  return {
+    bridge: { modelId: config.modelId, port, providerId: config.providerId },
+    cache,
+  };
+}
+
+async function bridgeImageBlocksForFallback(
+  runtime: AgentRuntimeInternal,
+  plan: VisionFallbackPlan,
+  messages: RunModelTextRequestOptions["messages"],
+) {
+  const bridge = plan.bridge;
+  if (!bridge) {
+    return { bridgedCount: 0, failedCount: 0, messages };
+  }
+  return bridgeImageBlocksInMessages({
+    fallbackModelId: bridge.modelId,
+    fallbackProviderId: bridge.providerId,
+    logger: runtime.logger,
+    messages,
+    port: bridge.port,
+  });
+}
+
+function createVisionFallbackGuidanceError(originalError: unknown): Error {
+  const originalMessage =
+    originalError instanceof Error
+      ? originalError.message
+      : typeof originalError === "string"
+        ? originalError
+        : JSON.stringify(originalError);
+  // 降级语义：不吞原文，指引附加在原错误之后，UI 展示的就是这条完整消息。
+  const error = new Error(buildVisionFallbackGuidanceMessage(originalMessage));
+  if (originalError instanceof Error && originalError.stack) {
+    error.stack = originalError.stack;
+  }
+  return error;
+}
+
+async function runModelTextRequestAttempt(
   this: AgentRuntimeInternal,
   options: RunModelTextRequestOptions,
 ): Promise<RuntimeModelTextResult> {

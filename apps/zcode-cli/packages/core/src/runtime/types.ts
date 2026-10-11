@@ -67,6 +67,7 @@ import type {
   DynamicWorkflowRunPort,
   DynamicWorkflowSnippetPort,
   ModelCatalogPort,
+  VisionBridgePort,
   ExecutionPort,
   BrowserControlPort,
   ExecutionShellSelection,
@@ -195,6 +196,12 @@ export interface AgentRuntimeConfig {
   /** 根 Session runtime 创建时固定；false 只关闭 Bash 的 bfs/ugrep prelude。 */
   nativeSearchEnhancementsEnabled?: boolean;
   memory?: MemoryRuntimeConfig;
+  /**
+   * 视觉桥接配置：主模型拒绝多模态请求时自动把图片交给 fallback 视觉模型转述后重试。
+   * bootstrap 在 App 创建时从容错读取的 setting.json 冻结进这里；缺席 = 功能关闭。
+   * cacheFilePath 指向「无视觉」缓存文件（cliStorageRoot 下），由 core 拥有读写。
+   */
+  visionFallback?: VisionFallbackRuntimeConfig;
   /** 历史恢复允许未绑定；只有完整选择才能创建本轮执行 Model。 */
   modelSelection?: ModelSelection;
   titleGeneration?: {
@@ -312,6 +319,15 @@ export interface MemoryRuntimeConfig {
   workspaceIdentity?: string;
 }
 
+/** 视觉桥接的 runtime 冻结配置；与 appSettings.visionFallback 字段一一对应。 */
+export interface VisionFallbackRuntimeConfig {
+  enabled?: boolean;
+  providerId?: string;
+  modelId?: string;
+  /** 「无视觉」缓存文件路径（cliStorageRoot 下）；缺席 = 只用进程内缓存。 */
+  cacheFilePath?: string;
+}
+
 export interface AgentRuntimeDeps {
   agentTelemetry?: AgentExecutionTelemetryPort;
   agentTelemetryCausation?: AgentTelemetryCausation;
@@ -323,6 +339,11 @@ export interface AgentRuntimeDeps {
   modelFactory: RuntimeModelFactory;
   /** 可选宿主能力：解析未来执行的显式意图；不用于修改已冻结 Model。 */
   resolveEffectiveModelSelection?: (selection: ModelSelection) => EffectiveModelSelectionResult;
+  /**
+   * 可选宿主能力：用 fallback 视觉模型描述一张图片（bootstrap 经 Provider Registry
+   * + adapters 桥接模块实现）。缺席时视觉桥接按未配置处理。
+   */
+  visionBridgePort?: VisionBridgePort;
   modelIoDir?: string;
   providerRuntimeHeadersPort?: ProviderRuntimeHeadersPort;
   permissionService?: PermissionService;
@@ -836,6 +857,11 @@ export interface RunModelTextRequestOptions {
   streamRecovery?: ModelStreamRecoveryStatus;
   tools: ModelToolContract[];
   traceContext: TraceContext;
+  /**
+   * 视觉桥接重试标记：桥接重试请求必须带上，防止重试再次失败时进入第二次桥接。
+   * 仅由 runModelTextRequest 的桥接编排层设置，不属于协议面。
+   */
+  visionFallbackRetried?: boolean;
 }
 
 export interface RuntimeModelStreamSnapshot {
