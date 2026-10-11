@@ -32,7 +32,7 @@
 - `packages/services`：业务服务；`packages/rpc`：RPC 框架。
 - `packages/shared`：共享协议与类型；`packages/client`：Agent 客户端 SDK。
 - `apps/zcode-cli`：Agent CLI 与运行时。
-- `packages/zcode-cua`：Computer Use 运行时适配器（cua-driver）；`apps/zcode-cli/packages/` 下的官方插件（browser-use、computer-use、node-repl-host 等）随包分发。
+- `packages/zcode-cua`：Computer Use 运行时适配器（cua-driver）；`apps/zcode-cli/packages/` 下的官方插件（browser-use、computer-use、node-repl-host、pdf/documents/spreadsheets 办公三插件等）随包分发。
 - `CONTEXT.md`：插件商店领域词汇；修改相关 UI 前阅读。
 - `DESIGN.md`：UI 设计规范；修改 UI 前阅读。
 - `docs/README.md`：仓库导航——某个问题该跑哪条命令或读哪份 spec。只含可当场验证的指针，不含实现说明。
