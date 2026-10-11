@@ -408,13 +408,13 @@
   },
   {
     "id": "openviking-client-integration",
-    "referenceRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
-    "source": "https://raw.githubusercontent.com/volcengine/OpenViking/76511554eee2c2efb0ae08f9a2284041aed39840/examples/LICENSE",
+    "referenceRevision": "20f9c11362ad16193b0daa4a414e1095061af427",
+    "source": "https://raw.githubusercontent.com/volcengine/OpenViking/20f9c11362ad16193b0daa4a414e1095061af427/examples/LICENSE",
     "file": "third-party/upstream/ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831.txt",
     "sha256": "ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831",
-    "importRevision": "76511554eee2c2efb0ae08f9a2284041aed39840",
+    "importRevision": "20f9c11362ad16193b0daa4a414e1095061af427",
     "license": "Apache-2.0",
-    "provenance": "Vendored from OpenViking examples/ at revision 76511554eee2c2efb0ae08f9a2284041aed39840: agent-hook-plugin (trimmed to the zcode host) plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except integration.json, which is machine-specific and removed; no file-local modification notices are therefore required.",
+    "provenance": "Vendored from OpenViking examples/ at revision 20f9c11362ad16193b0daa4a414e1095061af427: agent-hook-plugin (trimmed to the zcode host) plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim; integration.json ships the upstream 0.5.14 template and is rewritten by the install service at deploy time; no file-local modification notices are therefore required.",
     "roots": [
       "vendor/openviking/zcode",
       "vendor/openviking/memory-plugin-shared"

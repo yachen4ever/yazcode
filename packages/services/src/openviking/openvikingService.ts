@@ -20,7 +20,7 @@ const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "Stop"] a
 const VERIFY_TIMEOUT_MS = 8000;
 /** 与官方 examples/agent-hook-plugin/hosts/zcode/openviking.integration.json 保持一致。 */
 const INTEGRATION_ID = "openviking-memory";
-const INTEGRATION_VERSION = "0.5.13";
+const INTEGRATION_VERSION = "0.5.14";
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");

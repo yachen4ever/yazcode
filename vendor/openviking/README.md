@@ -22,7 +22,8 @@ OpenViking」档位使用。
 2. 用官方安装器装配到临时 HOME 后复制产物，或直接复制
    `examples/agent-hook-plugin`（剔除 `hosts/` 下 cursor / trae / kimicode）
    与 `examples/memory-plugin-shared/lib`
-3. 删除 `integration.json`（机器特定安装记录）
+3. `openviking.integration.json` 上游已是纯模板（无机器信息），原样保留；
+   安装服务以 `openvikingService.ts` 的 `INTEGRATION_VERSION` 常量保持版本对齐
 4. 校验无本机绝对路径、地址与凭据残留
 
 ## 为什么 vendor 而不是运行时下载
