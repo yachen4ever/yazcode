@@ -36,11 +36,16 @@
 
 ### 连接校验的错误分类
 
-| 情形 | 判定 | 提示要点 |
+| 情形 | 判定（reason） | 提示要点 |
 |---|---|---|
-| 地址不通 | 网络层失败 | 服务地址、网络可达性 |
-| 非 OV 服务 | `/health` 非 OV 响应 | 该端口未运行 OpenViking |
-| 鉴权失败 | 401/403，或 root key 被数据面拒绝 | 必须是 **user key**；root key 仅管理面 |
+| 地址不通（含数据面网络失败） | `unreachable` | 服务地址、网络可达性 |
+| 鉴权失败（key 缺失 / 401/403，含数据面被拒） | `unauthorized` | 必须是 **user key**；root key 仅管理面 |
+| 服务端错误（非 2xx） | `server_error` | 服务返回状态码原文 |
+| `/health` 非 OV 响应 | `not_openviking` | 该端口未运行 OpenViking |
+
+校验在 `/health` 之外**额外打一次数据面请求**确认 user key 真能读——`/health` 是
+公开端点，只信它会漏掉「服务在但 key 无效」；数据面失败按其性质归入
+`unreachable` / `unauthorized`，不设独立类别。
 
 ### 迁移
 

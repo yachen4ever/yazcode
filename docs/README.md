@@ -94,6 +94,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | spec | 回答什么 |
 | --- | --- |
 | `docs/specs/model-provider-remote-model-detection.md` | 自定义 Provider 的可用模型自动检测 |
+| `docs/specs/provider-tls-options.md` | 服务商级 TLS 选项：证书钉扎 / 跳过校验互斥与指纹回退 |
 | `packages/services/specs/provider-balance-query.md` | 外部 API Key Provider 余额查询 |
 | `packages/services/specs/official-service-switches.md` | 官方服务开关的持久化与进程投影 |
 
@@ -105,6 +106,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `packages/desktop/specs/github-updates.md` | 桌面更新 |
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
+| `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
 | `.agents/specs/bots-astrbot-bridge.md` | 机器人 AstrBot 桥接协议 v2 |
 
 ## 可执行门禁（规则的代码形态）
@@ -113,7 +115,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 | 门禁 | 位置 | 拦什么 |
 | --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` |
+| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` + `typecheck:cli`（全部 13 个 CLI 子包） |
 | `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
 | `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |
 | `check-skill-residue` | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤 | 拦 vendored skill 的宿主品牌/端口残留回流 |

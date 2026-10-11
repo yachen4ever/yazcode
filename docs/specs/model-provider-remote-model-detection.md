@@ -15,7 +15,7 @@
 
 ```text
 用户点击「检测可用模型」（模型元数据对话框，草稿态）
-  → UI hook 组装 { apiType, baseUrl, apiKey, headers }（当前草稿值）
+  → UI hook 组装 { apiType, baseUrl, apiKey, headers, tlsCaPath?, allowInsecureTls? }（当前草稿值）
   → RPC: IProviderSettingsService.listRemoteModels（ProxyChannel 泛化转发）
   → Host: 注入的 executor 执行 HTTP GET 并解析
       → buildRemoteModelListRequest / parseRemoteModelList（@zcode/provider 纯函数）
@@ -55,6 +55,8 @@
 1. 检测不落盘：任何失败或成功都不改变 Provider 配置、Registry 或视图 revision。
 2. 手输不被替代：模型 ID 输入框始终可用，检测结果只是点选回填草稿。
 3. 检测请求的 URL/头语义与正式执行链保持一致；两处语义分叉视为 bug。
+4. 检测请求的 TLS 选项（`tlsCaPath` / `allowInsecureTls`，见
+   `provider-tls-options.md`）与正式执行链同源：检测连通即代表执行链连通。
 
 ## 验收场景
 
