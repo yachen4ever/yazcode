@@ -101,6 +101,7 @@ import { collectDisabledPaths } from "../skill-command-overrides.js";
 import { loadPluginAgentProfiles, loadZCodeAgentProfiles } from "../subagents.js";
 import { createRuntimeAiSdkModelExecutionConfig } from "../model-config.js";
 import { ApiProviderModelRuntime } from "./provider-registry-model-runtime.js";
+import { createVisionBridgePort } from "./vision-bridge-port.js";
 import {
   completeAppStartup,
   debugRuntimeConfigResolved,
@@ -549,6 +550,11 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       modelAdapter,
     });
     providerModelRuntime.start();
+    // 视觉桥接端口：core 只认接口，这里用 Registry 活视图 + adapters 桥接模块实现。
+    const visionBridgePort = createVisionBridgePort({
+      env: options.env ?? process.env,
+      registry: options.providerRegistry,
+    });
     // model factory 提前到三条 workflow child 装配线之前构造：script workflow bridge、dwf actor
     // runtime 与 expert workflow facade 都**共享**父会话这一份 factory——Registry 视图更新后
     // 新建的 Model 才看得到，child 不各自冻结一份。
@@ -764,6 +770,7 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
         isRemoteWorkspaceIdentity(runtimeConfig.memory?.workspaceIdentity ?? ""),
       permissionBroker: options.permissionBroker,
       permissionService,
+      visionBridgePort,
       workflowPort: scriptWorkflowFacade.workflowPort,
       dynamicWorkflowRunPort,
       dynamicWorkflowSnippetPort,
