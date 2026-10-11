@@ -13,6 +13,7 @@ import {
 import { omitMcpServers, resolveTrustedOfficialCuaServerNames } from "../mcp-config.js";
 import { resolveDefaultEmbeddedSearchBackend } from "./embedded-search-backend.js";
 import { getProjectMemoryRoot } from "./paths.js";
+import { readVisionFallbackSettings, resolveVisionFallbackCacheFilePath } from "./vision-fallback-config.js";
 import type { ZCodeAppOptions } from "./types.js";
 import {
   resolveRegistryOwnedModelSelection,
@@ -182,6 +183,13 @@ export function resolveAppRuntimeConfig(input: {
       ...(input.storageRoot ? { storageRoot: input.storageRoot } : {}),
       use: options.runtimeConfig?.memory?.use ?? configResult.config.memory.use,
       workspaceIdentity: workspaceIdentity?.trim() || undefined,
+    },
+    // 视觉桥接：CLI 进程容错读取 Host SettingService 落盘的设置文件并在此冻结；
+    // 缓存路径始终提供（主模型「无视觉」事实与 fallback 是否配置无关，未配置也要记录），
+    // enabled/providerId/modelId 缺席即功能关闭。
+    visionFallback: {
+      cacheFilePath: resolveVisionFallbackCacheFilePath(cliStorageRoot),
+      ...(readVisionFallbackSettings(options.env ?? process.env) ?? {}),
     },
   };
   return {

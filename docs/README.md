@@ -89,6 +89,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `docs/specs/flatten-provider-zones.md` | 移除智谱套餐体系，Provider 拉平为普通预设 |
 | `docs/specs/memory-provider-selection.md` | 记忆提供方三态（disable / local / openviking）与无回落语义 |
 | `docs/specs/office-plugins-introduction.md` | 上游办公插件引入范围、路由去歧义与验收场景 |
+| `docs/specs/vision-fallback.md` | 视觉桥接：多模态拒绝的失败驱动桥接与无视觉缓存 |
 
 ### Provider 与外部服务
 

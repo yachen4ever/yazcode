@@ -161,6 +161,21 @@ const faIR: Record<string, string> = {
   "offPeak.chatCreated.open": "رفتن به وظیفه‌های زمان بیکاری",
   "settings.computerUse.disabledToast":
     "Computer Use غیرفعال است. برای اعمال شدن، گفتگوهای موجود به راه‌اندازی دوبارهٔ yazcode نیاز دارند.",
+  "settings.visionBridge.title": "پل تصویری",
+  "settings.visionBridge.description":
+    "وقتی مدل اصلی ورودی تصویر را نمی‌پذیرد، تصاویر پیام به‌طور خودکار با مدل بینایی جایگزین به توضیح متنی تبدیل و درخواست دوباره ارسال می‌شود. برای گیت‌وی‌های سازگار با OpenAI که فرادادهٔ مودالیتی ارائه نمی‌کنند مناسب است.",
+  "settings.visionBridge.enable": "فعال‌سازی پل تصویری",
+  "settings.visionBridge.enableDesc":
+    "وقتی مدل اصلی درخواست چندوجهی را رد می‌کند، به‌طور خودکار با توضیح تصویر دوباره تلاش می‌کند",
+  "settings.visionBridge.provider": "سرویس‌دهندهٔ جایگزین",
+  "settings.visionBridge.providerPlaceholder": "انتخاب سرویس‌دهنده",
+  "settings.visionBridge.noProviders":
+    "سرویس‌دهندهٔ واجد شرایطی وجود ندارد (دسترسی با API Key لازم است)",
+  "settings.visionBridge.model": "مدل بینایی جایگزین",
+  "settings.visionBridge.modelDesc": "از فهرست واقعی مدل‌های همین سرویس‌دهنده انتخاب کنید",
+  "settings.visionBridge.modelPlaceholder": "ابتدا مدل‌ها را تشخیص و انتخاب کنید",
+  "settings.visionBridge.modelsEmpty":
+    "هنوز مدلی تشخیص داده نشده است. روی «Detect available models» بزنید.",
   "settings.modelProvider.connectionUnavailableNotice": "طرح فعلی در دسترس نیست.",
   "settings.modelProvider.switchConnection": "تغییر به «{connection}»",
   "settings.modelProvider.connectionSuggestionStale":

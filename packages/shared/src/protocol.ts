@@ -338,6 +338,16 @@ export interface AppSettings {
    * verifiedAt 只用于设置页展示最近一次校验时间，不参与运行时判定。
    */
   openvikingConnection?: { url: string; userKey: string; verifiedAt?: number };
+  /**
+   * 视觉桥接配置：主模型拒绝多模态请求时，把消息中的图片交给 fallback 视觉模型
+   * 转成文字描述后重试。缺省（字段缺席）= 未启用，向后兼容旧配置。
+   * 结构定义见 validationAppSettings.ts 的 visionFallbackSettingsSchema。
+   */
+  visionFallback?: {
+    enabled?: boolean;
+    providerId?: string;
+    modelId?: string;
+  };
   onboardingOccupation?:
     | "office"
     | "developer"
