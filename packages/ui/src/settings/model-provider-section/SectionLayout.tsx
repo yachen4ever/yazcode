@@ -20,6 +20,8 @@ interface ModelProviderSectionLayoutProps {
   onReorderProviderIds?: (providerIds: string[]) => Promise<void>;
   reorderableProviderIds?: ReadonlySet<string>;
   children: ReactNode;
+  /** 与接入端点模块平级的独立设置区（渲染在模块卡片容器之外，如视觉桥接）。 */
+  belowPanel?: ReactNode;
 }
 
 function shouldShowModelProviderRefreshLoading(params: {
@@ -44,6 +46,7 @@ export function ModelProviderSectionLayout({
   onReorderProviderIds,
   reorderableProviderIds,
   children,
+  belowPanel,
 }: ModelProviderSectionLayoutProps) {
   const refreshButtonLoading = shouldShowModelProviderRefreshLoading({
     presetLoading,
@@ -93,6 +96,8 @@ export function ModelProviderSectionLayout({
           </div>
         </div>
       </div>
+
+      {belowPanel}
     </div>
   );
 }

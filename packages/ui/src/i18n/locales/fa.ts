@@ -3355,11 +3355,11 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.presetDescription":
     "فراهم‌کننده‌های داخلی Z.ai و BigModel؛ آن‌ها را با کلید API پیکربندی کنید.",
   "settings.modelProvider.presetEmpty": "هنوز همگام‌سازی نشده است. ابتدا کلید API را پیکربندی کنید.",
-  "settings.modelProvider.customTitle": "فراهم‌کننده‌های سفارشی",
+  "settings.modelProvider.customTitle": "نقاط دسترسی",
   "settings.modelProvider.refresh": "تازه‌سازی",
   "settings.modelProvider.reorderProvider": "برای تغییر ترتیب فراهم‌کننده بکشید",
   "settings.modelProvider.reorderModel": "برای تغییر ترتیب مدل بکشید",
-  "settings.modelProvider.empty": "هنوز فراهم‌کننده مدل سفارشی وجود ندارد",
+  "settings.modelProvider.empty": "هنوز نقطه دسترسی وجود ندارد",
   "settings.modelProvider.emptyHint":
     'برای ایجاد از قالب‌های آماده روی "افزودن ارائه‌دهنده" بزنید، یا یک ارائه‌دهنده سفارشی بسازید و کلید API را وارد کنید.',
   "settings.modelProvider.deleteConfirmDescription":

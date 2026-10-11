@@ -2787,9 +2787,9 @@ const enUS: Record<string, string> = {
     "Disabled {plugin} in this workspace (overriding User default)",
   "settings.plugins.toggle.failed": "Couldn't update {plugin}. Try again.",
   "settings.modelProviderDescription":
-    "Manage custom model providers. Once configured, they can be selected during chat.",
-  "settings.modelProvider.add": "Add provider",
-  "settings.modelProvider.createCustomProvider": "Create custom provider",
+    "Manage access endpoints. Once configured, they can be selected during chat.",
+  "settings.modelProvider.add": "Add endpoint",
+  "settings.modelProvider.createCustomProvider": "Create endpoint",
   "settings.modelProvider.templateCreateFailed":
     "Failed to create provider: invalid personal provider configuration",
   "settings.modelProvider.templateCreateRetry": "Retry",
@@ -2810,7 +2810,7 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.cancel": "Cancel",
   "settings.modelProvider.name": "Name",
   "settings.modelProvider.namePlaceholder": "e.g. DeepSeek",
-  "settings.modelProvider.addProviderTitle": "Add model provider",
+  "settings.modelProvider.addProviderTitle": "Add access endpoint",
   "settings.modelProvider.addProviderDescription":
     "Configure a custom API endpoint and initial model.",
   "settings.modelProvider.addFromCatalog": "Provider catalog",
@@ -2818,8 +2818,8 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.catalogProviderSelect": "Select provider",
   "settings.modelProvider.catalogProviderSearch": "Search providers",
   "settings.modelProvider.catalogProviderEmpty": "No providers found",
-  "settings.modelProvider.addProviderAction": "Add provider",
-  "settings.modelProvider.templatePickerTitle": "Add provider",
+  "settings.modelProvider.addProviderAction": "Add endpoint",
+  "settings.modelProvider.templatePickerTitle": "Add endpoint",
   "settings.modelProvider.templateGroup.other": "Other",
   "settings.modelProvider.templatePickerBack": "Back to provider details",
   "settings.modelProvider.addProviderModelReminder":
@@ -3408,7 +3408,7 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.presetDescription":
     "Built-in Z.ai and BigModel providers; configure them with an API key.",
   "settings.modelProvider.presetEmpty": "Not synced yet. Configure an API key first.",
-  "settings.modelProvider.customTitle": "Custom providers",
+  "settings.modelProvider.customTitle": "Endpoints",
   "settings.modelProvider.refresh": "Refresh",
   "settings.modelProvider.reorderProvider": "Drag to reorder provider",
   "settings.modelProvider.reorderModel": "Drag to reorder model",

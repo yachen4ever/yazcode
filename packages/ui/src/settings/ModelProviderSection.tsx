@@ -1069,6 +1069,18 @@ export function ModelProviderSection({
       onSelectNavItem={handleSelectNavItem}
       onReorderProviderIds={handleReorderProviderIds}
       reorderableProviderIds={reorderableProviderIds}
+      belowPanel={
+        /* 视觉桥接是与接入端点模块平级的全局设置区（belowPanel 插槽），不随选中 Provider 变化。 */
+        <VisionBridgeSettingsCard
+          modelProviders={modelProviders}
+          value={sharedSettings?.visionFallback}
+          onChange={(next) => {
+            void updateSharedSettings({ visionFallback: next }).catch((error) => {
+              logger.error("[ModelProviderSection] 保存视觉桥接设置失败", error);
+            });
+          }}
+        />
+      }
     >
       {(invalidProviderTarget || navigationUnavailable) && !templatePickerOpen ? (
         <p role="alert" className="mb-3 text-ui-base text-destructive">
@@ -1152,16 +1164,6 @@ export function ModelProviderSection({
           }}
         />
       )}
-      {/* 视觉桥接是模型设置区的全局配置卡，与具体 Provider 详情无关，固定在页面底部。 */}
-      <VisionBridgeSettingsCard
-        modelProviders={modelProviders}
-        value={sharedSettings?.visionFallback}
-        onChange={(next) => {
-          void updateSharedSettings({ visionFallback: next }).catch((error) => {
-            logger.error("[ModelProviderSection] 保存视觉桥接设置失败", error);
-          });
-        }}
-      />
     </ModelProviderSectionLayout>
   );
 }
