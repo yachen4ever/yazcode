@@ -3097,7 +3097,7 @@ const enUS: Record<string, string> = {
   "settings.visionBridge.providerPlaceholder": "Select a provider",
   "settings.visionBridge.noProviders": "No eligible provider (API Key access required)",
   "settings.visionBridge.model": "Fallback vision model",
-  "settings.visionBridge.modelDesc": "Pick from the provider's real model catalog",
+  "settings.visionBridge.modelDesc": "Pick from models with image input enabled",
   "settings.visionBridge.modelPlaceholder": "Detect and pick a model first",
   "settings.visionBridge.modelsEmpty":
     "No models detected yet. Click \"Detect available models\".",
