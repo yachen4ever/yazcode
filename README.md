@@ -141,8 +141,8 @@ Release 由本仓库的 [Release workflow](https://github.com/yachen4ever/yazcod
 
 yazcode 使用**年份号段** `26.y.z`，与上游 `3.14.x` 及社区 fork 的 `1.y.z` 都不重叠，便于一眼分辨构建来源：
 
-- **y（次版本）——重大功能批次**：包含完整功能集的 release 递增。上游同步不再是主线；值得共享的改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium)，再以 PR 回馈 [ZCodium-project](https://github.com/ZCodium-project/ZCodium)。
-- **z（修订号）——yazcode 自身迭代**：yazcode 自己的功能、修复与产品变更时递增。
+- **y（次版本）——引入上游变更的批次**：从上游（zai-org/ZCode 或生态 fork）吸收功能、修复或插件时递增。值得共享的改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium)，再以 PR 回馈 [ZCodium-project](https://github.com/ZCodium-project/ZCodium)。
+- **z（修订号）——纯内部迭代**：不涉及上游变更的 yazcode 自身功能、修复与产品变更时递增。
 - 同日重复构建追加 `-audit.<日期>[.n]` 后缀；破坏性变更（如数据目录迁移）会在 release 说明中显式标注。
 - 版本号不编码上游 revision——每个 release 基于的上游 commit 以其 release 说明为准。
 
