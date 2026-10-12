@@ -123,6 +123,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `check-skill-residue` | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤 | 拦 vendored skill 的宿主品牌/端口残留回流 |
 | `release` | `.github/workflows/release.yml` | 任一平台产物缺失则 release 保持 draft |
 | `upstream-audit` | `.github/workflows/upstream-audit.yml` | 上游同步的增量审计 |
+| `vendor-openviking-check` | `.github/workflows/vendor-openviking-check.yml` + `scripts/check-vendor-openviking.mjs` | `vendor/openviking` 与 volcengine/OpenViking latest release 的 examples 目录漂移（blob sha 比对；有漂移即红叉并列 M/A/D 明细） |
 
 `licenses-notices` 值得单独说明：它会重生成 `THIRD-PARTY-NOTICES.md` 与 `third-party/inventory.json`，并要求结果与已入库版本逐字节一致；不一致即失败。**这台闸门必须在 Linux 上跑**，脚本校验的是磁盘上真实安装的依赖树，而依赖树含平台相关的 optional 依赖——在 Windows 或 macOS 上重生成会得到不同结果。因此**不要在本地重生成这两份文件**，改完依赖后手动 dispatch 一次工作流，把 artifact 下载下来提交。
 

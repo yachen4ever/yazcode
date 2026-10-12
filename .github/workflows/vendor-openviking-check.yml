@@ -1,0 +1,27 @@
+# vendor/openviking 上游漂移检测：每 6 小时比对 vendored 文件与 volcengine/OpenViking
+# latest release 的 examples 目录（git blob sha 比对，不下载文件内容）。
+# - 无漂移：正常退出（绿）。
+# - 有漂移：红叉 + job summary 列出 M/A/D 明细，提示按 vendor/openviking/README.md 手工同步
+#   并更新 third-party/copied-components.json 的 referenceRevision（不自动同步——vendored
+#   语义是「手工同步 + 许可台账」）。
+# 上游是「代码倾倒」发布模式（低频大版本 + main 持续演进），本检测同时覆盖两者：
+# release 落后即提示同步；main 领先 release 的部分在下次 release 时自然进入比对窗口。
+name: vendor-openviking-check
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Detect vendor/openviking drift
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-vendor-openviking.mjs
