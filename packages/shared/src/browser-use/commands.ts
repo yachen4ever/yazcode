@@ -208,6 +208,35 @@ const browserPlaywrightSelectOptionSchema = z
   );
 
 /**
+ * cookies 命令的写入参数（对齐 CDP Storage.setCookies 的 CookieParam）。
+ * 定位方式二选一：url（含 domain/path 推导）或显式 domain+path。
+ */
+export const browserCookieParamSchema = z
+  .object({
+    name: z.string().min(1),
+    value: z.string(),
+    url: z.string().optional(),
+    domain: z.string().optional(),
+    path: z.string().optional(),
+    /** 秒级 Unix 时间戳；缺省或负值视为会话 cookie。 */
+    expires: z.number().optional(),
+    httpOnly: z.boolean().optional(),
+    secure: z.boolean().optional(),
+    sameSite: z.enum(["Strict", "Lax", "None"]).optional(),
+  })
+  .strict()
+  .refine(
+    (cookie) =>
+      (typeof cookie.url === "string" && cookie.url.length > 0) ||
+      (typeof cookie.domain === "string" &&
+        cookie.domain.length > 0 &&
+        typeof cookie.path === "string" &&
+        cookie.path.length > 0),
+    "Cookie requires url, or domain and path",
+  );
+export type BrowserCookieParam = z.infer<typeof browserCookieParamSchema>;
+
+/**
  * Playwright 公共操作使用与 backend 无关的消息结构，以 `name` 和 `operation` 区分动作，
  * 便于 extension/CDP adapter 复用同一契约。
  */
@@ -519,6 +548,16 @@ export const browserCommandSchema = z.discriminatedUnion("method", [
     .object({
       method: z.literal("playwright"),
       action: browserPlaywrightActionSchema,
+      tabId: z.string().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      method: z.literal("cookies"),
+      action: z.discriminatedUnion("name", [
+        z.object({ name: z.literal("get") }).strict(),
+        z.object({ name: z.literal("set"), cookies: z.array(browserCookieParamSchema).min(1) }).strict(),
+      ]),
       tabId: z.string().optional(),
     })
     .strict(),

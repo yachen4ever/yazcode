@@ -23,6 +23,7 @@ import {
 } from "./browserCommandPageHandlers.js";
 import { now, readState } from "./browserCommandState.js";
 import type { ControlledView } from "./browserCommandTypes.js";
+import { handleCookies } from "./browserCommandCookiesHandler.js";
 import { handlePlaywrightAction } from "./browserPlaywrightExecutor.js";
 
 export { isAllowedBrowserUrl } from "./browserCommandState.js";
@@ -99,6 +100,8 @@ export async function executeBrowserCommandOnView(
         return await handleEvaluate(view, command, done);
       case "playwright":
         return await handlePlaywrightAction(view, command.action, done, opts?.signal);
+      case "cookies":
+        return await handleCookies(view, command, done);
       default:
         // fill/waitFor/capabilities/getDialog/handleDialog/close/list/playwrightWaitForTimeout
         // 未在本 executor 实现（由 manager 层或后续增量处理）。

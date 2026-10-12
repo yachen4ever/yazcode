@@ -104,6 +104,7 @@ export type BrowserCommandMethod =
   | "waitFor"
   | "playwright"
   | "playwrightWaitForTimeout"
+  | "cookies"
   | "capabilities"
   | "browserVisibilityGet"
   | "browserVisibilitySet"
@@ -265,6 +266,19 @@ export interface BrowserRecordingOptions {
 
 // tabId（可选）：agent 对象模型用于寻址指定受控 tab（含 human 开的 tab）；缺省作用于会话默认 view。
 // 与 @zcode/shared 的 browserCommandSchema 各变体结构镜像同步。
+export interface BrowserCookieParam {
+  name: string;
+  value: string;
+  url?: string;
+  domain?: string;
+  path?: string;
+  /** 秒级 Unix 时间戳；缺省或负值视为会话 cookie。 */
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
 export type BrowserCommand =
   | { method: "navigate"; url: string; tabId?: string }
   | { method: "back"; tabId?: string }
@@ -343,6 +357,16 @@ export type BrowserCommand =
     }
   | { method: "playwrightWaitForTimeout"; timeoutMs: number; tabId?: string }
   | { method: "playwright"; action: BrowserPlaywrightAction; tabId?: string }
+  | {
+      method: "cookies";
+      action:
+        | { name: "get" }
+        | {
+            name: "set";
+            cookies: BrowserCookieParam[];
+          };
+      tabId?: string;
+    }
   | { method: "capabilities"; tabId?: string }
   | { method: "browserVisibilityGet" }
   | { method: "browserVisibilitySet"; visible: boolean }

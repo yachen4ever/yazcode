@@ -73,6 +73,11 @@ const FALLBACK_MANIFEST: BrowserApiManifest = {
       members: [
         { name: "browserId", kind: "property", signature: "browserId: string" },
         {
+          name: "cookies",
+          kind: "property",
+          signature: "cookies: BrowserCookiesAPI",
+        },
+        {
           name: "capabilities",
           kind: "property",
           signature: "capabilities: BrowserCapabilityCollection",

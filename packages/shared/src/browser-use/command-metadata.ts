@@ -97,6 +97,7 @@ export const browserCommandMethodSchema = z.enum([
   "waitFor",
   "playwright",
   "playwrightWaitForTimeout",
+  "cookies",
   "capabilities",
   "browserVisibilityGet",
   "browserVisibilitySet",

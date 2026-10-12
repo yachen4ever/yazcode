@@ -369,6 +369,10 @@ function toRestoredShell(
 }
 
 function isSideEffecting(command: BrowserCommand): boolean {
+  if (command.method === "cookies") {
+    // get 只读；set 写入会话凭据，视作副作用。
+    return command.action.name === "set";
+  }
   if (command.method === "playwright" && command.action.name === "locator") {
     return [
       "click",

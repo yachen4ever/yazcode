@@ -6,6 +6,7 @@ import {
   type BrowserCapabilityDescriptor,
   type BrowserCommand,
   type BrowserCommandResult,
+  type BrowserCookieParam,
   type BrowserDialog,
   type BrowserKeyModifier,
   type BrowserMouseButton,
@@ -864,9 +865,41 @@ export class BrowserUser {
   }
 }
 
+/**
+ * cookies 读写（browser 级）：经 CDP Storage 域操作当前 browser context 的全量 cookies
+ * （含 httpOnly）。cookies 是会话凭据级数据——结果含登录凭据，调用方不得写入日志。
+ */
+export class BrowserCookiesAPI {
+  private readonly execute: BrowserExecuteFn;
+  constructor(execute: BrowserExecuteFn) {
+    this.execute = execute;
+  }
+  async get(): Promise<Record<string, unknown>[]> {
+    const command: BrowserCommand = { method: "cookies", action: { name: "get" } };
+    const result = expectOk(command, await this.execute(command));
+    const cookies = (result.value as { cookies?: unknown })?.cookies;
+    if (!Array.isArray(cookies)) {
+      throw new Error("Browser cookies result is missing a cookies array");
+    }
+    return cookies;
+  }
+  async set(
+    cookies: BrowserCookieParam[],
+  ): Promise<{ set: number; failed: { index: number; name: string; error: string }[] }> {
+    if (!Array.isArray(cookies) || cookies.length === 0) {
+      throw new TypeError("cookies.set requires a non-empty cookies array");
+    }
+    const command: BrowserCommand = { method: "cookies", action: { name: "set", cookies } };
+    const result = expectOk(command, await this.execute(command));
+    const value = (result.value as { set?: number; failed?: { index: number; name: string; error: string }[] }) ?? {};
+    return { set: value.set ?? 0, failed: value.failed ?? [] };
+  }
+}
+
 export class Browser {
   readonly tabs: BrowserTabs;
   readonly user: BrowserUser;
+  readonly cookies: BrowserCookiesAPI;
   readonly capabilities: BrowserCapabilityCollection;
   private readonly defaultTab: Tab;
   private info: BrowserInfo;
@@ -913,6 +946,7 @@ export class Browser {
       "BrowserUser",
       this.policy,
     );
+    this.cookies = new BrowserCookiesAPI(this.execute);
     this.defaultTab = wrapTab(
       new Tab(
         this.execute,

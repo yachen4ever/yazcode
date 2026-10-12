@@ -26,7 +26,9 @@
       "name": "visibility",
       "mode": "included",
       "when": {
-        "requiredBrowserCapabilities": ["visibility"]
+        "requiredBrowserCapabilities": [
+          "visibility"
+        ]
       }
     },
     {
@@ -35,8 +37,13 @@
       "name": "tab-claiming-iab",
       "mode": "included",
       "when": {
-        "browserTypes": ["iab"],
-        "requiredApiMembers": ["BrowserUser.openTabs", "BrowserUser.claimTab"]
+        "browserTypes": [
+          "iab"
+        ],
+        "requiredApiMembers": [
+          "BrowserUser.openTabs",
+          "BrowserUser.claimTab"
+        ]
       }
     },
     {
@@ -45,8 +52,12 @@
       "name": "tab-cleanup-iab",
       "mode": "included",
       "when": {
-        "browserTypes": ["iab"],
-        "requiredApiMembers": ["Tabs.finalize"]
+        "browserTypes": [
+          "iab"
+        ],
+        "requiredApiMembers": [
+          "Tabs.finalize"
+        ]
       }
     },
     {
@@ -55,8 +66,13 @@
       "name": "tab-cleanup-iab-internal",
       "mode": "included",
       "when": {
-        "browserTypes": ["iab"],
-        "requiredApiMembers": ["Tab.markDeliverable", "Tab.markHandoff"]
+        "browserTypes": [
+          "iab"
+        ],
+        "requiredApiMembers": [
+          "Tab.markDeliverable",
+          "Tab.markHandoff"
+        ]
       }
     },
     {
@@ -65,7 +81,9 @@
       "name": "all-tabs-cleanup",
       "mode": "included",
       "when": {
-        "browserTypes": ["iab"],
+        "browserTypes": [
+          "iab"
+        ],
         "requiredApiMembers": [
           "BrowserUser.openTabs",
           "BrowserUser.claimTab",
@@ -80,7 +98,10 @@
       "name": "viewport",
       "mode": "lookup",
       "when": {
-        "requiredApiMembers": ["Tab.setViewportSize", "Tab.viewportSize"]
+        "requiredApiMembers": [
+          "Tab.setViewportSize",
+          "Tab.viewportSize"
+        ]
       }
     },
     {
@@ -97,8 +118,13 @@
       "mode": "lookup",
       "description": "Read when a task needs to record an IAB tab into a workspace WebM.",
       "when": {
-        "browserTypes": ["iab"],
-        "requiredApiMembers": ["BrowserRecordingAPI.start", "BrowserRecordingAPI.status"]
+        "browserTypes": [
+          "iab"
+        ],
+        "requiredApiMembers": [
+          "BrowserRecordingAPI.start",
+          "BrowserRecordingAPI.status"
+        ]
       }
     },
     {
@@ -112,6 +138,12 @@
       "path": "safety.md",
       "title": "Safety",
       "name": "safety",
+      "mode": "included"
+    },
+    {
+      "path": "browser-cookies.md",
+      "title": "Browser cookies (get / set)",
+      "name": "browser-cookies",
       "mode": "included"
     }
   ]
