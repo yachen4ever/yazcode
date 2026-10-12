@@ -13,10 +13,10 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 
 | 项目 | 仓库 | 许可 | 与 yazcode 的关系 |
 | ---- | ---- | ---- | ---------------- |
-| **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | 开源（Z.ai） | 一切工作的源头：2026 年 9 月开源的编程 Agent。 |
+| **ZCode** | [zai-org/ZCode](https://github.com/zai-org/ZCode) | 开源（Z.ai） | 一切工作的源头：2026 年 9 月开源的编程 Agent。3.15.1 起官方插件（pdf / documents / spreadsheets 等）以 Apache-2.0 发布，已被本仓库引入。 |
 | **ZCodium** | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 社区审计 fork：移除约 2.6 万行监控遥测、官方服务默认关闭。yazcode 的**历史底座**——yazcode 已转为独立个人产品线，不再与其保持同源；有价值的通用改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium)，再以 PR 回馈上游。 |
-| **ZCodium Exp.** | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 平行独立衍生：以开源组件补全官方发布包功能。yazcode 的 **Computer Use 运行时**移植自这里。 |
-| **MiniMax code** | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | **办公四件套技能**（docx / xlsx / pptx / pdf）的来源。 |
+| **axiom-desu/ZCodium** | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 平行独立衍生：以开源组件补全官方发布包功能。yazcode 的 **Computer Use 运行时**移植自这里；其上游同步纪律（白拿修复 cherry-pick）也是本仓库吸收上游修复的参照。 |
+| **MiniMax code** | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | **办公技能（ops 系）**的来源：docx / xlsx / pptx / pdf 的处理纪律版（去残留后以 `*-ops` / `pptx` 形态随仓库分发）。 |
 | **trycua/cua** | [trycua/cua](https://github.com/trycua/cua) | MIT | CUA 原生引擎 `@trycua/cua-driver`：Rust 实现的跨平台桌面操控（Win32 E2E 122/122）。 |
 | **OpenViking** | [volcengine/OpenViking](https://github.com/volcengine/OpenViking) | AGPLv3（服务端）/ Apache-2.0（`examples/`） | 可选的**外部记忆服务**（语义召回 + 自动抽取沉淀）。yazcode 内置其 Apache-2.0 的客户端集成运行时（`vendor/openviking/`）；服务端作为独立服务自行部署，两者不耦合。 |
 
@@ -30,7 +30,8 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - **会规划、会改、会跑、会验证**：文件改动用 diff 呈现，终端命令带上下文；每一次编辑、命令和工具调用都可以要求审批——仅本次允许、本项目内一直允许，或完全放行。
 - **多智能体协作**：子代理、动态工作流、技能与定时自动化。
 - **插件、技能与 MCP**：内置技能与插件体系，各自独立开关；支持第三方插件市场。
-- **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义端点（Chat Completions / Responses / Anthropic Messages），并可从供应商的 `/models` 端点自动检测可用模型；自签名证书的内网网关可按服务商勾选「跳过 TLS 证书校验」（仅该服务商生效，无全局放行）。
+- **模型自由选**：内置 DeepSeek、OpenAI、Anthropic、Moonshot Kimi、MiniMax、智谱 Z.AI（GLM）、阿里云、xAI、小米 MiMo、OpenRouter 等预设，也支持完全自定义端点（Chat Completions / Responses / Anthropic Messages），并可从端点的 `/models` 自动检测可用模型。自签网关按服务商二选一：**导入自签证书（钉扎，推荐）**或「跳过 TLS 证书校验」，仅该端点生效、互斥不并存。
+- **视觉桥接**：主模型不支持图片输入时（返回 not multimodal 类错误），自动把消息中的图片交给你在模型设置里指定的 fallback 视觉模型转成文字描述并重试一次，无需手动转述；该网关不返回模态元数据也能用（失败驱动，无需预判）。
 - **内嵌浏览器下载静默落盘**：内嵌浏览器（IAB）的附件下载不再弹「另存为」对话框，自动保存到 `Downloads/yazcode/`（重名自动加序号）；创建失败时回退默认对话框，下载不会丢。
 - **记忆提供方三选一**：内置文件记忆（跨会话自动提炼操作事实，按项目隔离）、[OpenViking](https://openviking.ai)（语义召回 + 自动沉淀的外部记忆服务）或不启用记忆。三态互斥、不做静默回落——选了 OpenViking 而服务不可达时会直接报错，不会悄悄退回本地记忆。
 
@@ -57,8 +58,8 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - **独立数据目录与命名**：用户数据在 `~/.yazcode`（自动从旧 `~/.zcode` / `~/.zcodium` 迁移）；env 前缀 `YAZCODE_*`；协议 `yazcode://`；CLI 命令 `yazcode`；版本线独立（见下）。
 - **去智谱**：移除智谱订阅体系（Coding Plan / Start Plan 供应商、`zhipu-account` 访问类型、首启套餐引导）——Z.AI / BigModel 保留为普通 API-Key 预设。官方 CDN builtin 配置源停用，builtin 供应商只来自本仓库经审计的 `config/provider/zcode-builtin.json`。
 - **硬数据根边界**：显式设置数据根环境变量后即为硬边界——桌面启动引导不再回读真实 HOME 的设置文件。
-- **模型检测**：给自定义 Provider 添加模型时，可查询该供应商的 `/models` 端点，从检测结果中点选回填模型 ID。
-- **版本号可见**：侧栏底部应用名旁直接展示当前版本（`v26.0.0` 样式）。
+- **模型检测**：给接入端点添加模型时，可查询其 `/models` 端点，从检测结果中点选回填模型 ID。
+- **版本号可见**：侧栏底部应用名旁直接展示当前版本。
 
 ### Computer Use 桌面操控
 
@@ -68,14 +69,25 @@ yazcode 站在四条开源工作线的成果之上，与它们的关系如下：
 - 插件默认启用；驱动会话被内核回收时适配层自动复活并重试（`session_ended` 自愈），对模型透明。
 - 原生模块（`.node` / `.dll`）随安装包分发，路径在打包链中 fail-closed 校验。
 
-### 办公四件套技能
+### 办公技能：双来源互补
 
-自 [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code)（MIT）移植 docx / xlsx / pptx / pdf 四个技能，并完成**去残留**：
+**制作向**来自上游 3.15.1 的官方插件（Apache-2.0）：pdf / documents(docx) / spreadsheets(xlsx) 三插件以 `.zcode-plugin` 形态引入、随包分发、默认启用——工作流式排版（报告 / 创意海报 / LaTeX 简历）、docx-js 创建与设计系统、图表与 VBA 模板，配套 `visual-judge` 渲染质检子代理。
+
+**处理向**自 [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code)（MIT）移植并完成**去残留**：
 
 - C# 程序集 `MiniMaxAIDocx.*` → `YazOffice.*`（42 处改名）；
 - 修订记录作者默认值（宿主 daemon 名）→ `yazcode`——这类值会写进用户文档的修订历史；
 - 移除宿主专有的桌面截图通道与 sidecar 协议（`127.0.0.1:5321` POST 等），扫描页阅读改为 poppler 渲染 + 原生读图；
 - 四个技能目录随附上游 LICENSE 副本，来源与修订声明进 `THIRD-PARTY-NOTICES.md` 台账。
+
+两套能力按意图分流、互为补充，路由直觉一句话：**造新的走插件，改旧的走 ops**——
+
+- `pdf`（插件，制作）/ `pdf-ops`（填表、合并拆分、提取、OCR、修复）；
+- `docx`（插件，docx-js 从零创建与设计）/ `docx-redline`（既有文档的修订 / redlining / 格式保持）；
+- `xlsx`（插件，图表引擎 / VBA / 场景建模）/ `xlsx-ops`（既有表格的编辑、清洗、校验、转换）；
+- `pptx` 保留 MiniMax 版（python-pptx 脚本实现，强于上游的纯指引版）。
+
+双方 SKILL.md 内含交叉引用，选错时模型可按引用跳转。决策与验收场景见 [docs/specs/office-plugins-introduction.md](docs/specs/office-plugins-introduction.md)。
 
 ### 质量门禁
 
