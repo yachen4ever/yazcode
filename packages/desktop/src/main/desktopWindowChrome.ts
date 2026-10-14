@@ -644,6 +644,16 @@ export function createBrowserWindow(options: {
       });
     },
   );
+  // renderer 进程死亡（OOM/渲染异常/被杀）会让窗口白屏或消失，且不产生 native crash
+  // 记录——不落日志就永远无法事后定位（2026-10-14 关 IAB 标签整应用退出的事故无法取证）。
+  win.webContents.on("render-process-gone", (_event, details) => {
+    options.logger.error("[desktop-window] renderer process gone", {
+      reason: details.reason,
+      exitCode: details.exitCode,
+      webContentsId: win.webContents.id,
+      url: win.webContents.getURL(),
+    });
+  });
 
   win.webContents.on("will-attach-webview", (event, webPreferences, params) => {
     // CDP 在原生 Dialog 已创建后再替换 UI，macOS 仍可能显示已经排队的
