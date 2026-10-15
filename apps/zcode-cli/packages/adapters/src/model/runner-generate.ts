@@ -11,6 +11,7 @@ import { getResponseHeaders, unwrapRetryError } from "./failure-inspection.js";
 import { offPeakTicketExpiredMessage, resolveOffPeakFailureDecision } from "./offpeak-retry.js";
 import { AiSdkModelAdapterError } from "./errors.js";
 import { resolveAnthropicRequestMetadataUserId } from "./anthropic-request-metadata.js";
+import { findMisplacedSystemPositions } from "./system-message-compat.js";
 import { createGenerateTextOptions } from "./runner-options.js";
 import { detectProviderBusinessFinishError } from "./provider-finish-business-error.js";
 import {
@@ -104,6 +105,16 @@ export async function runGenerateText(input: {
     const retryBudgetAttempt =
       attempt - Number(signatureRepairAttempted);
     const attemptRequest = { ...input.request, messages: requestMessages };
+    if (attempt === 1) {
+      const misplaced = findMisplacedSystemPositions(requestMessages);
+      if (misplaced.length > 0) {
+        input.logger?.warn("System messages not normalized to leading positions", {
+          event: "model.system_not_normalized",
+          misplacedPositions: misplaced,
+          totalMessages: requestMessages.length,
+        });
+      }
+    }
     const startedAt = Date.now();
     let resolved = input.resolved;
     let statusContext = createAttemptStatusContext(

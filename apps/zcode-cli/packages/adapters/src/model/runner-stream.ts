@@ -15,6 +15,7 @@ import {
   type ClassifiedModelFailure,
 } from "./failure-classifier.js";
 import { resolveAnthropicRequestMetadataUserId } from "./anthropic-request-metadata.js";
+import { findMisplacedSystemPositions } from "./system-message-compat.js";
 import {
   getErrorCode,
   getHttpResponseStatus,
@@ -151,6 +152,16 @@ export async function* runStreamText(input: {
       abortSignal: attemptAbortController.signal,
       messages: requestMessages,
     };
+    if (attempt === 1) {
+      const misplaced = findMisplacedSystemPositions(requestMessages);
+      if (misplaced.length > 0) {
+        input.logger?.warn("System messages not normalized to leading positions", {
+          event: "model.system_not_normalized",
+          misplacedPositions: misplaced,
+          totalMessages: requestMessages.length,
+        });
+      }
+    }
     let statusContext = createAttemptStatusContext(
       {
         ...baseStatusContext,
