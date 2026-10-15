@@ -68,3 +68,19 @@ export function normalizeOpenAiCompatibleSystemMessages(
 
   return [...leading, ...relocated, ...rest];
 }
+
+/** 归一后仍存在非开头 system 时的位置诊断（qwen38 严格模板 400 的定位用）。 */
+export function findMisplacedSystemPositions(
+  messages: readonly { role: string }[],
+): number[] {
+  const positions: number[] = [];
+  let seenNonSystem = false;
+  messages.forEach((message, index) => {
+    if (message.role === "system") {
+      if (seenNonSystem) positions.push(index);
+    } else {
+      seenNonSystem = true;
+    }
+  });
+  return positions;
+}

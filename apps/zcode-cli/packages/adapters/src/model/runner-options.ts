@@ -10,6 +10,7 @@ import type {
   ResolvedAiSdkModel,
 } from "./runner-runtime.js";
 import { createModelRequestAttributionHeaders, type ModelStatusContext } from "./runner-status.js";
+import { findMisplacedSystemPositions } from "./system-message-compat.js";
 
 type ExperimentalIncludeWithResponseBody = {
   requestBody?: boolean;
@@ -55,14 +56,21 @@ export function createGenerateTextOptions(input: {
     responseJsonSchema: input.request.responseJsonSchema,
     resolved: input.resolved,
   });
+  const generateMessages = toAiSdkMessages(input.request.messages, {
+    apiFormat: resolveProviderApiFormat(providerOptions),
+    providerOptions,
+    providerKind: input.resolved.providerKind,
+    inputFormat: input.resolved.properties?.inputFormat,
+  });
+  const generateMisplaced = findMisplacedSystemPositions(generateMessages);
+  if (generateMisplaced.length > 0) {
+    // 诊断用 metadata 透传给 runner（logger 在 runner 层），不在这里落日志。
+    (generateMessages as { __misplacedSystemPositions?: number[] }).__misplacedSystemPositions =
+      generateMisplaced;
+  }
   return removeUndefined({
     model: input.resolved.model,
-    messages: toAiSdkMessages(input.request.messages, {
-      apiFormat: resolveProviderApiFormat(providerOptions),
-      providerOptions,
-      providerKind: input.resolved.providerKind,
-      inputFormat: input.resolved.properties?.inputFormat,
-    }),
+    messages: generateMessages,
     tools: toAiSdkTools(input.request.tools, {
       providerKind: input.resolved.providerKind,
       modelId: input.resolved.modelId,
@@ -116,14 +124,20 @@ export function createStreamTextOptions(input: {
     providerKind: input.resolved.providerKind,
     providerOptions,
   });
+  const streamMessages = toAiSdkMessages(input.request.messages, {
+    apiFormat: resolveProviderApiFormat(providerOptions),
+    providerOptions,
+    providerKind: input.resolved.providerKind,
+    inputFormat: input.resolved.properties?.inputFormat,
+  });
+  const streamMisplaced = findMisplacedSystemPositions(streamMessages);
+  if (streamMisplaced.length > 0) {
+    (streamMessages as { __misplacedSystemPositions?: number[] }).__misplacedSystemPositions =
+      streamMisplaced;
+  }
   return removeUndefined({
     model: input.resolved.model,
-    messages: toAiSdkMessages(input.request.messages, {
-      apiFormat: resolveProviderApiFormat(providerOptions),
-      providerOptions,
-      providerKind: input.resolved.providerKind,
-      inputFormat: input.resolved.properties?.inputFormat,
-    }),
+    messages: streamMessages,
     tools: toAiSdkTools(input.request.tools, {
       providerKind: input.resolved.providerKind,
       modelId: input.resolved.modelId,
