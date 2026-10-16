@@ -47,10 +47,13 @@ export function toAiSdkMessages(
   messages: ModelInputMessage[],
   options: AiSdkMessageTransformOptions = {},
 ): AiSdkModelMessage[] {
+  // openai 系端点（官方/兼容/网关/custom）一律归一：部分严格模板（vLLM/Qwen）
+  // 拒绝中段 system（"System message must be at the beginning"），归一前移不改变信息。
+  // anthropic 协议的 system 由 SDK 抽为顶层参数，且中段 system 承载 cache boundary 语义，不归一。
   const normalizedMessages =
-    options.providerKind === "openai-compatible"
-      ? normalizeOpenAiCompatibleSystemMessages(messages)
-      : messages;
+    options.providerKind === "anthropic"
+      ? messages
+      : normalizeOpenAiCompatibleSystemMessages(messages);
   const shouldStripOpenAiResponsesStoredReasoning =
     shouldStripStoredReasoningForOpenAiResponsesStatelessReplay(options);
 

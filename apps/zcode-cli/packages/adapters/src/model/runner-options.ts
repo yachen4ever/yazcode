@@ -48,7 +48,7 @@ export function createGenerateTextOptions(input: {
   );
   const providerOptionsWithMetadata = mergeAnthropicRequestMetadata({
     metadataUserId: input.anthropicMetadataUserId,
-    providerKind: input.resolved.providerKind,
+    providerKind: input.resolved.providerKind ?? "(missing)",
     providerOptions,
   });
   const requestProviderOptions = withNativeGenerateOutputFormat({
@@ -59,7 +59,7 @@ export function createGenerateTextOptions(input: {
   const generateMessages = toAiSdkMessages(input.request.messages, {
     apiFormat: resolveProviderApiFormat(providerOptions),
     providerOptions,
-    providerKind: input.resolved.providerKind,
+    providerKind: input.resolved.providerKind ?? "(missing)",
     inputFormat: input.resolved.properties?.inputFormat,
   });
   const generateMisplaced = findMisplacedSystemPositions(generateMessages);
@@ -72,7 +72,7 @@ export function createGenerateTextOptions(input: {
     model: input.resolved.model,
     messages: generateMessages,
     tools: toAiSdkTools(input.request.tools, {
-      providerKind: input.resolved.providerKind,
+      providerKind: input.resolved.providerKind ?? "(missing)",
       modelId: input.resolved.modelId,
       requiresMfjsToolSchema: input.resolved.properties.requiresMfjsToolSchema,
       supportsNativeWebSearch: input.resolved.properties.supportsNativeWebSearch,
@@ -121,13 +121,13 @@ export function createStreamTextOptions(input: {
   );
   const requestProviderOptions = mergeAnthropicRequestMetadata({
     metadataUserId: input.anthropicMetadataUserId,
-    providerKind: input.resolved.providerKind,
+    providerKind: input.resolved.providerKind ?? "(missing)",
     providerOptions,
   });
   const streamMessages = toAiSdkMessages(input.request.messages, {
     apiFormat: resolveProviderApiFormat(providerOptions),
     providerOptions,
-    providerKind: input.resolved.providerKind,
+    providerKind: input.resolved.providerKind ?? "(missing)",
     inputFormat: input.resolved.properties?.inputFormat,
   });
   const streamMisplaced = findMisplacedSystemPositions(streamMessages);
@@ -139,7 +139,7 @@ export function createStreamTextOptions(input: {
     model: input.resolved.model,
     messages: streamMessages,
     tools: toAiSdkTools(input.request.tools, {
-      providerKind: input.resolved.providerKind,
+      providerKind: input.resolved.providerKind ?? "(missing)",
       modelId: input.resolved.modelId,
       requiresMfjsToolSchema: input.resolved.properties.requiresMfjsToolSchema,
       supportsNativeWebSearch: input.resolved.properties.supportsNativeWebSearch,
