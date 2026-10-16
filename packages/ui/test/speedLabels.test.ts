@@ -26,10 +26,18 @@ describe("formatSpeedLabels", () => {
     assert.equal(labels.prefillLabel, null);
   });
 
-  it("无匹配轮（undefined）时两个标签都为 null", () => {
+  it("无匹配轮（undefined）时所有标签都为 null", () => {
     const labels = formatSpeedLabels(undefined, numberFormat);
     assert.equal(labels.decodeLabel, null);
     assert.equal(labels.prefillLabel, null);
+    assert.equal(labels.durationLabel, null);
+  });
+
+  it("durationLabel：<60s 显示秒，≥60s 显示分+秒，null/0 不显示", () => {
+    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 45.3, generationDurationMs: 45000 }, numberFormat).durationLabel, "45s");
+    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 90300 }, numberFormat).durationLabel, "1m30s");
+    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: null }, numberFormat).durationLabel, null);
+    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 0 }, numberFormat).durationLabel, null);
   });
 });
 

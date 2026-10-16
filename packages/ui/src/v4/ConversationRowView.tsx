@@ -1344,7 +1344,10 @@ export const ConversationAssistantTextActions = memo(function ConversationAssist
   });
   const producingRound = debug.rounds.find((round) => round.recordedAt >= createdAt);
   const numberFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
-  const { decodeLabel, prefillLabel } = formatSpeedLabels(producingRound, numberFormat);
+  const { decodeLabel, prefillLabel, durationLabel } = formatSpeedLabels(
+    producingRound,
+    numberFormat,
+  );
   const [localFeedback, setLocalFeedback] = useState<AssistantMessageFeedback | null>(feedback);
   const copyLabel = intl.formatMessage({ id: "chat.message.copy" });
   const likeLabel = intl.formatMessage({
@@ -1470,6 +1473,9 @@ export const ConversationAssistantTextActions = memo(function ConversationAssist
         <span className="select-none text-ui-sm text-foreground-subtlest">
           ↓{decodeLabel} tok/s
         </span>
+      ) : null}
+      {durationLabel ? (
+        <span className="select-none text-ui-sm text-foreground-subtlest">{durationLabel}</span>
       ) : null}
     </MessageActions>
   );
