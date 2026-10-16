@@ -1474,9 +1474,6 @@ export const ConversationAssistantTextActions = memo(function ConversationAssist
           ↓{decodeLabel} tok/s
         </span>
       ) : null}
-      {durationLabel ? (
-        <span className="select-none text-ui-sm text-foreground-subtlest">{durationLabel}</span>
-      ) : null}
     </MessageActions>
   );
 });
