@@ -7,7 +7,7 @@ import {
   GEN_UI_HTML_MAX_BYTES,
   GEN_UI_OUTPUT_DIRECTORY,
   genUiPathSchema,
-} from "@zcode/shared";
+} from "@zcode/shared/gen-ui";
 
 interface GenUiSchemeRegistrar {
   registerSchemesAsPrivileged(
