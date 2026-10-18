@@ -63,7 +63,29 @@ flowchart LR
    内联可视化，高度自适应、无横向溢出；同文件二次引用直接复用。
 2. CLI 直跑（非 desktop surface）或 env 缺失：上下文不注入目录行，引用按普通文本渲染。
 3. 越界路径（`..`/根外/符号链接）、非 html、>5MB、非法文件名：主进程拒绝，渲染错误态卡片。
-4. 代码块内的引用、流式未完成的引用：不渲染（分别走代码区排除与 pending 门槛）。
+4. 代码块内的引用、流式未完成的引用：不渲染（分别走代码区排除与完成门槛）。
 5. 历史消息重放/fork：同路径文件仍存在则直接渲染；文件已删显示错误态，不崩溃。
 6. 主题（深浅色）与 390px 窄屏：卡片布局不溢出；作者片段内滚动区域不受根样式影响。
 7. `pnpm typecheck` / `pnpm lint` / 架构门禁全绿；parser、目录派生、主进程校验各有单测。
+
+## 落地注记（2026-10-18，26.2.0 打包版实测后的修复）
+
+首次打包实测（workwin 审计版）暴露两个阻断缺陷，修复约束如下：
+
+1. **visualize 插件必须随桌面包 stage**。`packages/desktop/scripts/official-plugin-stage-list.mjs`
+   是打包 stage 清单（原内联在 `prepare-agent-node-bundle.mjs`，现已抽成模块）；漏条目时
+   filesystem seed 对解析不到 root 的插件静默跳过，会话里技能不可见且无任何告警。
+   `official-plugin-stage-list.test.ts` 守护 definitions↔stage 同步：凡有 listing 的定义
+   必须有 stage 条目或显式豁免（运行时 CDN 安装类）。补建 `presentations-plugin`（定义曾
+   存在但包从未 vendor，已随本次清理从 definitions 移除）时必须同步加 stage 条目。
+2. **presentation surface 是结构性事实，不接灰度**。曾寄生于 desktop-context-prompt 服务端
+   灰度（`desktopContextPromptEnabled`），而审计版构建该灰度恒为本地关闭态，`zcode_desktop`
+   永不成立 → Interactive views 上下文、输出目录派生、技能门禁全部失效。现 surface 仅由
+   Host 装配事实推导（`resolveZCodeAgentPresentationSurface`），desktop-context-prompt 灰度
+   机制（rollout、env 链、`ZCODE_DESKTOP_CONTEXT_PROMPT_ENABLED`）整体退役。翻转的副作用：
+   Desktop Context 段（Interactive views / Files & URLs / Inline Code Comments）在 desktop
+   会话无条件携带；远端执行器仍不带 `ZCODE_GEN_UI_OUTPUT_ROOT`（P1 限定本地工作区，段落里
+   显式声明 Gen UI 不可用）。
+3. 主进程校验（`genUiFileProtocol.ts`）的单测在 `packages/desktop/tests/genUiFileProtocol.test.ts`，
+   覆盖验收场景 3 的全部拒绝路径与桥脚本注入位置。
+
