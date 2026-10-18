@@ -127,6 +127,11 @@ export interface ZCodeAppOptions {
   traceContext?: TraceContext;
   runtimeConfig?: ZCodeAppRuntimeConfigInput;
   /**
+   * visualize 内置插件只在 stdio 协议入口加载（终端无内联视图宿主）。
+   * bootstrap 内部装配选项，不是用户配置或协议请求字段；用户禁用该插件仍然生效。
+   */
+  includeVisualize?: boolean;
+  /**
    * stdio 协议模式的 agent 进程由 Electron host 拉起，模型服务需要看到 electron 来源。
    * 普通 CLI 不传，继续使用 cli 默认值。
    */

@@ -123,6 +123,8 @@ export interface AgentRuntimeConfig {
   remoteSessionId?: string;
   bashTimeoutPolicy?: BashTimeoutPolicy;
   presentationSurface?: PresentationSurface;
+  /** Gen UI 输出根（ZCODE_GEN_UI_OUTPUT_ROOT）；由执行 Host 注入，缺省关闭内联可视化。 */
+  genUiOutputRoot?: string;
   mode?: CollaborationMode;
   planEnabled?: boolean;
   modelStreaming?: "off" | "on";

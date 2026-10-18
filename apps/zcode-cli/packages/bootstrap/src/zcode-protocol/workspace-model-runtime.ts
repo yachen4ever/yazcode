@@ -75,6 +75,8 @@ export async function createWorkspaceZCodeApp(
     options.providerRuntimeHeadersPort ?? createProviderRuntimeHeadersPort(context, workspace);
   return context.deps.createZCodeApp({
     ...options,
+    // 协议宿主有内联视图渲染面，visualize 插件只在 stdio 协议入口加载。
+    includeVisualize: true,
     platform: context.deps.platform,
     providerRuntimeHeadersPort,
     runtimeConfig: {

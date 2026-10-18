@@ -112,6 +112,7 @@ import {
   resolveStartupPlugins,
   startAppStartup,
 } from "./startup-marks.js";
+import { filterVisualizeSkillRoots } from "./visualize-skill-gate.js";
 
 function decodePromptAttachmentDataUrl(
   content: string,
@@ -749,7 +750,10 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
           ? (options.skillPort ??
             createNodeSkillAdapter({
               extraRoots: configResult.config.skills.roots,
-              extraResolvedRoots: [...pluginOutcome.skillRoots, ...bundledSkillRoots],
+              extraResolvedRoots: [
+                ...filterVisualizeSkillRoots(pluginOutcome.skillRoots, options.includeVisualize),
+                ...bundledSkillRoots,
+              ],
               disabledPaths: [
                 ...collectDisabledPaths(configResult.config.skillOverrides),
                 // 动态工作流关闭时不提供 dynamic-workflows 技能：

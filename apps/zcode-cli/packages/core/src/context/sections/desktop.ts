@@ -1,12 +1,21 @@
 import type { ContextSection } from "../types.js";
 import { estimateTokens } from "../utils.js";
 
-export function buildDesktopContextSection(): ContextSection {
+export function buildDesktopContextSection(genUiOutputDirectory?: string): ContextSection {
   return createDesktopSection(
     "ZCode Desktop Context",
     "desktop_context",
     [
       "# ZCode Desktop Context",
+      "",
+      "### Interactive views",
+      ...(genUiOutputDirectory
+        ? [
+            "- This Desktop host supports Gen UI: completed assistant references to HTML fragments in the supplied session directory render inline.",
+            `- Writable, durable visualization directory for this session: ${JSON.stringify(genUiOutputDirectory)}. Save inline fragments here, outside the project. Other paths cannot be rendered.`,
+            "- Use the independent visualize skill for authoring instructions and styles before generating an interactive view.",
+          ]
+        : ["- No visualization output directory is supplied; inline Gen UI is unavailable."]),
       "",
       "### Files & URLs",
       "- Return local web URLs as Markdown links (e.g., [label](http://127.0.0.1:8080)).",

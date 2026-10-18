@@ -30,6 +30,8 @@ export async function getSkillReferenceCatalog(
   const outcome = await listZCodeSkills({
     env: context.deps.env,
     logger: context.logger,
+    // 引用面板由协议宿主承载：visualize 技能目录在这里可见，普通 CLI 扫描仍过滤。
+    includeVisualize: true,
     workingDirectory: params.workspace.workspacePath,
   });
   return toResult("workspace", outcome);

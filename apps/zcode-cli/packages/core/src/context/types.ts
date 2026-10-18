@@ -105,6 +105,8 @@ export interface ContextBuilderConfig {
   /** 当前步骤的执行对象，不进入 Context Source 或持久化环境快照。 */
   model?: Model;
   presentationSurface?: PresentationSurface;
+  /** Gen UI 会话输出目录（执行 Host 派生并确保存在后才注入上下文）。 */
+  genUiOutputDirectory?: string;
   currentDate?: string;
   userInstructions?: ResolvedUserInstructions;
   projectContext?: ProjectContext;

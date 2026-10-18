@@ -22,6 +22,10 @@ import {
   normalizeReadFileStateMtimeMs,
 } from "../../tool/read-file-state.js";
 import { resolveEnabledProjectMemoryRoot } from "../helpers/project-memory.js";
+import {
+  ensureGenUiOutputDirectory,
+  resolveGenUiOutputDirectory,
+} from "../helpers/gen-ui-output.js";
 import { buildContextHistoryEntries } from "./context-history-entries.js";
 import { resolveRuntimeEmbeddedSearchEnabled } from "./embedded-search-branch.js";
 import { getContextSourceShellDisplayName } from "./session-shell-environment.js";
@@ -61,6 +65,8 @@ export async function ensureContextInitialized(
   // Bash cd 之后 workingDirectory 会变化，但 workspaceRoot 仍表示会话初始工作区边界。
   this.workspaceRoot = snapshot.workingDirectory;
   this.contextSourceSnapshot = snapshot;
+  // Gen UI 输出目录在注入上下文前确保存在；desktop surface 且 env 缺失时静默跳过。
+  await ensureGenUiOutputDirectory(this);
   this.startMcpStartup(traceContext);
   this.skillLoadOutcome = await this.discoverSkillsForContext(traceContext);
   this.memoryRoot = await this.loadProjectMemoryRoot(traceContext);
@@ -124,6 +130,7 @@ export function createContextBuilderFromSnapshot(
     envInfo,
     model: options.model,
     presentationSurface: this.config.presentationSurface,
+    genUiOutputDirectory: resolveGenUiOutputDirectory(this),
     currentDate: snapshot.currentDate,
     userInstructions: snapshot.userInstructions,
     projectContext: snapshot.projectContext,
