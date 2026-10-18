@@ -2,12 +2,8 @@ import { lstatSync, realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getZCodeDataRootDir } from "@zcode/services/node";
-import {
-  GEN_UI_FILE_SCHEME,
-  GEN_UI_HTML_MAX_BYTES,
-  GEN_UI_OUTPUT_DIRECTORY,
-  genUiPathSchema,
-} from "@zcode/shared/gen-ui";
+import { GEN_UI_FILE_SCHEME, GEN_UI_HTML_MAX_BYTES, genUiPathSchema } from "@zcode/shared/gen-ui";
+import { GEN_UI_OUTPUT_DIRECTORY } from "@zcode/shared/node";
 
 interface GenUiSchemeRegistrar {
   registerSchemesAsPrivileged(
