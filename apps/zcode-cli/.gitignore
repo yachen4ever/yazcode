@@ -20,3 +20,6 @@ packages/**/tests/**/*.js.map
 packages/**/tests/**/*.d.ts.map
 .VSCodeCounter
 vendor
+# visualize 插件的 vendored 前端资产（d3/lucide/floating-ui，Apache-2.0 登记在 third-party）
+# 必须随包分发；裸 vendor 规则会把 skills/visualize/assets/vendor 整目录吞掉（26.2.0 CI 实测）。
+!apps/zcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/
