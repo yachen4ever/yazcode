@@ -275,7 +275,11 @@ export function findUnclosedAssistantDirectiveStart(
   content: string,
   directiveName: string,
   protectedRanges: readonly AssistantTextRange[] = [],
-  options: AssistantDirectiveSyntaxOptions = {},
+  options: AssistantDirectiveSyntaxOptions & {
+    // 调用方可注入自己的"仍是合法参数前缀"判定（如 Gen UI 的 JSON 参数前缀），
+    // 与 key=value 判定取或，任一命中才隐藏半截 directive。
+    isParameterPrefix?: (source: string) => boolean;
+  } = {},
 ): number | null {
   const startPattern = createDirectiveStartPattern(directiveName, options);
   let unclosedStart: number | null = null;
@@ -304,6 +308,7 @@ export function findUnclosedAssistantDirectiveStart(
         }
       }
       const isParameterPrefix =
+        options.isParameterPrefix?.(parameterPrefix) === true ||
         parseDirectiveParameters(parameterPrefix, options) !== null ||
         quote !== null ||
         /(?:^|[\s,])[a-zA-Z_][a-zA-Z\d_-]*\s*(?:=\s*)?$/.test(parameterPrefix);
