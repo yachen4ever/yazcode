@@ -19,6 +19,12 @@ import { fileURLToPath } from "node:url";
 import { runCommand } from "../../../scripts/spawn-command.mjs";
 import { stageCuaDriverRuntime } from "../../../scripts/cua-driver-runtime-assets.mjs";
 import { stageAgentBundle } from "./stage-agent-bundle.mjs";
+import {
+  BROWSER_USE_PLUGIN_PACKAGE_NAME,
+  EXCLUDED_OFFICIAL_PLUGIN_ASSET_NAMES,
+  INCLUDED_OFFICIAL_PLUGIN_TOP_LEVEL_PATHS,
+  OFFICIAL_PLUGIN_STAGE_LIST as officialPluginPackages,
+} from "./official-plugin-stage-list.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const desktopRoot = resolve(scriptDir, "..");
@@ -31,7 +37,6 @@ const pnpmRunEnv = {
   // 子 workspace 不能解析根 workspace 的 @zcode/shared，Docker/web app 打包会因此卡在插件 runtime 构建。
   PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: "false",
 };
-const BROWSER_USE_PLUGIN_PACKAGE_NAME = "@zcode/browser-use-plugin";
 
 // 平台目录命名：darwin/win32/linux + x64/arm64，
 // 支持 ZCODE_TARGET_OS / ZCODE_TARGET_ARCH 覆盖（交叉打包时由 CI 注入）。
@@ -73,95 +78,6 @@ const platformKey = `${platform}-${arch}`;
 
 const glmDir = resolve(desktopRoot, "bundled-agents", platformKey, "glm");
 // zcode.cjs / .node-bundle-meta.json 的落点由 stage-agent-bundle.mjs 自己解析（同源）。
-// node_repl 宿主抽成独立包
-// @zcode/node-repl-host 之后，browser-use 不再产出 dist/mcp/server.js，CUA 资产
-// （docs/computer-use.md、scripts/computer-use-client.mjs）也已归 @zcode/zcode-cua-plugin。
-// 这份清单当时漏改，打包准备阶段照旧去 browser-use 要那三个文件，直接 missing runtime 挂掉。
-// dev 链路走的是 scripts/build-desktop-agent-cli.mjs 的 requiredDevPluginRuntimeBuilds（那份改对了），
-// 两份平行清单各自维护，所以 dev 测不出来 —— 权威归属见 bootstrap/official-plugin-definitions.ts。
-const browserUseRequiredRuntimePaths = [
-  "scripts/browser-client.mjs",
-  "docs/api.json",
-  "docs/documents.json",
-  "docs/overview.md",
-  // documents.json 已暴露 recording lookup，桌面安装包不能复用缺少正文的 runtime。
-  "docs/recording.md",
-  "docs/workflow.md",
-  "skills/control-browser/SKILL.md",
-  "skills/web-gui-tester/SKILL.md",
-];
-const officialPluginPackages = [
-  {
-    // browser-use 只携带自己的 client script 与 skill/docs；node_repl MCP runtime 归
-    // @zcode/node-repl-host（见上方常量注释）。
-    packageName: "@zcode/browser-use-plugin",
-    relativePath: "apps/zcode-cli/packages/browser-use-plugin",
-    requiresRuntime: true,
-    requiredRuntimePaths: browserUseRequiredRuntimePaths,
-    runtimeBuildScript: "scripts/build.mjs",
-    stagedPath: "packages/browser-use-plugin",
-  },
-
-  {
-    // node_repl 宿主：Browser Use 与 Computer Use 共用的 MCP runtime，本轮抽成独立包。
-    // 它没有 listing（不进插件市场展示面），但生产包首启 seed 必须拿到它的 dist runtime，
-    // 否则 bua/cua 任一开启时都会连不上 node_repl。
-    packageName: "@zcode/node-repl-host",
-    relativePath: "apps/zcode-cli/packages/node-repl-host",
-    requiresRuntime: true,
-    requiredRuntimePaths: ["dist/mcp/server.js"],
-    runtimeBuildScript: "scripts/build.mjs",
-    stagedPath: "packages/node-repl-host",
-  },
-
-  {
-    // Computer Use 模型可见面（skill/docs/client script）。无独立 dist runtime：
-    // 原生执行由共享 node_repl host 携带（见上方条目 + stageOfficialPlugins 里的
-    // @trycua/cua-driver 暂存），权威归属见 bootstrap/official-plugin-definitions.ts。
-    packageName: "@zcode/zcode-cua-plugin",
-    relativePath: "apps/zcode-cli/packages/zcode-cua-plugin",
-    requiresRuntime: false,
-    requiredRuntimePaths: [],
-    requiredSeedPaths: [
-      "docs/computer-use.md",
-      "scripts/computer-use-client.mjs",
-      "scripts/computer-use-errors.mjs",
-      "scripts/computer-use-envelope.mjs",
-      "scripts/computer-use-keys.mjs",
-      "scripts/computer-use-target.mjs",
-      "skills/computer-use/SKILL.md",
-    ],
-    stagedPath: "packages/zcode-cua-plugin",
-  },
-
-  // 26.1.0 引入的上游官方办公插件（Apache-2.0，纯 skills/agents 无 runtime），见
-  // docs/specs/office-plugins-introduction.md。与 scripts/prepare-prebuilds.mjs、
-  // packages/server/src/remote/zcodeAgentOfficialPluginAssets.ts 三份清单保持一致。
-  {
-    packageName: "@zcode/pdf-plugin",
-    relativePath: "apps/zcode-cli/packages/pdf-plugin",
-    requiresRuntime: false,
-    requiredRuntimePaths: [],
-    requiredSeedPaths: ["agents/visual-judge.md", "skills/pdf/SKILL.md"],
-    stagedPath: "packages/pdf-plugin",
-  },
-  {
-    packageName: "@zcode/documents-plugin",
-    relativePath: "apps/zcode-cli/packages/documents-plugin",
-    requiresRuntime: false,
-    requiredRuntimePaths: [],
-    requiredSeedPaths: ["agents/visual-judge.md", "skills/docx/SKILL.md"],
-    stagedPath: "packages/documents-plugin",
-  },
-  {
-    packageName: "@zcode/spreadsheets-plugin",
-    relativePath: "apps/zcode-cli/packages/spreadsheets-plugin",
-    requiresRuntime: false,
-    requiredRuntimePaths: [],
-    requiredSeedPaths: ["agents/visual-judge.md", "skills/xlsx/SKILL.md"],
-    stagedPath: "packages/spreadsheets-plugin",
-  },
-];
 // 随 CLI 内置的技能包（不是插件）：bootstrap 的 resolveBundledSkillRoots 沿官方插件同款候选目录
 // 在 zcode.cjs 旁找 packages/bundled-skills 并原地读取。漏 stage 它，桌面包的 /workflow 会展开成
 // 「先加载 dynamic-workflows 技能」而技能文件不存在，因此必须随 Agent 一起打包。
@@ -175,32 +91,10 @@ const bundledSkillPack = {
   stagedPath: "packages/bundled-skills",
   topLevelPaths: ["skills"],
 };
-const includedOfficialPluginTopLevelPaths = new Set([
-  ".mcp.json",
-  ".zcode-plugin",
-  "README.md",
-  // Electron 生产资源复制有独立白名单，遗漏 agents 会让首启 filesystem seed 永久缺少子代理。
-  "agents",
-  "commands",
-  "dist",
-  "docs",
-  "hooks",
-  "output-styles",
-  "package.json",
-  "scripts",
-  "skills",
-  "templates",
-]);
-const excludedOfficialPluginAssetNames = new Set([
-  ".DS_Store",
-  ".venv",
-  "__pycache__",
-  "node_modules",
-]);
 
 function shouldCopyOfficialPluginAsset(sourcePath) {
   const name = basename(sourcePath);
-  return !excludedOfficialPluginAssetNames.has(name) && !name.endsWith(".pyc");
+  return !EXCLUDED_OFFICIAL_PLUGIN_ASSET_NAMES.has(name) && !name.endsWith(".pyc");
 }
 const isBootstrapWithRemote = process.env.ZCODE_BOOTSTRAP_WITH_REMOTE === "1";
 
@@ -293,7 +187,7 @@ async function stageOfficialPlugins() {
 
     const targetRoot = resolve(glmDir, plugin.stagedPath);
     mkdirSync(targetRoot, { recursive: true });
-    for (const entryName of includedOfficialPluginTopLevelPaths) {
+    for (const entryName of INCLUDED_OFFICIAL_PLUGIN_TOP_LEVEL_PATHS) {
       const sourcePath = resolve(sourceRoot, entryName);
       if (!existsSync(sourcePath)) continue;
       cpSync(sourcePath, resolve(targetRoot, entryName), {
