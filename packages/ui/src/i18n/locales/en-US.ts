@@ -2174,14 +2174,10 @@ const enUS: Record<string, string> = {
   "settings.memory.ov.userKey": "User key",
   "settings.memory.ov.userKeyDescription":
     "Must be a user key; a root key is admin-only and cannot read or write memories.",
-  "settings.memory.ov.test":
-    "Test connection",
-  "settings.memory.ov.activate":
-    "Save and enable",
-  "settings.memory.ov.uninstall":
-    "Uninstall",
-  "settings.memory.ov.actions":
-    "OpenViking integration",
+  "settings.memory.ov.test": "Test connection",
+  "settings.memory.ov.activate": "Save and enable",
+  "settings.memory.ov.uninstall": "Uninstall",
+  "settings.memory.ov.actions": "OpenViking integration",
   "settings.memory.ov.verified":
     "Connection verified (server version {version}). The built-in memory layer stays off; OpenViking carries all memory.",
   "settings.memory.ov.notVerified":
@@ -2826,26 +2822,18 @@ const enUS: Record<string, string> = {
     "Add at least one model before adding the provider.",
   "settings.modelProvider.baseUrl": "Base URL",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
-  "settings.modelProvider.allowInsecureTls":
-    "Skip TLS certificate verification (self-signed)",
+  "settings.modelProvider.allowInsecureTls": "Skip TLS certificate verification (self-signed)",
   "settings.modelProvider.allowInsecureTlsDescription":
     "Applies to this provider only: connections to self-signed intranet gateways skip certificate verification. Enable only on trusted networks; affects model requests only.",
-  "settings.modelProvider.selfSigned":
-    "Self-signed intranet gateway (choose one)",
-  "settings.modelProvider.importCert":
-    "Import self-signed certificate (recommended)",
+  "settings.modelProvider.selfSigned": "Self-signed intranet gateway (choose one)",
+  "settings.modelProvider.importCert": "Import self-signed certificate (recommended)",
   "settings.modelProvider.importCertDescription":
     "Import the gateway's self-signed certificate or its CA (.pem / .crt / .der). Certificate verification stays on with fingerprint pinning, which prevents man-in-the-middle; uncheck to pick another file.",
-  "settings.modelProvider.sslAdvanced":
-    "Advanced SSL settings",
-  "settings.modelProvider.sslAdvancedActive":
-    "Active",
-  "settings.modelProvider.certPath":
-    "Certificate file path",
-  "settings.modelProvider.certPathPlaceholder":
-    "C:\certs\gateway.crt",
-  "settings.modelProvider.chooseCertFile":
-    "Choose file",
+  "settings.modelProvider.sslAdvanced": "Advanced SSL settings",
+  "settings.modelProvider.sslAdvancedActive": "Active",
+  "settings.modelProvider.certPath": "Certificate file path",
+  "settings.modelProvider.certPathPlaceholder": "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile": "Choose file",
   "settings.modelProvider.certPinned":
     "Certificate imported; connections are verified against its fingerprint.",
   "settings.modelProvider.certImported":
@@ -3099,8 +3087,7 @@ const enUS: Record<string, string> = {
   "settings.visionBridge.model": "Fallback vision model",
   "settings.visionBridge.modelDesc": "Pick from models with image input enabled",
   "settings.visionBridge.modelPlaceholder": "Detect and pick a model first",
-  "settings.visionBridge.modelsEmpty":
-    "No models detected yet. Click \"Detect available models\".",
+  "settings.visionBridge.modelsEmpty": 'No models detected yet. Click "Detect available models".',
   "settings.modelProvider.modelDisplayName": "Display name",
   "settings.modelProvider.modelApiFormat.anthropic": "Anthropic messages",
   "settings.modelProvider.modelApiFormat.openaiCompatible": "OpenAI Compatible",
@@ -6546,6 +6533,9 @@ const enUS: Record<string, string> = {
   "scheduledPreview.toast.running": "Running “{title}”…",
   "scheduledPreview.toast.view": "View",
   "scheduledPreview.addSchedule": "Add schedule",
+  "genUi.waiting": "Building the visualization…",
+  "genUi.incomplete": "The visualization reference is incomplete and cannot be rendered.",
+  "genUi.invalid": "The visualization reference is invalid and was skipped.",
 };
 
 export default enUS;

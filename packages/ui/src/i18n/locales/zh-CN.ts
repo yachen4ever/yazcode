@@ -2039,14 +2039,10 @@ const zhCN: Record<string, string> = {
   "settings.memory.ov.userKey": "用户密钥",
   "settings.memory.ov.userKeyDescription":
     "必须是 user key；root key 只能用于管理面，无法读写记忆。",
-  "settings.memory.ov.test":
-    "测试连接",
-  "settings.memory.ov.activate":
-    "保存并启用",
-  "settings.memory.ov.uninstall":
-    "卸载集成",
-  "settings.memory.ov.actions":
-    "OpenViking 集成",
+  "settings.memory.ov.test": "测试连接",
+  "settings.memory.ov.activate": "保存并启用",
+  "settings.memory.ov.uninstall": "卸载集成",
+  "settings.memory.ov.actions": "OpenViking 集成",
   "settings.memory.ov.verified":
     "连接正常（服务端版本 {version}）。内置记忆层保持关闭，记忆全部由 OpenViking 承担。",
   "settings.memory.ov.notVerified":
@@ -2639,30 +2635,20 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.addProviderModelReminder": "添加接入端点前，请至少添加一个模型。",
   "settings.modelProvider.baseUrl": "Base URL",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
-  "settings.modelProvider.allowInsecureTls":
-    "跳过 TLS 证书校验（自签名证书）",
+  "settings.modelProvider.allowInsecureTls": "跳过 TLS 证书校验（自签名证书）",
   "settings.modelProvider.allowInsecureTlsDescription":
     "仅对该服务商生效：连接自签名证书的内网网关时不再校验证书。启用前请确认网络可信；仅影响模型请求，其他连接不受影响。",
-  "settings.modelProvider.selfSigned":
-    "自签名证书的内网网关（二选一）",
-  "settings.modelProvider.importCert":
-    "导入自签证书（推荐）",
+  "settings.modelProvider.selfSigned": "自签名证书的内网网关（二选一）",
+  "settings.modelProvider.importCert": "导入自签证书（推荐）",
   "settings.modelProvider.importCertDescription":
     "导入网关的自签证书或其 CA（.pem / .crt / .der）。证书校验保持开启并按指纹钉扎，可防中间人；需重新选择文件时先取消勾选。",
-  "settings.modelProvider.sslAdvanced":
-    "SSL 高级设置",
-  "settings.modelProvider.sslAdvancedActive":
-    "已启用",
-  "settings.modelProvider.certPath":
-    "证书文件路径",
-  "settings.modelProvider.certPathPlaceholder":
-    "C:\certs\gateway.crt",
-  "settings.modelProvider.chooseCertFile":
-    "选择文件",
-  "settings.modelProvider.certPinned":
-    "已导入证书，连接时按指纹钉扎校验。",
-  "settings.modelProvider.certImported":
-    "已导入证书，连接时按指纹钉扎校验。",
+  "settings.modelProvider.sslAdvanced": "SSL 高级设置",
+  "settings.modelProvider.sslAdvancedActive": "已启用",
+  "settings.modelProvider.certPath": "证书文件路径",
+  "settings.modelProvider.certPathPlaceholder": "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile": "选择文件",
+  "settings.modelProvider.certPinned": "已导入证书，连接时按指纹钉扎校验。",
+  "settings.modelProvider.certImported": "已导入证书，连接时按指纹钉扎校验。",
   "settings.modelProvider.readOnlyField": "{field}（只读）",
   "settings.modelProvider.endpointPath": "接口路径：{format}",
   "settings.modelProvider.apiFormat": "API 格式",
@@ -2903,7 +2889,8 @@ const zhCN: Record<string, string> = {
   "settings.visionBridge.model": "Fallback 视觉模型",
   "settings.visionBridge.modelDesc": "从已勾选图片输入的模型中选择",
   "settings.visionBridge.modelPlaceholder": "先检测并选择模型",
-  "settings.visionBridge.modelsEmpty": "该接入端点下没有勾选图片输入的模型——先在模型列表里勾选视觉能力",
+  "settings.visionBridge.modelsEmpty":
+    "该接入端点下没有勾选图片输入的模型——先在模型列表里勾选视觉能力",
   "settings.modelProvider.modelDisplayName": "显示名称",
   "settings.modelProvider.modelApiFormat.anthropic": "Anthropic Messages",
   "settings.modelProvider.modelApiFormat.openaiCompatible": "OpenAI Compatible",
@@ -6246,6 +6233,9 @@ const zhCN: Record<string, string> = {
   "scheduledPreview.toast.running": "正在运行“{title}”…",
   "scheduledPreview.toast.view": "查看",
   "scheduledPreview.addSchedule": "添加计划",
+  "genUi.waiting": "可视化生成中……",
+  "genUi.incomplete": "可视化引用不完整，未能渲染。",
+  "genUi.invalid": "可视化引用无效，已跳过该区块。",
 };
 
 export default zhCN;

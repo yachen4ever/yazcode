@@ -2142,14 +2142,10 @@ const faIR: Record<string, string> = {
   "settings.memory.ov.userKey": "کلید کاربر",
   "settings.memory.ov.userKeyDescription":
     "باید کلید کاربر باشد؛ کلید root فقط برای مدیریت است و نمی‌تواند حافظه‌ها را بخواند یا بنویسد.",
-  "settings.memory.ov.test":
-    "آزمون اتصال",
-  "settings.memory.ov.activate":
-    "ذخیره و فعال‌سازی",
-  "settings.memory.ov.uninstall":
-    "حذف یکپارچه‌سازی",
-  "settings.memory.ov.actions":
-    "یکپارچه‌سازی OpenViking",
+  "settings.memory.ov.test": "آزمون اتصال",
+  "settings.memory.ov.activate": "ذخیره و فعال‌سازی",
+  "settings.memory.ov.uninstall": "حذف یکپارچه‌سازی",
+  "settings.memory.ov.actions": "یکپارچه‌سازی OpenViking",
   "settings.memory.ov.verified":
     "اتصال تأیید شد (نسخه سرور {version}). لایه حافظه داخلی خاموش می‌ماند و تمام حافظه بر عهده OpenViking است.",
   "settings.memory.ov.notVerified":
@@ -2788,30 +2784,20 @@ const faIR: Record<string, string> = {
     "پیش از افزودن فراهم‌کننده، حداقل یک مدل اضافه کنید.",
   "settings.modelProvider.baseUrl": "URL پایه",
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
-  "settings.modelProvider.allowInsecureTls":
-    "رد کردن تأیید گواهی TLS (امضای خودی)",
+  "settings.modelProvider.allowInsecureTls": "رد کردن تأیید گواهی TLS (امضای خودی)",
   "settings.modelProvider.allowInsecureTlsDescription":
     "فقط برای همین ارائه‌دهنده اعمال می‌شود: اتصال به دروازه‌های داخلی با گواهی امضای خودی بدون تأیید گواهی برقرار می‌شود. فقط در شبکه‌های مورد اعتماد فعال کنید؛ فقط درخواست‌های مدل را تحت تأثیر قرار می‌دهد.",
-  "settings.modelProvider.selfSigned":
-    "دروازهٔ داخلی با گواهی امضای خودی (یک مورد را انتخاب کنید)",
-  "settings.modelProvider.importCert":
-    "وارد کردن گواهی امضای خودی (توصیه‌شده)",
+  "settings.modelProvider.selfSigned": "دروازهٔ داخلی با گواهی امضای خودی (یک مورد را انتخاب کنید)",
+  "settings.modelProvider.importCert": "وارد کردن گواهی امضای خودی (توصیه‌شده)",
   "settings.modelProvider.importCertDescription":
     "گواهی امضای خودی دروازه یا CA آن را وارد کنید (.pem / .crt / .der). تأیید گواهی روشن می‌ماند و با اثرانگشت سنجاق می‌شود که از حملات میانجی جلوگیری می‌کند؛ برای انتخاب فایل دیگر، تیک را بردارید.",
-  "settings.modelProvider.sslAdvanced":
-    "تنظیمات پیشرفته SSL",
-  "settings.modelProvider.sslAdvancedActive":
-    "فعال",
-  "settings.modelProvider.certPath":
-    "مسیر فایل گواهی",
-  "settings.modelProvider.certPathPlaceholder":
-    "C:\certs\gateway.crt",
-  "settings.modelProvider.chooseCertFile":
-    "انتخاب فایل",
-  "settings.modelProvider.certPinned":
-    "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
-  "settings.modelProvider.certImported":
-    "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
+  "settings.modelProvider.sslAdvanced": "تنظیمات پیشرفته SSL",
+  "settings.modelProvider.sslAdvancedActive": "فعال",
+  "settings.modelProvider.certPath": "مسیر فایل گواهی",
+  "settings.modelProvider.certPathPlaceholder": "C:\certs\gateway.crt",
+  "settings.modelProvider.chooseCertFile": "انتخاب فایل",
+  "settings.modelProvider.certPinned": "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
+  "settings.modelProvider.certImported": "گواهی وارد شد؛ اتصال‌ها با اثرانگشت آن تأیید می‌شوند.",
   "settings.modelProvider.readOnlyField": "{field} (فقط‌خواندنی)",
   "settings.modelProvider.endpointPath": "مسیر نقطه پایانی: {format}",
   "settings.modelProvider.apiFormat": "قالب API",
@@ -6472,6 +6458,9 @@ const faIR: Record<string, string> = {
     "قابلیت تازه برای مشترکین: با ساخت «وظیفه در زمان بی‌کاری»، در دوره‌های مازاد توان پردازشی، وظیفه تخصیص‌یافته شما را رایگان کامل می‌کنیم.",
   "offPeak.cancel.description":
     "«{title}» از اجرا بازمی‌ایستد. فایل‌هایی که تا حالا تغییر داده حفظ می‌شوند.",
+  "genUi.waiting": "In progress: building the visualization…",
+  "genUi.incomplete": "The visualization reference is incomplete and cannot be rendered.",
+  "genUi.invalid": "The visualization reference is invalid and was skipped.",
 };
 
 export default faIR;

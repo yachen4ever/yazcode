@@ -66,6 +66,7 @@ import {
   MessageActions,
   MessageResponse,
 } from "@/components/ai-elements/message.js";
+import { GenUiMessageResponse } from "@/components/gen-ui/GenUiMessageResponse.js";
 import {
   Reasoning,
   ReasoningContent,
@@ -1525,7 +1526,7 @@ const AssistantTextRowView = memo(function AssistantTextRowView({
           导致 assistant 正文虽然在 JSX 上标了 selectable，框选逻辑却永远找不到该区域。
           selectable 语义必须放在稳定的 DOM 包装层上，完成态和 streaming 共用同一路径。 */}
       <div data-conversation-selectable="true" className="w-full text-ui-base">
-        <MessageResponse
+        <GenUiMessageResponse
           renderZCodeFileCitations
           streaming={streaming}
           workspacePath={context.workspacePath}
@@ -1541,7 +1542,7 @@ const AssistantTextRowView = memo(function AssistantTextRowView({
           readAttachment={context.readAttachment}
         >
           {visibleText}
-        </MessageResponse>
+        </GenUiMessageResponse>
       </div>
       {codeCommentCardsEnabled && codeCommentCards && codeCommentCards.length > 0 ? (
         <div className="mt-3">

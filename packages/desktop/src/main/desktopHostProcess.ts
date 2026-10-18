@@ -29,6 +29,7 @@ import {
   ZCODE_DESKTOP_CONTEXT_PROMPT_ENABLED_ENV,
 } from "@zcode/shared";
 import { getMainLaunchPartialMarks } from "./desktopLaunchMarks.js";
+import { resolveGenUiOutputRoot } from "./genUi/genUiFileProtocol.js";
 import { BroadcastHub } from "./broadcastHub.js";
 import type { TaskRealtimeBus } from "./taskRealtimeBus.js";
 import { createHostLogRelay } from "./hostLogRelay.js";
@@ -251,6 +252,9 @@ export function spawnHostProcess(
       ...buildHostProcessEnv(dependencies.hostProcessLocalEnv),
       ...buildHostE2ECoverageEnv(),
       ZCODE_PROCESS_LABEL: label,
+      // Gen UI 会话输出根：CLI 侧仅在 desktop surface 且本变量存在时派生并声明目录。
+      // 远端执行器不经 desktopHostProcess 拉起，天然不带该变量（P1 限定本地工作区）。
+      ZCODE_GEN_UI_OUTPUT_ROOT: resolveGenUiOutputRoot(),
       // macOS-only: the Computer Use Helper launcher runs inside this forked host utilityProcess, whose
       // code-signing identity is a nested Electron helper (NOT dev.zcode.app). Publish THIS (main
       // Electron) process's pid — which IS dev.zcode.app — so helperLauncher passes it as
@@ -510,7 +514,6 @@ export function spawnHostProcess(
       });
       return;
     }
-
 
     if (result.data.type === HostResponseTypes.BotRemoteWorkspaceReconnectRequest) {
       const request = result.data;

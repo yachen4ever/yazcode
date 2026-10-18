@@ -9,6 +9,7 @@
     ".agents/skills/docx/**",
     ".agents/skills/xlsx/**",
     ".agents/skills/pptx/**",
-    ".agents/skills/pdf/**"
+    ".agents/skills/pdf/**",
+    "apps/zcode-cli/packages/visualize-plugin/**"
   ]
 }

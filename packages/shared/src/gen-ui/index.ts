@@ -58,3 +58,5 @@ export type GenUiScope = z.infer<typeof genUiScopeSchema>;
 export function buildGenUiScopeKey(scope: GenUiScope): string {
   return JSON.stringify([scope.workspaceIdentity?.trim() || scope.workspacePath, scope.sessionId]);
 }
+
+export { GEN_UI_FILE_SCHEME, buildGenUiFileUrl } from "./fileProtocol.js";
