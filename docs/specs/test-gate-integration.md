@@ -24,11 +24,13 @@
    任何 `pnpm --dir apps/zcode-cli/...` 形态的调用都不可靠。
 2. **CLI 子包测试需要先构建其依赖包的 dist**。`@zcode/core` / `@zcode/adapters` 与 CLI
    顶层测试 import 兄弟包的**发布入口**（`@zcode/contracts` 等），其 `exports` 指向
-   `dist/`，不构建则报 `ERR_MODULE_NOT_FOUND`。最小构建集是
-   `shared-types → contracts → dynamic-workflow → dynamic-workflow-runtime`（约 16s）；
-   `typecheck:cli` 需要更多（`adapters`、`core` 等的 dist），故 CI 一律构建全部 CLI 包。
-   **这是既有事实**：`typecheck:cli` 在未构建的干净检出上同样失败——门禁不是新引入的问题，
-   但把它显式化后，新检出不再依赖「本机碰巧构建过」。
+   `dist/`，不构建则报 `ERR_MODULE_NOT_FOUND`。
+   - 测试够用的最小构建集（约 16s）：`shared-types → contracts → dynamic-workflow →
+     dynamic-workflow-runtime`，由 `test:build:cli` 承担，使 `pnpm test` 单独可跑。
+   - `typecheck:cli` 需要更多（`adapters`、`core`、`i18n`、`bootstrap`、`tui` 等），
+     实测须构建**全部** CLI 包，故 `verify:pre-push` 前置 `build:cli`（约 76s）。
+   - **这是既有事实**：`typecheck:cli` 在未构建的干净检出上同样失败——门禁不是新引入
+     的问题，但把它显式化后，新检出不再依赖「本机碰巧构建过」。
 3. **各包 test 脚本的 glob 必须真实命中**。`tsx --test test/**/*.test.ts` 在
    bash/zsh 下依赖 glob 展开，`**` 不递归时只会匹配一层；脚本必须能在实际 shell 下
    命中全部测试文件。**正确写法是引号形式**（`"test/**/*.test.ts"`），交给 node 自己
@@ -69,3 +71,5 @@
 6. **CI 覆盖**：`tests.yml` 在 push 到 main 与 PR 时运行，与本地门禁同源同口径。
 7. **CI 冷启动可跑**：CI 只装依赖、不预构建任何产物，`tests.yml` 自己先构建 CLI 包
    再跑测试——不依赖「本机碰巧构建过」。
+8. **门禁在干净检出可跑**：清空全部 CLI `dist/` 后，`pnpm verify:pre-push` 退出码 0。
+   门禁自带构建前置，不要求使用者先手工构建。
