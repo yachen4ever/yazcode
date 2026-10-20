@@ -44,6 +44,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # CLI 子包测试与 typecheck:cli 都 import 兄弟包的发布入口（dist/），不构建
+      # 就报 ERR_MODULE_NOT_FOUND。CI 是干净环境，这里自己构建，不依赖任何预置产物。
+      # 与 release.yml 的 build 步骤同一口径：先构建，再跑类型检查与测试。
+      - name: Build CLI packages
+        run: pnpm -r --filter "./apps/zcode-cli/packages/*" build
+
       # 根 workspace 的 pnpm test 覆盖 9 个测试套件（372 个用例）：
       # shared / ui / services / desktop / zcode-cua + CLI 的 contracts / core /
       # adapters / 顶层 tests。任一包失败即整体失败。

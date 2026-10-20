@@ -22,15 +22,24 @@
 
 1. **门禁从根 workspace 触发**。根 `test` 脚本用 `pnpm --filter` 调用各包已有脚本；
    任何 `pnpm --dir apps/zcode-cli/...` 形态的调用都不可靠。
-2. **各包 test 脚本的 glob 必须真实命中**。`tsx --test test/**/*.test.ts` 在
+2. **CLI 子包测试需要先构建其依赖包的 dist**。`@zcode/core` / `@zcode/adapters` 与 CLI
+   顶层测试 import 兄弟包的**发布入口**（`@zcode/contracts` 等），其 `exports` 指向
+   `dist/`，不构建则报 `ERR_MODULE_NOT_FOUND`。最小构建集是
+   `shared-types → contracts → dynamic-workflow → dynamic-workflow-runtime`（约 16s）；
+   `typecheck:cli` 需要更多（`adapters`、`core` 等的 dist），故 CI 一律构建全部 CLI 包。
+   **这是既有事实**：`typecheck:cli` 在未构建的干净检出上同样失败——门禁不是新引入的问题，
+   但把它显式化后，新检出不再依赖「本机碰巧构建过」。
+3. **各包 test 脚本的 glob 必须真实命中**。`tsx --test test/**/*.test.ts` 在
    bash/zsh 下依赖 glob 展开，`**` 不递归时只会匹配一层；脚本必须能在实际 shell 下
-   命中全部测试文件。
-3. **跨平台路径断言不得硬编码 Windows 路径**。路径测试用 `node:path` 的
-   `resolve`/`join` 构造当前平台的绝对路径，不写死盘符。
-4. **CLI 顶层测试（`apps/zcode-cli/tests/*.test.mjs`）需要 tsx loader**。它们 import
+   命中全部测试文件。**正确写法是引号形式**（`"test/**/*.test.ts"`），交给 node 自己
+   递归展开——实测 shell 展开漏掉深层测试文件（探针：15 例 vs 16 例）。
+4. **跨平台路径断言不得硬编码 Windows 路径**。路径测试用 `node:path` 的
+   `resolve`/`join` 构造当前平台的绝对路径，不写死盘符。`path.isAbsolute("C:\\...")`
+   在 POSIX 上为 `false`。
+5. **CLI 顶层测试（`apps/zcode-cli/tests/*.test.mjs`）需要 tsx loader**。它们 import
    `packages/shared/src/**` 的 `.ts` 源文件，必须以 `node --import tsx --test` 运行，
    否则 `.js` 扩展名解析不到编译产物而报 `ERR_MODULE_NOT_FOUND`。
-5. **测试失败即门禁失败**，不得跳过、不得标注「已知失败」后放行。
+6. **测试失败即门禁失败**，不得跳过、不得标注「已知失败」后放行。
 
 ## 状态所有者
 
@@ -58,3 +67,5 @@
 4. **CLI 顶层测试可达**：`apps/zcode-cli/tests/*.test.mjs` 的 9 个用例被执行并通过。
 5. **门禁拦截回归**：任一包测试失败时，`verify:pre-push` 退出码非 0。
 6. **CI 覆盖**：`tests.yml` 在 push 到 main 与 PR 时运行，与本地门禁同源同口径。
+7. **CI 冷启动可跑**：CI 只装依赖、不预构建任何产物，`tests.yml` 自己先构建 CLI 包
+   再跑测试——不依赖「本机碰巧构建过」。
