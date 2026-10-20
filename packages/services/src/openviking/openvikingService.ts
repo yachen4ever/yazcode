@@ -20,7 +20,10 @@ const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "Stop"] a
 const VERIFY_TIMEOUT_MS = 8000;
 /** 与官方 examples/agent-hook-plugin/hosts/zcode/openviking.integration.json 保持一致。 */
 const INTEGRATION_ID = "openviking-memory";
-const INTEGRATION_VERSION = "0.5.14";
+// 同步 vendor/openviking 时必须与 vendored integration.json / plugin.json 的 version
+// 字段一起改：安装服务把本常量写进 hook 命令的 OPENVIKING_INTEGRATION_VERSION，
+// 与模板里的 version 不一致会让上游按版本判定集成形态时走错分支。
+const INTEGRATION_VERSION = "0.5.21";
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");
