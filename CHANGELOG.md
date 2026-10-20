@@ -5,6 +5,15 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.2.1 (2026-10-21)
+
+- **内置 OpenViking 客户端集成同步到上游 v0.5.1.1**：上游修的是「后续 session commit
+  生成的记忆无法被 find/search 检索」，正命中记忆召回路径。同步内容为增强而非破坏性
+  变更——脱敏规则扩展到工具输入与输出、`OPENVIKING_EXTRA_HEADERS` 支持、2xx 非 JSON
+  响应防御、召回排除 URI 链路打通、CRLF 兼容、召回压缩 prompt 优化。
+- 集成版本标记 0.5.14 → 0.5.21，与上游模板保持一致。
+- 裁剪范围不变：非 zcode host 与上游测试辅助目录仍不随包分发。
+
 ## 26.2.0 (2026-10-18)
 
 - **会话内联可视化（gen-ui P1，只读渲染链）**：agent 产出的可视化 HTML 可直接在会话内
