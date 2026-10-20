@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test \"test/**/*.test.mjs\"",
     "install:gnome-extension": "node compatible/helper/install-extension.mjs"
   },
   "exports": {

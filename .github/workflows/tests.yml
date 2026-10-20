@@ -1,0 +1,51 @@
+# 测试门禁：与本地 `pnpm verify:pre-push` 同源同口径。
+#
+# 为什么需要它：仓库此前没有任何 CI 工作流运行测试，「CI 绿灯」与「测试通过」完全无关。
+# 本工作流把测试纳入 CI，使回归在合入前暴露，而不是靠人记得手动跑。
+#
+# 口径约定（见 docs/specs/test-gate-integration.md）：
+# - 必须从**根 workspace** 执行。apps/zcode-cli 是嵌套的独立 pnpm workspace，
+#   从它内部调用子包脚本时 PATH 里没有 tsx，会直接 "sh: tsx: command not found"。
+#   因此这里用根的 `pnpm test`，它内部用 --filter 从根上下文调用各包脚本。
+# - 各包测试脚本的 glob 交给 node 自己展开（引号形式），不依赖 shell 的 globstar。
+name: tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 根 workspace 的 pnpm test 覆盖 9 个测试套件（372 个用例）：
+      # shared / ui / services / desktop / zcode-cua + CLI 的 contracts / core /
+      # adapters / 顶层 tests。任一包失败即整体失败。
+      - name: Run test suites
+        run: pnpm test

@@ -108,6 +108,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `packages/desktop/specs/remote-assets-github-release.md` | 远程资源 `zz-*` 资产的命名契约与自建源加载 |
 | `packages/desktop/specs/github-updates.md` | 桌面更新 |
 | `docs/specs/release-acceptance-order.md` | 发版顺序：实机验收先于打 tag，tag 与 release 是两个独立状态 |
+| `docs/specs/test-gate-integration.md` | 测试接入门禁：从根 workspace 调用各包测试脚本与 glob 约定 |
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
 | `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
@@ -120,8 +121,9 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 | 门禁 | 位置 | 拦什么 |
 | --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` + `typecheck:cli`（全部 13 个 CLI 子包） |
+| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test`（9 个套件 372 个用例） |
 | `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
+| `tests` | `.github/workflows/tests.yml` | push / PR 时跑根 `pnpm test`，与本地门禁同口径 |
 | `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |
 | `check-skill-residue` | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤 | 拦 vendored skill 的宿主品牌/端口残留回流 |
 | `release` | `.github/workflows/release.yml` | 任一平台产物缺失则 release 保持 draft |

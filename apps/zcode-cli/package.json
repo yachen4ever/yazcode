@@ -25,7 +25,8 @@
     "release": "node ../../node_modules/release-it/bin/release-it.js --config .release-it.json",
     "release:dry": "pnpm run release --release-version",
     "sea": "pnpm --filter @zcode/cli sea",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "test": "node --import tsx --test \"tests/**/*.test.mjs\""
   },
   "dependencies": {
     "dotenv": "^17.4.2",

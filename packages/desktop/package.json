@@ -25,7 +25,7 @@
     "postinstall": "node scripts/node-pty-rebuild.mjs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test \"test/**/*.test.ts\""
   },
   "dependencies": {
     "@babel/runtime": "^7.24.5",
