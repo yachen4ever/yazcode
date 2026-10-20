@@ -107,6 +107,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | --- | --- |
 | `packages/desktop/specs/remote-assets-github-release.md` | 远程资源 `zz-*` 资产的命名契约与自建源加载 |
 | `packages/desktop/specs/github-updates.md` | 桌面更新 |
+| `docs/specs/release-acceptance-order.md` | 发版顺序：实机验收先于打 tag，tag 与 release 是两个独立状态 |
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
 | `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
