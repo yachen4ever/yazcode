@@ -2332,15 +2332,21 @@ The original import revisions of copied components are not recorded in the curre
 
 - React Best Practices skill (MIT): .agents/skills/react-best-practices. License reference: https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278. Original import revision: not recorded. Review required: Pinned upstream README and skill declare MIT, but a complete original copyright/license notice has not been obtained.
 
-- minimax-code docx skill (MIT): .agents/skills/docx. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
+- minimax-code docx skill (MIT): .agents/skills/docx-redline. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
-- minimax-code xlsx skill (MIT): .agents/skills/xlsx. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
+- minimax-code xlsx skill (MIT): .agents/skills/xlsx-ops. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
 - minimax-code pptx skill (MIT): .agents/skills/pptx. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
-- minimax-code pdf skill (MIT): .agents/skills/pdf. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
+- minimax-code pdf skill (MIT): .agents/skills/pdf-ops. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
-- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/76511554eee2c2efb0ae08f9a2284041aed39840/examples/LICENSE. Original import revision: 76511554eee2c2efb0ae08f9a2284041aed39840.
+- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/c2dea8005f851ce064223b78c2c7d5634807b9fb/examples/LICENSE. Original import revision: c2dea8005f851ce064223b78c2c7d5634807b9fb.
+
+- zai-pdf-plugin (Apache-2.0): apps/zcode-cli/packages/pdf-plugin. License reference: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/pdf-plugin/skills/pdf/LICENSE.txt. Original import revision: aac4755666d09fdcd70272fcf063c077a639015f.
+
+- zai-documents-plugin (Apache-2.0): apps/zcode-cli/packages/documents-plugin. License reference: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/documents-plugin/skills/docx/LICENSE.txt. Original import revision: aac4755666d09fdcd70272fcf063c077a639015f.
+
+- zai-spreadsheets-plugin (Apache-2.0): apps/zcode-cli/packages/spreadsheets-plugin. License reference: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/spreadsheets-plugin/skills/xlsx/LICENSE.txt. Original import revision: aac4755666d09fdcd70272fcf063c077a639015f.
 
 Fig autocomplete source carries the repository's MIT license; the generated registry records npm @withfig/autocomplete@2.692.3 metadata as ISC. The original source MIT notice is retained below.
 
@@ -37736,7 +37742,7 @@ SOFTWARE.
 
 ### Notice ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831
 
-- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/76511554eee2c2efb0ae08f9a2284041aed39840/examples/LICENSE
+- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/c2dea8005f851ce064223b78c2c7d5634807b9fb/examples/LICENSE
 
 
 
@@ -37942,6 +37948,33 @@ SOFTWARE.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+````
+
+### Notice a14e8d7dc01e3612bdc22e86bb19059488831df981295313a71eedfc7247ba3e
+
+- zai-pdf-plugin: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/pdf-plugin/skills/pdf/LICENSE.txt
+
+- zai-documents-plugin: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/documents-plugin/skills/docx/LICENSE.txt
+
+- zai-spreadsheets-plugin: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/spreadsheets-plugin/skills/xlsx/LICENSE.txt
+
+
+
+````text
+Copyright (c) 2026 Z.ai
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 ````
 
 ### Notice 5f787c1dee3c56547f09ccc2906ab5f5293c4d8dd6c8654e573216c38e908dbd
