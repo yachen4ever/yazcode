@@ -23,7 +23,7 @@ const INTEGRATION_ID = "openviking-memory";
 // 同步 vendor/openviking 时必须与 vendored integration.json / plugin.json 的 version
 // 字段一起改：安装服务把本常量写进 hook 命令的 OPENVIKING_INTEGRATION_VERSION，
 // 与模板里的 version 不一致会让上游按版本判定集成形态时走错分支。
-const INTEGRATION_VERSION = "0.5.21";
+const INTEGRATION_VERSION = "0.5.23";
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");
