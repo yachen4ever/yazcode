@@ -2340,7 +2340,7 @@ The original import revisions of copied components are not recorded in the curre
 
 - minimax-code pdf skill (MIT): .agents/skills/pdf-ops. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
-- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/c2dea8005f851ce064223b78c2c7d5634807b9fb/examples/LICENSE. Original import revision: c2dea8005f851ce064223b78c2c7d5634807b9fb.
+- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/7f3ae1af822d936c1d0b070537772b0f1d59122f/examples/LICENSE. Original import revision: 7f3ae1af822d936c1d0b070537772b0f1d59122f.
 
 - zai-pdf-plugin (Apache-2.0): apps/zcode-cli/packages/pdf-plugin. License reference: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/pdf-plugin/skills/pdf/LICENSE.txt. Original import revision: aac4755666d09fdcd70272fcf063c077a639015f.
 
@@ -37740,9 +37740,9 @@ SOFTWARE.
 
 ````
 
-### Notice ce9f41ac37e0462bef169bd8519e1a046409456e2ba8d693a7dc193749017831
+### Notice 081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6
 
-- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/c2dea8005f851ce064223b78c2c7d5634807b9fb/examples/LICENSE
+- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/7f3ae1af822d936c1d0b070537772b0f1d59122f/examples/LICENSE
 
 
 
