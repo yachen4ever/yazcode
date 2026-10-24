@@ -23,6 +23,7 @@ import * as fs from "node:fs";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const OWNER = "volcengine";
 const REPO = "OpenViking";
@@ -33,22 +34,41 @@ const LOCAL_BASELINE = "third-party/copied-components.json";
 
 const VENDOR_TO_UPSTREAM = [
   { local: `${VENDOR_ROOT}/zcode`, upstream: "examples/agent-hook-plugin" },
-  { local: `${VENDOR_ROOT}/memory-plugin-shared/lib`, upstream: "examples/memory-plugin-shared/lib" },
+  {
+    local: `${VENDOR_ROOT}/memory-plugin-shared/lib`,
+    upstream: "examples/memory-plugin-shared/lib",
+  },
 ];
 
 /** 上游有意不拷贝的内容：新增/删除不计入漂移。LICENSE 永不豁免。 */
-function isTrimmed(upstreamPath) {
+export function isTrimmed(upstreamPath) {
   if (upstreamPath.endsWith("LICENSE") || upstreamPath.endsWith("LICENSE.txt")) return false;
   if (upstreamPath.endsWith(".d.mts")) return true;
   if (upstreamPath === "examples/memory-plugin-shared/lib/setup-wizard.mjs") return true;
-  if (upstreamPath.startsWith("examples/memory-plugin-shared/") &&
-      !upstreamPath.startsWith("examples/memory-plugin-shared/lib/")) return true;
-  for (const host of ["hosts/cursor", "hosts/trae", "hosts/kimicode", "hosts/cursor.mjs", "hosts/cursor-transcript.mjs", "hosts/trae.mjs", "hosts/trae-turns.mjs", "hosts/kimicode.mjs", "hosts/kimicode-turns.mjs"]) {
+  if (
+    upstreamPath.startsWith("examples/memory-plugin-shared/") &&
+    !upstreamPath.startsWith("examples/memory-plugin-shared/lib/")
+  )
+    return true;
+  for (const host of [
+    "hosts/cursor",
+    "hosts/trae",
+    "hosts/kimicode",
+    "hosts/cursor.mjs",
+    "hosts/cursor-transcript.mjs",
+    "hosts/trae.mjs",
+    "hosts/trae-turns.mjs",
+    "hosts/kimicode.mjs",
+    "hosts/kimicode-turns.mjs",
+  ]) {
     if (upstreamPath.startsWith(`examples/agent-hook-plugin/${host}`)) return true;
   }
   for (const top of ["tests/", "DESIGN.md", "README.md", "README_CN.md"]) {
-    if (upstreamPath === `examples/agent-hook-plugin/${top}` ||
-        upstreamPath.startsWith(`examples/agent-hook-plugin/${top}`)) return true;
+    if (
+      upstreamPath === `examples/agent-hook-plugin/${top}` ||
+      upstreamPath.startsWith(`examples/agent-hook-plugin/${top}`)
+    )
+      return true;
   }
   return false;
 }
@@ -66,7 +86,7 @@ async function ghApi(path) {
 }
 
 /** git blob sha1（与 GitHub trees API 同算法），免下载内容即可精确比对。 */
-function gitBlobSha(content) {
+export function gitBlobSha(content) {
   const hash = createHash("sha1");
   hash.update(`blob ${content.length}\0`);
   hash.update(content);
@@ -90,8 +110,10 @@ async function upstreamTree(sha) {
   const map = new Map();
   for (const entry of tree.tree ?? []) {
     if (entry.type !== "blob") continue;
-    if (!entry.path.startsWith(`${UPSTREAM_BASE}/agent-hook-plugin/`) &&
-        !entry.path.startsWith(`${UPSTREAM_BASE}/memory-plugin-shared/`)) {
+    if (
+      !entry.path.startsWith(`${UPSTREAM_BASE}/agent-hook-plugin/`) &&
+      !entry.path.startsWith(`${UPSTREAM_BASE}/memory-plugin-shared/`)
+    ) {
       continue;
     }
     map.set(entry.path, entry.sha);
@@ -99,16 +121,16 @@ async function upstreamTree(sha) {
   return map;
 }
 
-function localBlobMap() {
+export function localBlobMap() {
   const map = new Map();
   for (const { local, upstream } of VENDOR_TO_UPSTREAM) {
-    walkRel(local, upstream, map);
+    walkRel(local, upstream, map, local);
   }
   return map;
 }
 
 /** 以相对路径递归遍历，避免 Windows/POSIX 分隔符与前缀截断的错位。 */
-function walkRel(localDir, upstreamPrefix, map) {
+function walkRel(localDir, upstreamPrefix, map, rootDir) {
   const abs = join(process.cwd(), localDir);
   let dirents;
   try {
@@ -120,12 +142,16 @@ function walkRel(localDir, upstreamPrefix, map) {
     const rel = `${localDir}/${dirent.name}`;
     const absPath = join(abs, dirent.name);
     if (dirent.isDirectory()) {
-      walkRel(rel, upstreamPrefix, map);
+      walkRel(rel, upstreamPrefix, map, rootDir);
     } else if (dirent.isFile()) {
-      // rel 去掉 local 目录段后即上游相对路径（zcode/ ↔ agent-hook-plugin、lib/ ↔ lib/）。
+      // rel 去掉【映射根】目录段后即上游相对路径（zcode/ ↔ agent-hook-plugin、lib/ ↔ lib/）。
+      // 修复：此前截取基准是「当前父目录」，递归进 scripts/、hosts/、lib/install/ 等二层及
+      // 更深目录时，会把「scripts/hook.mjs」错映射成上游扁平路径「hook.mjs」——上游不存在
+      // 这些扁平路径，于是同一批文件同时产生幻影 D（错误映射路径上游缺失）与幻影 A（真实
+      // 嵌套路径无本地覆盖），漂移清单远大于真实差异。截取基准必须是映射根，与目录深度无关。
       map.set(rel, {
         blob: gitBlobSha(readFileSync(absPath)),
-        upstreamPath: `${upstreamPrefix}/${rel.slice(localDir.length + 1)}`,
+        upstreamPath: `${upstreamPrefix}/${rel.slice(rootDir.length + 1)}`,
       });
     }
   }
@@ -197,7 +223,10 @@ async function main() {
   process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+// 仅在直接执行时联网比对；被测试导入时只暴露纯函数。
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}
