@@ -5,6 +5,22 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.2.2 (2026-10-25)
+
+- **内置 OpenViking 客户端集成同步到上游 v0.5.2（integration 0.5.21 → 0.5.23）**：hook 锁
+  状态文件路径改经 `withAgentHookLock` 回调传给 host；共享库四件增强——`config-schema`
+  新增 `recallEventsDecayProtection` 旋钮（默认空＝关）、`pending-queue` pending 写入回放、
+  `recall-core` 跨分支捕获与 recall 上下文归属、`agent-hook-runtime` 配套一行；vendored
+  README 与测试文件跟随上游。
+- `lib/ov-http.mjs` 保留 yazcode 本地版（v26.0.7 错误处理加固）；上游 v0.5.2 未改此文件，
+  台账 provenance 已显式登记该例外。服务端 0.5.2 已于 2026-10-24 部署，本版本为可选增强
+  对齐，回滚双向兼容。
+- 修复 vendor 漂移检测两个缺陷：深层文件被按父目录错映射成上游扁平路径，产生大量幻影
+  A/D（现按映射根截取，附回归测试并接入根测试门禁）；此前同步验证依赖「基线＝latest
+  短路」，完整比对从未真正执行。`vendor-openviking-check` CI 自 10-23 起的红灯恢复可信。
+- oxfmt 忽略清单补 26.1.0 改名后的 ops 技能目录与 `vendor/**`——vendored 代码不参与本仓
+  格式化，防止重排破坏与上游的 blob 一致性。
+
 ## 26.2.1 (2026-10-21)
 
 - **内置 OpenViking 客户端集成同步到上游 v0.5.1.1**：上游修的是「后续 session commit
