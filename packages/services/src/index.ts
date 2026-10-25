@@ -225,10 +225,15 @@ export type {
   ResolvedSessionDirectories,
   ResolveSessionDirectoriesInput,
 } from "./project/project.js";
-export { createProjectService } from "./project/projectService.js";
-export { ProjectRepository } from "./session/projectRepository.js";
 export type { ProjectRecord, ProjectRoot, SaveProjectInput } from "./session/projectRepository.js";
-export { createOpenVikingService } from "./openviking/openvikingService.js";
+// createProjectService / ProjectRepository / createOpenVikingService 是值导出且其模块顶层
+// 依赖 node:fs、node:crypto 等，不能进根 barrel：renderer 对 @zcode/services 的值导入会把
+// 整条相对导入链拉进浏览器模块图，node:* 被外置化后 renderer 模块图整体死亡（dev 渲染
+// 黑屏）。Node 侧消费者（node.ts 装配、测试）直接从模块路径或 @zcode/services/node 导入；
+// test/browserSafeBarrel.test.ts 静态守卫本约束。
+// createProjectService / ProjectRepository 是值导出且其模块顶层依赖 node:fs、node:crypto，
+// 不能进根 barrel：renderer 对 @zcode/services 的值导入会拉进 node:* 模块导致模块图死亡
+// （P1b-1 曾因此打黑 dev renderer）。Node 侧消费者（node.ts 装配、测试）直接从模块路径导入。
 export type {
   OpenVikingIntegrationStatus,
   OpenVikingVerifyFailureReason,
