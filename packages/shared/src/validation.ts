@@ -40,6 +40,8 @@ export {
   appSettingsOccupationEnum,
   appSettingsPatchSchema,
   appSettingsSchema,
+  embeddedBrowserUserscriptEntrySchema,
+  embeddedBrowserUserscriptsSettingsSchema,
   localeSchema,
   memoryProviderSchema,
   openvikingConnectionSchema,
@@ -47,6 +49,8 @@ export {
   visionFallbackSettingsSchema,
 } from "./validationAppSettings.js";
 export type {
+  EmbeddedBrowserUserscriptEntry,
+  EmbeddedBrowserUserscriptsSettings,
   MemoryProvider,
   OpenVikingConnection,
   VisionFallbackSettings,

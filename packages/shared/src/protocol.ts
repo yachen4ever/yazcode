@@ -348,6 +348,16 @@ export interface AppSettings {
     providerId?: string;
     modelId?: string;
   };
+  /**
+   * IAB 内置用户脚本 manifest：scriptId → { enabled, sha256? }。
+   * sha256 是「批准时」的内容锚定，与当前文件不一致即停用（fail-closed）；
+   * 结构定义见 validationAppSettings.ts 的 embeddedBrowserUserscriptsSettingsSchema，
+   * 契约见 docs/specs/iab-userscripts.md。
+   */
+  embeddedBrowserUserscripts?: Record<
+    string,
+    { enabled: boolean; sha256?: string }
+  >;
   onboardingOccupation?:
     | "office"
     | "developer"
