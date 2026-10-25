@@ -17,8 +17,12 @@ export interface ResolveSessionDirectoriesInput {
   projectId: string;
   /** 任务行固化的 cwd；缺省回退项目当前 primary。 */
   taskWorkspacePath?: string;
-  /** 任务行固化的附加目录 JSON；存在即优先，改项目 roots 不改写旧任务。 */
-  taskExecutionDirectories?: string | null;
+  /**
+   * 任务行固化的附加目录；存在即优先，改项目 roots 不改写旧任务。
+   * 两种形态：列原始 JSON 文本（string）或 taskIndexRepo 已解析的 meta 数组；
+   * 空数组 = 固化了「显式空」（单 root 项目），与「无固化值」（null/undefined）区分。
+   */
+  taskExecutionDirectories?: string | readonly string[] | null;
 }
 
 export interface ResolvedSessionDirectories {

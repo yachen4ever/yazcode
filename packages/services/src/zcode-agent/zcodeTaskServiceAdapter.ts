@@ -184,8 +184,9 @@ interface CreateZCodeTaskServiceAdapterOptions {
   taskIndexSyncer: ZCodeTaskIndexSyncer;
   settingService?: Pick<ISettingService, "get">;
   cuaProductMcpServerResolver?: CuaProductMcpServerResolver;
-  /** 多目录项目：prepareSession 解析 primary root 与附加目录；未注入时 projectId 即拒绝。 */
-  projectService?: Pick<IProjectService, "prepareSession">;
+  /** 多目录项目：prepareSession 解析 primary root 与附加目录；未注入时 projectId 即拒绝。
+   *  resolveSessionDirectories 供恢复/冷恢复链路按任务行固化值重解析（P2 协议下发）。 */
+  projectService?: Pick<IProjectService, "prepareSession" | "resolveSessionDirectories">;
 }
 
 interface TaskTarget {
@@ -201,6 +202,8 @@ interface TaskTargetWithMcpServers extends TaskTarget {
   thoughtLevel?: string;
   mcpServers?: ZCodeAgentMcpServer[];
   toolDenylist?: string[];
+  /** 多目录项目附加目录：经 resolveSessionDirectories 解析（任务行固化值优先），随 resume 下发。 */
+  additionalDirectories?: string[];
 }
 
 type WorkspaceEventInput = string | ZCodeWorkspaceEventSubscriptionParams;
@@ -1160,6 +1163,10 @@ export function createZCodeTaskServiceAdapter(
       ...(thoughtLevel ? { thoughtLevel } : {}),
       ...(mcpServers ? { mcpServers } : {}),
       ...(params.toolDenylist ? { toolDenylist: params.toolDenylist } : {}),
+      // P2 协议下发：恢复路径按任务行固化值重解析的附加目录（resolveTaskIndexResumeHints）。
+      ...(params.additionalDirectories?.length
+        ? { additionalDirectories: params.additionalDirectories }
+        : {}),
     });
   }
 
@@ -1341,7 +1348,8 @@ export function createZCodeTaskServiceAdapter(
   async function resolveTaskIndexResumeHints(
     params: TaskTarget,
     reason: "replayable_snapshot" | "resume_task",
-  ): Promise<{ model?: string; thoughtLevel?: string }> {
+    hintsConfig?: { skipConfigHints?: boolean },
+  ): Promise<{ model?: string; thoughtLevel?: string; additionalDirectories?: string[] }> {
     const meta = await taskIndexRepo.getTaskMeta(params).catch((error) => {
       logger.warn(undefined, "读取 task index resume hint 失败，继续不带历史配置恢复", {
         error: error instanceof Error ? error.message : String(error),
@@ -1352,6 +1360,11 @@ export function createZCodeTaskServiceAdapter(
       });
       return null;
     });
+    const additionalDirectories = await resolveProjectAdditionalDirectories(meta, reason, params);
+    if (hintsConfig?.skipConfigHints) {
+      // model/thoughtLevel 已由调用方显式提供：跳过配置回填（含日志），仅解析项目附加目录。
+      return { ...(additionalDirectories?.length ? { additionalDirectories } : {}) };
+    }
     const model = meta?.model?.trim();
     const thoughtLevel = meta?.thoughtLevel?.trim();
     if (model || thoughtLevel) {
@@ -1369,7 +1382,50 @@ export function createZCodeTaskServiceAdapter(
     return {
       ...(model ? { model } : {}),
       ...(thoughtLevel ? { thoughtLevel } : {}),
+      ...(additionalDirectories?.length ? { additionalDirectories } : {}),
     };
+  }
+
+  /**
+   * P2 冷恢复/恢复路径的附加目录解析（spec：docs/specs/multi-root-projects.md）：
+   * 任务 meta 带 projectId 时经 resolveSessionDirectories 重解析——任务行固化值
+   * （rootPath/executionDirectories）优先，缺失再按项目当前 roots 补。解析失败降级为
+   * 无附加目录（会话仍可恢复），不阻塞恢复链路。非项目任务恒为 undefined。
+   */
+  async function resolveProjectAdditionalDirectories(
+    meta: ZCodeTaskMeta | null,
+    reason: "replayable_snapshot" | "resume_task" | "cold_recovery_subscribe",
+    params: TaskTarget,
+  ): Promise<string[] | undefined> {
+    const projectId = meta?.projectId?.trim();
+    if (!projectId) return undefined;
+    if (!options.projectService?.resolveSessionDirectories) {
+      logger.warn(undefined, "宿主未装配 ProjectService，恢复路径跳过附加目录下发", {
+        reason,
+        taskId: params.taskId,
+        projectId,
+      });
+      return undefined;
+    }
+    try {
+      const resolved = await options.projectService.resolveSessionDirectories({
+        projectId,
+        taskWorkspacePath: meta?.rootPath,
+        // 空数组 = 固化了「显式空」：必须原样传（不能 ?? 折叠），否则单 root 项目
+        // 会错误回落项目当前 roots。
+        taskExecutionDirectories: meta?.executionDirectories ?? null,
+      });
+      return [...resolved.additionalDirectories];
+    } catch (error) {
+      logger.warn(undefined, "解析项目附加目录失败，恢复继续不带附加目录", {
+        error: error instanceof Error ? error.message : String(error),
+        reason,
+        taskId: params.taskId,
+        projectId,
+        workspacePath: params.workspacePath,
+      });
+      return undefined;
+    }
   }
 
   async function syncTaskIndexMeta(meta: ZCodeTaskMeta): Promise<ZCodeTaskMeta> {
@@ -1901,6 +1957,11 @@ export function createZCodeTaskServiceAdapter(
             // Bugfix: replayable task facade 创建 session 时同样会启动 runtime；
             // 之前这里丢掉 mcpServers，导致手机远控路径和 desktop-continuous 的 MCP 行为不一致。
             mcpServers,
+            // P2 协议下发（spec：docs/specs/multi-root-projects.md）：附加目录与 cwd 覆写
+            // 同一来源（prepareSession 产物）；CLI 侧仅白名单消费，不进 mcpServers/配置装配。
+            ...(projectDirectories?.additionalDirectories.length
+              ? { additionalDirectories: [...projectDirectories.additionalDirectories] }
+              : {}),
           });
         }
       }
@@ -2320,10 +2381,11 @@ export function createZCodeTaskServiceAdapter(
       // snapshot→task index 正文索引回源，旧 resumeSession op 保留到 v4 生命周期收口。
       const explicitModel = params.model?.trim();
       const explicitThoughtLevel = params.thoughtLevel?.trim();
-      const indexHints =
-        explicitModel && explicitThoughtLevel
-          ? {}
-          : await resolveTaskIndexResumeHints(params, "resume_task");
+      // 附加目录解析必须无条件进行（P2：恢复路径按任务行固化值重解析）；model/thoughtLevel
+      // 已显式提供时跳过配置回填，避免一次多余的 hint 日志。
+      const indexHints = await resolveTaskIndexResumeHints(params, "resume_task", {
+        skipConfigHints: Boolean(explicitModel) && Boolean(explicitThoughtLevel),
+      });
       const model = explicitModel || indexHints.model;
       const thoughtLevel = explicitThoughtLevel || indexHints.thoughtLevel;
       const snapshot = await resumeTaskSnapshot({
@@ -2333,6 +2395,9 @@ export function createZCodeTaskServiceAdapter(
         model,
         thoughtLevel,
         mcpServers: params.mcpServers,
+        ...(indexHints.additionalDirectories?.length
+          ? { additionalDirectories: indexHints.additionalDirectories }
+          : {}),
       });
       emitWorkspaceConfig(params, snapshot.settings);
       const snapshotMeta = await syncTaskIndexSnapshot(snapshot);
@@ -2526,9 +2591,11 @@ export function createZCodeTaskServiceAdapter(
         params.clientMode === "web-remote-replayable" &&
         params.resumeModelPolicy !== "ui-resolved-only" &&
         (!explicitModel || !explicitThoughtLevel);
-      const indexHints = shouldBackfillTaskIndexResumeHints
-        ? await resolveTaskIndexResumeHints(params, "replayable_snapshot")
-        : {};
+      // 附加目录解析必须无条件进行（P2：恢复路径按任务行固化值重解析）；配置回填
+      // 仍按原 shouldBackfillTaskIndexResumeHints 门控（ui-resolved-only 不回填）。
+      const indexHints = await resolveTaskIndexResumeHints(params, "replayable_snapshot", {
+        skipConfigHints: !shouldBackfillTaskIndexResumeHints,
+      });
       const model = explicitModel || indexHints.model;
       const thoughtLevel = explicitThoughtLevel || indexHints.thoughtLevel;
       const snapshot = await resumeTaskSnapshot({
@@ -2540,6 +2607,9 @@ export function createZCodeTaskServiceAdapter(
         // 避免冷恢复用 workspace/draft 默认配置污染 context window 与思考强度。
         model,
         thoughtLevel,
+        ...(indexHints.additionalDirectories?.length
+          ? { additionalDirectories: indexHints.additionalDirectories }
+          : {}),
       });
       const resumeDurationMs = Date.now() - resumeStartedAt;
       const projectionStartedAt = Date.now();

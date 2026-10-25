@@ -274,8 +274,11 @@ function parseExecutionDirectoriesColumn(raw: unknown): string[] | undefined {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return undefined;
-    const list = parsed.filter((item): item is string => typeof item === "string" && item !== "");
-    return list.length > 0 ? list : undefined;
+    // L1 收敛（docs/specs/multi-root-projects.md「executionDirectories 空数组语义」）：
+    // 空数组 = 任务行固化了「显式空」（单 root 项目 reserve 的产物），与「无固化值」
+    // （列 null）是两种状态，不能折叠成 undefined；否则冷恢复会错误回落项目当前 roots。
+    // 过滤口径与 projectService.parseExecutionDirectories 逐条对齐（trim 判空）。
+    return parsed.filter((item): item is string => typeof item === "string" && item.trim() !== "");
   } catch {
     return undefined;
   }

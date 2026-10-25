@@ -2088,6 +2088,10 @@ export function createLocalServices(options: {
           resolveOffPeakClientConfig: () => codingPlanSubscriptionService.getOffPeakClientConfig(),
           resolveOffPeakTaskService: () => offPeakTaskServiceForAgent,
         };
+  // 项目服务实例提前到 agent service 装配之前：agent service 的 V4 冷恢复通道（P2）经
+  // resolveSessionDirectories 按任务行固化值重解析附加目录；同一实例继续供 task adapter
+  // （prepareSession）与服务集合（RPC 面）共用。
+  const projectService = createProjectService(new ProjectRepository());
   const zcodeAgentService = createZCodeAgentService({
     ...(agentAccountProviderConfigSource
       ? { accountProviderConfigSource: agentAccountProviderConfigSource }
@@ -2096,7 +2100,14 @@ export function createLocalServices(options: {
     ...(modelSelectionReadinessSource ? { modelSelectionReadinessSource } : {}),
     authorizeLocalMediaPreviewPath: options?.authorizeLocalMediaPreviewPath,
     ...offPeakToolWiring,
-    // 动态工作流灰度：与 Off-Peak 不同，
+    // 多目录项目（P2 冷恢复通道）：按任务行固化值重解析附加目录，随 V4 订阅下发。
+    resolveProjectSessionDirectories: async (input) => {
+      const resolved = await projectService.resolveSessionDirectories(input);
+      return {
+        additionalDirectories: [...resolved.additionalDirectories],
+        fromTaskRecord: resolved.fromTaskRecord,
+      };
+    },    // 动态工作流灰度：与 Off-Peak 不同，
     // 这里不按 serviceAuthorityMode 裁剪——SSH/WSL/Docker 的 desktop-attached-remote Host
     // 是它自己那些 workspace 的唯一裁决者，灰度开启时远程 workspace 同样提供工作流。
     resolveDynamicWorkflowClientConfig: () =>
@@ -2323,8 +2334,7 @@ export function createLocalServices(options: {
     commitMessageGenerator: gitCommitMessageGenerator,
   });
   // task wrapper 由 ZCode task service adapter 提供；核心 session 状态由 ZCode agent server 维护。
-  // 项目服务实例在 adapter（任务创建的 prepareSession）与服务集合（RPC 面）共用。
-  const projectService = createProjectService(new ProjectRepository());
+  // 项目服务实例已在 agent service 装配前创建（冷恢复通道共用），这里只做注入。
   const zcodeTaskService = createZCodeTaskServiceAdapter({
     zcodeAgentService,
     taskIndexRepo,

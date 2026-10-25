@@ -18,8 +18,19 @@ async function assertDirectoryExists(path: string): Promise<void> {
   if (!info.isDirectory()) throw new Error(`project.primary-root-missing: ${path}`);
 }
 
-function parseExecutionDirectories(raw: string | null | undefined): string[] | null {
-  if (typeof raw !== "string" || raw.trim() === "") return null;
+/**
+ * 任务行固化附加目录的统一解析器（L1 收敛后的唯一口径，见
+ * docs/specs/multi-root-projects.md「executionDirectories 空数组语义」）：
+ * - 非字符串空白串 / 非数组 JSON → null（无固化值）；
+ * - 数组 → 过滤非字符串与 trim 后为空的项，空数组原样返回（固化了「显式空」）；
+ * - 接受两种输入形态：列原始 JSON 文本（string）与 taskIndexRepo 已解析的 meta 数组。
+ */
+function parseExecutionDirectories(raw: string | readonly string[] | null | undefined): string[] | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "string") {
+    return raw.filter((item): item is string => typeof item === "string" && item.trim() !== "");
+  }
+  if (raw.trim() === "") return null;
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return null;

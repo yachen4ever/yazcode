@@ -108,6 +108,7 @@ import {
   type ZCodeToolExecResource,
   type ZCodePluginOperationProgressNotification,
   type ZCodeTaskMode,
+  type ZCodeTaskMeta,
 } from "@zcode/shared";
 import { createServiceLogger } from "#src/logger/serviceLogger.js";
 import { createOfficialMcpIssuanceAudit } from "#src/official-mcp/officialMcpIssuanceAudit.js";
@@ -348,14 +349,16 @@ type SessionCreateCompatField =
   | "toolAllowlist"
   | "toolDenylist"
   | "offPeakToolEnabled"
-  | "dynamicWorkflowEnabled";
+  | "dynamicWorkflowEnabled"
+  | "additionalDirectories";
 type SessionResumeCompatField =
   | "thoughtLevel"
   | "mcpServers"
   | "toolAllowlist"
   | "toolDenylist"
   | "offPeakToolEnabled"
-  | "dynamicWorkflowEnabled";
+  | "dynamicWorkflowEnabled"
+  | "additionalDirectories";
 type SessionSendCompatField =
   | "browserAmbientContext"
   | "automationId"
@@ -377,6 +380,9 @@ const SESSION_CREATE_OPTIONAL_COMPAT_FIELDS = new Set<SessionCreateCompatField>(
   // 动态工作流灰度 flag 同理：旧 CLI 不认时
   // 省略重试，工作流工具簇随之不注册，绝不让整个 create 硬失败。
   "dynamicWorkflowEnabled",
+  // 多目录项目附加目录同款降级：旧 app-server strict schema 不认时省略重试，
+  // 会话仍按单目录创建，绝不让项目任务首发硬失败。
+  "additionalDirectories",
 ]);
 const SESSION_RESUME_OPTIONAL_COMPAT_FIELDS = new Set<SessionResumeCompatField>([
   "thoughtLevel",
@@ -386,6 +392,8 @@ const SESSION_RESUME_OPTIONAL_COMPAT_FIELDS = new Set<SessionResumeCompatField>(
   "toolDenylist",
   "offPeakToolEnabled",
   "dynamicWorkflowEnabled",
+  // 多目录项目附加目录同款降级（与 create 同因）。
+  "additionalDirectories",
 ]);
 const SESSION_SEND_OPTIONAL_COMPAT_FIELDS = new Set<SessionSendCompatField>([
   "browserAmbientContext",
@@ -653,6 +661,10 @@ function buildSessionCreateParams(
     ...(params.dynamicWorkflowEnabled === true && !omittedFields.has("dynamicWorkflowEnabled")
       ? { dynamicWorkflowEnabled: true }
       : {}),
+    // 多目录项目附加目录：仅在非空时下发（缺席 = 单目录会话），旧 CLI 不认时经 compat 省略。
+    ...(params.additionalDirectories?.length && !omittedFields.has("additionalDirectories")
+      ? { additionalDirectories: params.additionalDirectories }
+      : {}),
   };
 }
 
@@ -688,6 +700,10 @@ function buildSessionResumeParams(
     // 同因：resume 不带该 flag 会让冷恢复丢掉工作流工具簇。
     ...(params.dynamicWorkflowEnabled === true && !omittedFields.has("dynamicWorkflowEnabled")
       ? { dynamicWorkflowEnabled: true }
+      : {}),
+    // 多目录项目附加目录：冷恢复重建 runtime 时与 create 同边界下发；仅非空时写字段。
+    ...(params.additionalDirectories?.length && !omittedFields.has("additionalDirectories")
+      ? { additionalDirectories: params.additionalDirectories }
       : {}),
   };
 }
@@ -890,6 +906,16 @@ interface CreateZCodeAgentServiceOptions extends Omit<
   resolveOffPeakTaskService?: () =>
     | Pick<IOffPeakTaskService, "createTask" | "list" | "getCodingPlanSupport">
     | undefined;
+  /**
+   * 多目录项目（docs/specs/multi-root-projects.md）：V4 冷恢复订阅时按任务行固化值
+   * 重解析附加目录（resolveSessionDirectories）。注入窄面而非整个 ProjectService，
+   * 避免 agent service 反向依赖项目 CRUD 面。缺席 = 冷恢复不下发附加目录。
+   */
+  resolveProjectSessionDirectories?: (input: {
+    projectId: string;
+    taskWorkspacePath?: string;
+    taskExecutionDirectories?: string | readonly string[] | null;
+  }) => Promise<{ additionalDirectories: string[]; fromTaskRecord: boolean }>;
   /**
    * browser-use 执行桥：把 agent 的 interaction/browserExecute 反向请求转发到 main
    * （WebContentsView+CDP）。desktop host 装配时注入；缺省（纯 CLI/远控无 main）则
@@ -1618,6 +1644,46 @@ export function createZCodeAgentService(
         clientMode: "desktop-continuous" as const,
       }
     );
+  }
+
+  /**
+   * P2 冷恢复附加目录解析（spec：docs/specs/multi-root-projects.md「冷恢复语义」）：
+   * 任务 meta 带 projectId 时经注入的 resolveSessionDirectories 重解析——任务行固化值
+   * 优先，缺失按项目当前 roots 补。空数组 = 固化了「显式空」，必须原样传递不能折叠。
+   * 解析失败降级为 undefined（会话仍可恢复），不阻塞冷恢复链路。
+   */
+  async function resolveColdRecoveryAdditionalDirectories(
+    taskMeta: ZCodeTaskMeta | null,
+    params: ZCodeAgentConversationSubscribeParams,
+  ): Promise<string[] | undefined> {
+    const projectId = taskMeta?.projectId?.trim();
+    if (!projectId) return undefined;
+    if (!options?.resolveProjectSessionDirectories) {
+      logger.warn(undefined, "宿主未装配项目目录解析，V4 冷恢复跳过附加目录下发", {
+        event: "v4.conversation.subscribe.additional_directories_unavailable",
+        sessionId: params.sessionId,
+        projectId,
+        workspacePath: params.workspacePath,
+      });
+      return undefined;
+    }
+    try {
+      const resolved = await options.resolveProjectSessionDirectories({
+        projectId,
+        taskWorkspacePath: taskMeta?.rootPath,
+        taskExecutionDirectories: taskMeta?.executionDirectories ?? null,
+      });
+      return [...resolved.additionalDirectories];
+    } catch (error) {
+      logger.warn(undefined, "解析项目附加目录失败，V4 冷恢复继续不带附加目录", {
+        error: error instanceof Error ? error.message : String(error),
+        event: "v4.conversation.subscribe.additional_directories_resolve_failed",
+        sessionId: params.sessionId,
+        projectId,
+        workspacePath: params.workspacePath,
+      });
+      return undefined;
+    }
   }
 
   function v4SubscriptionRouteKey(route: V4SubscriptionRoute): string {
@@ -4950,13 +5016,13 @@ export function createZCodeAgentService(
       const connection = resolveV4Connection(params);
       const topic = conversationTopic(params.sessionId);
       const taskMetaStartedAt = performance.now();
-      const resumeThoughtLevel = await automationTaskIndexRepo
+      // 一次 meta 读取同时供 thought hint 与多目录附加目录解析（P2 冷恢复通道）。
+      const taskMeta = await automationTaskIndexRepo
         .getTaskMeta({
           workspacePath: params.workspacePath,
           workspaceIdentity: params.workspaceIdentity,
           taskId: params.sessionId,
         })
-        .then((meta) => meta?.thoughtLevel?.trim() || undefined)
         .catch((error) => {
           // desktop-continuous 的 V4 冷订阅绕过 task adapter，旧 session 没有
           // Agent durable selection 时也就丢了 task-local thought。索引读取失败仍允许只读恢复。
@@ -4968,8 +5034,13 @@ export function createZCodeAgentService(
             workspaceKey: resolveWorkspaceKey(params),
             workspacePath: params.workspacePath,
           });
-          return undefined;
+          return null;
         });
+      const resumeThoughtLevel = taskMeta?.thoughtLevel?.trim() || undefined;
+      const resumeAdditionalDirectories = await resolveColdRecoveryAdditionalDirectories(
+        taskMeta,
+        params,
+      );
       const taskMetaReadMs = Math.max(0, Math.round(performance.now() - taskMetaStartedAt));
       const cliRequestStartedAt = performance.now();
       const result = await client.request(
@@ -4986,6 +5057,11 @@ export function createZCodeAgentService(
           // workspace 身份；该路径已可能被 path.resolve 改写。当前 attachment 才是权威来源。
           workspace: buildWorkspaceRef(params),
           ...(resumeThoughtLevel ? { resumeThoughtLevel } : {}),
+          // P2 冷恢复通道（spec：docs/specs/multi-root-projects.md）：附加目录由 Host
+          // 按任务行固化值重解析后下发；仅非空时写，缺席 = 单目录会话。
+          ...(resumeAdditionalDirectories?.length
+            ? { additionalDirectories: resumeAdditionalDirectories }
+            : {}),
           ...(params.base ? { base: params.base } : {}),
           ...(params.visibility ? { visibility: params.visibility } : {}),
         },

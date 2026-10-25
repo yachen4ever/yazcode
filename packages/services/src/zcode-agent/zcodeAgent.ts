@@ -153,6 +153,12 @@ export interface ZCodeAgentResumeSessionParams extends ZCodeAgentSessionTarget {
   // 禁 Bash 等）。否则 resume 后模型可见工具面/执行权限会比创建时更宽。
   toolAllowlist?: string[];
   toolDenylist?: string[];
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md）：Host 侧经
+   * resolveSessionDirectories 解析（任务行固化值优先）后随 resume 下发；
+   * CLI 侧仅白名单消费，不进配置装配。
+   */
+  additionalDirectories?: string[];
 }
 
 export interface ZCodeAgentInitializeResult {
@@ -203,6 +209,11 @@ export interface ZCodeAgentCreateSessionParams extends ZCodeAgentWorkspaceTarget
   toolAllowlist?: string[];
   toolDenylist?: string[];
   importedHistory?: ZCodeSessionImportHistory;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md）：与 cwd 覆写同一份
+   * prepareSession 产物，随 session create 下发；CLI 侧仅白名单消费，不进配置装配。
+   */
+  additionalDirectories?: string[];
 }
 
 export interface ZCodeAgentListSessionsParams extends ZCodeAgentWorkspaceTarget {
