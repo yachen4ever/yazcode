@@ -15,7 +15,7 @@ yazcode 目前**没有项目实体**：侧栏「项目」只是按 workspace 路
 
 - 落库在 **tasks-index.sqlite**（`packages/services/src/session/tasksDatabase/`），新表
   `projects(project_id PK, name, host_id, …)` 与 `project_roots(project_id, root_path,
-  position, is_primary, PK(project_id, root_path))`——只增建表，受
+position, is_primary, PK(project_id, root_path))`——只增建表，受
   `docs/specs/sqlite-schema-contract.md` 门禁保护。tasks 表增列 `root_path` /
   `project_id` / `execution_directories`（可空，存量行为不变）。
 - **primary 唯一性**由保存路径保证：`saveProject` 单事务 `DELETE project_roots` + 重插
@@ -97,12 +97,12 @@ config/AGENTS/MCP/hooks/plugins/memory/permissions 的装配——这些仍只�
 
 ### CLI 侧消费点清单（P2 实装）
 
-| 消费点 | 文件 | 形态 |
-| --- | --- | --- |
-| skills 发现 | `apps/zcode-cli/packages/adapters/src/skills/roots.ts` | 每附加目录追加 `.zcode/skills` 与 `.agents/skills` project 根，root 带 `namespace = basename`；同名技能经 `qualifiedName = "<namespace>:<name>"` 可辨 |
-| commands 发现 | `apps/zcode-cli/packages/adapters/src/commands/roots.ts` | 每附加目录追加 `.zcode/commands` 与 `.agents/commands` project 根（含 `namespace` 元数据）；同名命令 cwd 优先（先到先赢不变），附加目录侧重复项落既有 duplicate 诊断 |
-| 子代理发现 | `apps/zcode-cli/packages/bootstrap/src/subagents.ts` | 每附加目录追加 `.zcode/agents` project 根；来自附加目录的 profile 名做 `<namespace>:<name>` 前缀（与插件 agent 同机制），project 级 permissionMode 剥离同款生效 |
-| env-info 展示 | `apps/zcode-cli/packages/core/src/context/sections/env-info.ts` | `EnvInfo.additionalDirectories` 渲染 Additional working directories 段 |
+| 消费点        | 文件                                                            | 形态                                                                                                                                                                 |
+| ------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| skills 发现   | `apps/zcode-cli/packages/adapters/src/skills/roots.ts`          | 每附加目录追加 `.zcode/skills` 与 `.agents/skills` project 根，root 带 `namespace = basename`；同名技能经 `qualifiedName = "<namespace>:<name>"` 可辨                |
+| commands 发现 | `apps/zcode-cli/packages/adapters/src/commands/roots.ts`        | 每附加目录追加 `.zcode/commands` 与 `.agents/commands` project 根（含 `namespace` 元数据）；同名命令 cwd 优先（先到先赢不变），附加目录侧重复项落既有 duplicate 诊断 |
+| 子代理发现    | `apps/zcode-cli/packages/bootstrap/src/subagents.ts`            | 每附加目录追加 `.zcode/agents` project 根；来自附加目录的 profile 名做 `<namespace>:<name>` 前缀（与插件 agent 同机制），project 级 permissionMode 剥离同款生效      |
+| env-info 展示 | `apps/zcode-cli/packages/core/src/context/sections/env-info.ts` | `EnvInfo.additionalDirectories` 渲染 Additional working directories 段                                                                                               |
 
 传输载体：`AgentRuntimeConfig.additionalDirectories`（core，注释即契约）是 CLI 侧唯一
 runtime 冻结位——skills/commands/subagents/env-info 四个消费点只从它读；派生运行时随
@@ -110,9 +110,18 @@ runtimeConfig 继承。协议侧附加目录只在 create/resume/冷恢复三条
 runtimeConfig，**不触碰** `resolveAppRuntimeConfig` 里 config/MCP/hooks/plugins/memory/
 permissions 的任何装配分支。
 
-审计验收（场景 4）：静态扫描 CLI 侧（apps/zcode-cli）全部 `additionalDirectories`
-标识符引用点，逐个断言落在上述四个消费点 + 协议/schema/类型接线位；任何指向
+审计验收（场景 4，2026-10-25 按复核 M3 建议 1 升级为流动级口径）：词法断言——静态扫描
+CLI 侧（apps/zcode-cli，.ts/.tsx/.mjs）全部 `additionalDirectories` 标识符引用点，逐个
+断言落在上述四个消费点 + 协议/schema/类型接线位；任何指向
 config/MCP/hooks/plugins/memory/permissions 装配的引用即测试失败（防越期接线）。
+词法「零引用」不构成信任边界证明（上游与本项目都以整体展开方式在装配出口携带该值，
+差别只在词法可见性），故在词法断言之上追加**流动级断言**：真实调用
+`resolveAppRuntimeConfig`（config/MCP/hooks/plugins/memory/permissions 的唯一装配入口），
+断言 ① 配置装配面对象（`configResult.config`）在调用前后逐字不变且不含
+`additionalDirectories`；② 装配出口 `runtimeConfig` 键集合与快照相等（新增装配键须显式
+更新快照，防静默扩面）；③ 附加目录只经 `AgentRuntimeConfig.additionalDirectories` 唯一
+冻结位进入 runtime，入参缺席时出口不得无中生有。动态断言需先构建 CLI 包
+（verify:pre-push 与 CI 的 test 阶段均先跑 `build:cli`）。
 
 ## 远程边界（P4）
 
@@ -139,12 +148,12 @@ SSH / Source Server 项目**硬约束单 root**：保存、root 初始化、任�
 
 ## 分期
 
-| 期 | 内容 | 交付物 |
-| --- | --- | --- |
-| P1 | 数据层 + Host 项目服务（CRUD、prepareSession、任务 reserve 固化） | 表 + 迁移 + 服务 + 单测（schema 门禁随行） |
-| P2 | 协议字段 + CLI 白名单消费（三条通道 + 发现点 + env-info） | 协议 schema + CLI 注入点 + 信任边界审计测试 |
-| P3 | UI（编辑器、侧栏项目化、文件提及、草稿隔离） | 组件 + 交互测试 |
-| P4 | 远程单 root 边界 + 自动化/闲时任务携带 projectId/hostId | remote-policy + 调度归属 |
+| 期  | 内容                                                              | 交付物                                      |
+| --- | ----------------------------------------------------------------- | ------------------------------------------- |
+| P1  | 数据层 + Host 项目服务（CRUD、prepareSession、任务 reserve 固化） | 表 + 迁移 + 服务 + 单测（schema 门禁随行）  |
+| P2  | 协议字段 + CLI 白名单消费（三条通道 + 发现点 + env-info）         | 协议 schema + CLI 注入点 + 信任边界审计测试 |
+| P3  | UI（编辑器、侧栏项目化、文件提及、草稿隔离）                      | 组件 + 交互测试                             |
+| P4  | 远程单 root 边界 + 自动化/闲时任务携带 projectId/hostId           | remote-policy + 调度归属                    |
 
 P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3。
 
@@ -154,7 +163,10 @@ P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3。
    namespace；同名技能两个 root 并存、来源可辨。
 2. 改主目录 / 移除 root 后：旧任务 cwd 与已固化附加目录不变；新任务用新主目录。
 3. primary 目录被删：新任务创建被拒并提示，不复活目录。
-4. `additionalDirectories` 不出现在任何配置装配入参（审计断言）。
+4. `additionalDirectories` 零流动（2026-10-25 口径升级）：不写回任何配置装配面对象、
+   不出现在 MCP/hooks/plugins/memory/permissions 装配产物；装配出口键集合与快照相等，
+   唯一进入 runtime 的形态是 `AgentRuntimeConfig.additionalDirectories` 冻结位
+   （流动级审计断言 + 词法白名单双保险）。
 5. 远程项目保存双 root 被拒；远程会话附加目录为空。
 6. sqlite schema 门禁：新增表/列经 `db:schema:update` 显式入基线，无删改。
 7. 同 cwd 双项目：草稿、文件提及来源标注、任务归属各自独立。
