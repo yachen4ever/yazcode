@@ -190,6 +190,8 @@ export default defineConfig([
       "preload/embeddedBrowserJavaScriptDialog": "src/preload/embeddedBrowserJavaScriptDialog.ts",
       "preload/codingPlanWebview": "src/preload/codingPlanWebview.ts",
       "preload/browserVideoRecorder": "src/preload/browserVideoRecorder.ts",
+      // IAB 用户脚本 runtime：session 级 preload，隔离世界运行（docs/specs/iab-userscripts.md）。
+      "preload/userscriptRuntime": "src/preload/userscriptRuntime.ts",
       "preload/index": "src/preload/index.ts",
       "preload/resourceManager": "src/preload/resourceManager.ts",
       "preload/cuaPermissionPanel": "src/preload/cuaPermissionPanel.ts",

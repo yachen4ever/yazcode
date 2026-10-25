@@ -5,6 +5,8 @@
     "rootDir": "src",
     "lib": ["es2025", "dom"]
   },
-  "include": ["src/preload"],
+  // userscriptRuntime 与 main 共用 src/main/userscripts 下的 electron-free 纯模块
+  // （channel 契约与协议判定单一来源）；rootDir 已是 src，include 需显式补入。
+  "include": ["src/preload", "src/main/userscripts/userscriptIpcContract.ts", "src/main/userscripts/userscriptRules.ts"],
   "references": [{ "path": "../shared" }]
 }

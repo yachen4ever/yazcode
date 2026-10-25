@@ -472,6 +472,29 @@ export const visionFallbackSettingsSchema = z.object({
 });
 export type VisionFallbackSettings = z.infer<typeof visionFallbackSettingsSchema>;
 
+/**
+ * IAB 内置用户脚本 manifest 的单条目：scriptId → 启用状态与内容锚定 hash。
+ * sha256 是「批准时」的内容指纹：条目缺 sha256 表示待锚定；与当前文件不一致即停用
+ * （fail-closed），契约见 docs/specs/iab-userscripts.md。
+ * 条目损坏时降级为「禁用」而不是让整个设置文件解析失败——manifest 子树的损坏
+ * 不能连累 locale/provider 等无关设置。
+ */
+export const embeddedBrowserUserscriptEntrySchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    sha256: nonEmptyStringSchema.optional(),
+  })
+  .catch({ enabled: false });
+export type EmbeddedBrowserUserscriptEntry = z.infer<typeof embeddedBrowserUserscriptEntrySchema>;
+
+/** manifest 整表：scriptId → 条目；整表非对象时降级为空表（同上，fail-closed 且不伤及他人）。 */
+export const embeddedBrowserUserscriptsSettingsSchema = z
+  .record(nonEmptyStringSchema, embeddedBrowserUserscriptEntrySchema)
+  .catch({});
+export type EmbeddedBrowserUserscriptsSettings = z.infer<
+  typeof embeddedBrowserUserscriptsSettingsSchema
+>;
+
 const appSettingsObjectSchema = z.object({
   recentProjects: z.array(z.string()).default([]),
   locale: localeSchema.default("zh-CN"),
@@ -533,6 +556,9 @@ const appSettingsObjectSchema = z.object({
   // 官方服务开关必须登记在存储 schema 里：只进 patch schema 会在写盘时被 zod strip，
   // 开关看起来能切但永远读不回来，UI 表现为点击后立刻回弹。
   officialServices: officialServiceSwitchesSchema.optional(),
+  // 用户脚本 manifest 必须登记在存储 schema 里：只进 patch schema 会在写盘时被 zod strip，
+  // 锚定的 sha256 看似写入了但永远读不回来，脚本表现为启用后立刻失效。
+  embeddedBrowserUserscripts: embeddedBrowserUserscriptsSettingsSchema.optional(),
 });
 
 export const appSettingsSchema = z.preprocess(
@@ -623,4 +649,7 @@ export const appSettingsPatchSchema = z.object({
     .optional(),
   settingsSyncFirstRunPromptHandled: z.boolean().optional(),
   zcodeEndpointOrigin: zcodeEndpointOriginSchema.optional(),
+  // 用户脚本 manifest 必须登记在存储 schema 里：只进 patch schema 会在写盘时被 zod strip，
+  // 锚定的 sha256 看似写入了但永远读不回来，脚本表现为启用后立刻失效。
+  embeddedBrowserUserscripts: embeddedBrowserUserscriptsSettingsSchema.optional(),
 });
