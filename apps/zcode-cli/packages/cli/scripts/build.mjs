@@ -230,6 +230,15 @@ export const buildCli = async ({
   }),
 } = {}) => {
   const cliVersion = await version;
+  // 镜像 scripts/dev-desktop-env.mjs:29-30 的既有先例：剔除宿主运行时注入的 builtin
+  // 配置路径（ZCODE_BUILTIN_PROVIDER_CONFIG_FILE / ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE）。
+  // 宿主运行时 staged 的 builtin 配置（~/.zcode/.../endpoint-*/zcode-builtin.json）用的是
+  // 宿主自身 schema；仓库构建必须消费仓库自己的 config/provider/zcode-builtin.json——
+  // 宿主注入的路径会让下方 stageBuiltinProviderConfig 的 Release schema 校验失败直接
+  // 打红构建（从 Host shell 直跑 pnpm build:cli 可稳定复现）。只删这两个变量：
+  // ZCODE_ENV 是文档化的构建环境选择器（缺省有 .env 兜底），不动。
+  delete env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE;
+  delete env.ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE;
   const outfile = resolve(cliDirectory, "dist/zcode.cjs");
   const sourcemapFile = `${outfile}.map`;
   const notices = await readThirdPartyNotices(resolve(rootDirectory, "../.."));
