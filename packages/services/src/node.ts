@@ -335,6 +335,9 @@ import { ICommandsService } from "./commands/commands.js";
 import { IHooksService } from "./hooks/hooks.js";
 import { IMemoryService } from "./memory/memory.js";
 import { IOpenVikingService } from "./openviking/openviking.js";
+import { IProjectService } from "./project/project.js";
+import { createProjectService } from "./project/projectService.js";
+import { ProjectRepository } from "./session/projectRepository.js";
 import { ISettingsSyncService } from "./settings-sync/settingsSync.js";
 import { IFeedbackService } from "./feedback/feedback.js";
 import { IPromptAttachmentTransferService } from "./prompt-attachment-transfer/promptAttachmentTransfer.js";
@@ -2586,6 +2589,7 @@ export function createLocalServices(options: {
     )
     .register(IMemoryService, createMemoryService())
     .register(IOpenVikingService, createOpenVikingService())
+    .register(IProjectService, createProjectService(new ProjectRepository()))
     .register(ISettingsSyncService, createSettingsSyncService({ settingService }))
     .register(
       IFeedbackService,

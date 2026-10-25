@@ -219,6 +219,15 @@ export type { ProjectMemoryFileSummary, ProjectMemoryWorkspaceSummary } from "./
 
 // OpenViking integration — IOpenVikingService is both a type (interface) and value (descriptor).
 export { IOpenVikingService } from "./openviking/openviking.js";
+export { IProjectService } from "./project/project.js";
+export type {
+  PreparedProjectSession,
+  ResolvedSessionDirectories,
+  ResolveSessionDirectoriesInput,
+} from "./project/project.js";
+export { createProjectService } from "./project/projectService.js";
+export { ProjectRepository } from "./session/projectRepository.js";
+export type { ProjectRecord, ProjectRoot, SaveProjectInput } from "./session/projectRepository.js";
 export { createOpenVikingService } from "./openviking/openvikingService.js";
 export type {
   OpenVikingIntegrationStatus,
