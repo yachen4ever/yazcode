@@ -25,6 +25,7 @@ import {
   type BrowserViewportSize,
 } from "@zcode/shared";
 import { executeBrowserCommandOnView, type ControlledView } from "./browserCommandExecutor.js";
+import { isLateRendererTabReport } from "./rendererTabAdmission.js";
 import { executeIabPlaywrightLocator } from "./browserPlaywrightLocatorExecutor.js";
 import { recordBrowserVideo, type BrowserWebmRecorderFactory } from "./browserVideoRecorder.js";
 import { normalizePlaywrightTimeout } from "./browserPlaywrightTimeout.js";
@@ -822,6 +823,9 @@ export class BrowserGuestManager {
   async reportResidency(
     payload: BrowserViewResidencyReportPayload & { windowId: number },
   ): Promise<void> {
+    // 迟到上报（面板已关/已切 tab）静默丢弃；作用域不匹配仍交给严格校验抛错。
+    // 判定语义与单测在 electron-free 的 rendererTabAdmission（ZCodium #66 同型）。
+    if (isLateRendererTabReport(this.tabs.get(payload.tabId))) return;
     const tab = this.requireRendererOwnedTab(payload);
     tab.cachedUrl = payload.restoreUrl?.trim() || tab.cachedUrl;
     if (payload.title !== undefined) tab.cachedTitle = payload.title ?? "";
