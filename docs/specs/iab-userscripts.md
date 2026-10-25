@@ -57,10 +57,15 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      任何用户脚本；未来官方「固定 preload」需求并入同一 runtime，禁止再注册第二个
      session 级 preload（guest 的 per-webview preload——对话框桥、录像器——是既有 app 功能
      挂点，不属于用户脚本分发面，与 session preload 叠加生效，互不竞争）。
-   - runtime 在每个 frame（主/子）的 document_start 注入一次；按 frame 幂等（重复执行
-     守卫）；**仅主 frame 提供 GM 存储**，子 frame 只有 `GM_info` / `GM_addStyle`
-     （避免 iframe 抢写共享存储）。主 frame 判定以 main 侧 `event.senderFrame` 为准，
-     不信任 renderer 传参。
+   - runtime 在主 frame 的 document_start 注入一次，按 frame 幂等（重复执行守卫）。
+     **P1 只注入主 frame**：Electron 对 sandbox renderer 的 session preload 仅进主 frame，
+     除非 webPreferences 显式开 `nodeIntegrationInSubFrames`——guest 的 `will-attach-webview`
+     强制项未开该 flag，且它优先于 webview tag 上的同名属性（fixture 实测确认，对照实验
+     归因闭合）。iframe **内部**元素的脚本清理因此不在 P1 能力内；外层 CSS 隐藏整个
+     iframe 的常见场景（AI Copilot 面板）不受影响。runtime 侧保留 frame 判定与
+     `sub_frame_denied` 守卫作为 fail-safe 深防线（当前配置下不可达）；未来开
+     `nodeIntegrationInSubFrames` 需过安全评审，并把 GM 存储面一并纳入评审范围。
+     main 侧主 frame 判定以 `event.senderFrame` 为准，不信任 renderer 传参。
    - **非 http(s) scheme（chrome-error、about:blank、devtools 等）上 runtime 直接 no-op**。
 
 6. **IPC 面（恰好 3 个 channel，参数校验在 main）**：
@@ -168,12 +173,21 @@ app ready（main）
 8. **runtime（静态可验证部分 + 纯函数）**：非 http(s) protocol 判定 no-op；frame 幂等守卫
    存在；runAt 归一化；runtime 源码不引入 electron 之外的 Node 内置模块；GM_* 以函数参数
    注入而非 window 全局；runtime 引用的 channel 常量与 contract 同源。
-9. **fixture 实测项**（P1 完成后本地 fixture 前后对比，不阻塞本 spec 的实现合入）：
-   - 隔离上下文断言 A（页面摸不到 GM_*）与断言 B（runtime 拿不到页面 JS 变量）；
-   - 挂起/恢复后 preload 仍自动生效（销毁/重建 guest 不需要重新注册）;
-   - 仿数据门户 fixture（AI Copilot 同款 iframe + MutationObserver 复活节点）：
-     隐藏脚本生效后快照 elements[]/dom[] 瘦身、硬刷新不复活、首屏桥调用次数下降。
-   - 实测步骤建议：`pnpm dev:desktop` + 本地 fixture 页（`http://127.0.0.1`）；在
-     `~/.yazcode/userscripts/` 放入测试脚本并按行为规则 2 手工启用；CDP 连接 guest
-     webContents 分别在主世界与隔离世界执行探测脚本取断言值；对比注入前后的
-     `SNAPSHOT_SCRIPT` 快照字节/元素数与桥调用计数。
+9. **fixture 实测项**（2026-10-25 已实测，除标注外全部 PASS；产物 `/tmp/iab-fixture/`）：
+   - 断言 A PASS：主世界六个 `GM_*`、runtime 入口标志与 `unsafeWindow` 全 undefined；
+     GM_* 以函数参数注入，隔离世界同样不挂 window 全局。
+   - 断言 B PASS：页面主世界先行设置的 `window.__pageProbe` 隔离世界读不到
+     （脚本侧 `GM_setValue` 落盘证据：`typeofPageProbe:"undefined"`，主世界同点实测可见）。
+   - 功能链 PASS：GM_addStyle 隐藏 AI Copilot iframe 与 MutationObserver 复活广告节点
+     （复活节点同样命中 CSS）；`@run-at document-start` 实测落 `interactive`（match IPC
+     一跳延迟，行为规则 6 的已知代价实录）；GM 存储往返（set→硬重载→get）；
+     **硬刷新不失效**（立项原始痛点）；销毁/重建 guest 后 preload 自动重放。
+   - 快照瘦身实测：`SNAPSHOT_SCRIPT` 注入前后 8163→4945 字节（-39.4%）、elements
+     16→8（-50%）、dom 45→37（-17.8%）；ACTION_SEL 命中数不变——收益全部来自快照对
+     display:none 的过滤。首屏桥调用计数未插桩，以快照体量为量化代理。
+   - 严格 CSP（`script-src 'self'`）下脚本仍生效：隔离世界 `new Function` 不受页面
+     CSP 限制（调研未覆盖项，实测确认）。
+   - 附加覆盖 PASS：发现≠启用 / 首扫锚定 sha256 / 文件变更 hash 门停服 / 清 sha 重新批准。
+   - 残余：真实侧栏 tab 的挂起/恢复路径与首屏桥调用插桩，待 dev renderer 修复
+     （main@`b46ae4a`，services barrel browser-safe 回归）后补测；harness 等价路径
+     已覆盖断言本体。
