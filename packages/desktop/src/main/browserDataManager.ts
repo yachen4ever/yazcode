@@ -26,8 +26,10 @@ import {
 } from "./chromeProfileDiscovery.js";
 import type { LinuxChromePasswordStore } from "./chromeInstallationCandidates.js";
 import type { WindowsChromeAppBoundKeyReader } from "./windowsChromeAppBoundKey.js";
+import { EMBEDDED_BROWSER_PARTITION } from "./embeddedBrowserPartition.js";
 
-export const EMBEDDED_BROWSER_PARTITION = "persist:zcode-embedded-browser";
+// 常量本体在 electron-free 的 embeddedBrowserPartition.ts；这里 re-export 维持既有导入面。
+export { EMBEDDED_BROWSER_PARTITION };
 const CACHE_STORAGE_TYPES: Electron.ClearStorageDataOptions["storages"] = [
   "shadercache",
   "serviceworkers",
