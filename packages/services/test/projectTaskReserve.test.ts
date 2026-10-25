@@ -87,4 +87,40 @@ describe("task index 项目归属三件套", () => {
     assert.equal(read?.rootPath, undefined);
     assert.equal(read?.executionDirectories, undefined);
   });
+
+  // ── L1 收敛（docs/specs/multi-root-projects.md「executionDirectories 空数组语义」）──
+
+  it("L1：空数组固化写列 \"[]\"，meta_json 与列兜底两条读路径都解析为显式空", async () => {
+    const { DatabaseSync } = (await import("node:sqlite")) as typeof import("node:sqlite");
+    await repo.syncTaskMeta({
+      meta: projectTaskMeta({
+        taskId: "sess_reserve_empty",
+        traceId: "zcode-sess_reserve_empty",
+        executionDirectories: [],
+      }),
+    });
+    const viaMetaJson = await repo.getTaskMeta({
+      workspacePath: "D:/code/datacenter",
+      taskId: "sess_reserve_empty",
+    });
+    // 写路径：空数组（JS truthy）落列 "[]"；读路径 meta_json 优先，原样返回显式空。
+    assert.deepEqual(viaMetaJson?.executionDirectories, []);
+    // 列兜底：破坏 meta_json 强制走列解析；"[]" 必须解析为显式空而非 undefined
+    // （P1b-2 旧语义折叠成 undefined，会让冷恢复错误回落项目当前 roots）。
+    const db = new DatabaseSync(join(workspace, "tasks.sqlite"));
+    try {
+      db.prepare("UPDATE tasks SET meta_json = '{broken' WHERE task_id = ?").run(
+        "sess_reserve_empty",
+      );
+    } finally {
+      db.close();
+    }
+    const viaColumn = await repo.getTaskMeta({
+      workspacePath: "D:/code/datacenter",
+      taskId: "sess_reserve_empty",
+    });
+    assert.deepEqual(viaColumn?.executionDirectories, []);
+    // 对照：无固化值（列 null）仍解析为 undefined——两种状态可区分。
+    assert.equal(viaColumn?.projectId, "proj_1");
+  });
 });
