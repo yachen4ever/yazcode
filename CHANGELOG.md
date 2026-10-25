@@ -31,6 +31,30 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   落地（守卫动态 import 口径、spec 因果重写、审计流动级升级），可直修 MINOR 随批
   处置（@match 通配上限、存储损坏显式失败、scriptId 路径段判定、V4 错版措辞）。
 
+### 验收结论（2026-10-26，workwin 实机，通过）
+
+实机验收于 workwin（Windows x64）完成，安装源为本次发布产物。三端安装包 SHA256：
+win-x64 `73429f62…fffb`（实测安装源）、mac-arm64 `2f57f21a…326c`、
+linux-x86_64 `b45feccd…5283`、linux-arm64 `5a52923e…95fc`。A/B/C 三项全部通过，发布放行。
+
+- **A 安装与集成 PASS**：计划任务方式启动，UA `yazcode/26.3.0 Electron/41.0.3`；
+  OpenViking 集成 0.5.23 实机握手 `tools/list` 24 工具、hooks 四事件注入；桌面会话
+  技能清单 60 项含 visualize，CLI 直跑 60 项无 visualize（门禁双向验证）；gen-ui
+  五类安全边界全过（合法 200 + 测高桥 postMessage、路径穿越/根外绝对路径/非 html/
+  非法 host 全拒且无内容泄漏）。
+- **B IAB 用户脚本实战 PASS**：目标为真实工作门户（安徽电信 EDA，
+  `https://nlkf-eda.anhuitelecom.com:11050`，自签证书经「设置 → 浏览器 → 安全」放行）。
+  发现≠启用（fail-closed）、首扫 sha256 锚定由 app 写回、真实页 document-start 注入
+  （落盘 readyState=loading）、主世界 GM_* 六函数全隔离、GM 存储往返落盘、硬刷新免疫
+  （Page.reload 后 preload 自动重跑，bootCount 递增为证）、快照瘦身 -19.1% 字节 /
+  -43% 动作元素；隐藏选择器 `.assistant-iframe, iframe[src*="ai-copilot"]` 取自门户
+  真实 bundle 渲染函数。注记：门户票据过期，登录态面板本体未活体验证，隐藏有效性以
+  真实页注入 + 合成面板节点 + 快照差分证实（详见验收记录）。
+- **C 多目录白名单 PASS**：手驱 app-server `session/create` 携 `additionalDirectories`
+  后，session 级技能目录 61 项含附加目录 marker 技能（id 路径可证）；无附加目录的
+  对照 session 60 项、零泄漏。commands/subagents/env-info 消费面与配置装配零流动由
+  仓库审计测试覆盖（未逐一实机外测）。
+
 ## 26.2.3 (2026-10-25)
 
 - **修复 OpenViking MCP 代理拉不起的安装器缺陷**（2026-10-25 workwin 事故根因）：安装器
