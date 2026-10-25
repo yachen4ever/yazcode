@@ -4,7 +4,7 @@ import { localTtftFactsSchema } from "../localTtft.js";
 // 阶段为类型占位（后半接通道层时启用），数据形状已按规范定稿。
 import { z } from "zod";
 import { APP_USAGE_RANGES, appUsageSnapshotSchema } from "../usage-stats.js";
-import { zcodeWorkspaceRefSchema } from "../zcode-protocol-legacy-types.js";
+import { zcodeWorkspaceRefSchema, zcodeAdditionalDirectoriesSchema } from "../zcode-protocol-legacy-types.js";
 import {
   PROTOCOL_V4_LIMITS,
   V4_WIRE_PROTOCOL_VERSION,
@@ -427,6 +427,9 @@ export const v4ConversationSubscribeParamsSchema = subscribeParamsSchema.extend(
   legacyTaskIds: z.array(z.string().min(1)).max(MAX_LEGACY_TASK_IDS_PER_SUBSCRIBE).optional(),
   // 仅供 host→CLI cold resume 使用；live conversation 不消费该 hint。
   resumeThoughtLevel: z.string().trim().min(1).optional(),
+  // 多目录项目附加目录（docs/specs/multi-root-projects.md）：host 冷恢复前按任务行
+  // 固化值重解析后随订阅下发；与 resumeThoughtLevel 同族（live 不消费），缺席即无附加目录。
+  additionalDirectories: zcodeAdditionalDirectoriesSchema.optional(),
   /**
    * 这条订阅收不收 `workflowRun.*` 键级增量。与 `clientMode` 同族：由**可信 host** 从该连接的
    * clientHello 注入，面向 UI 的 subscribe 选不了它——一个客户端能不能认得增量是连接的事实，

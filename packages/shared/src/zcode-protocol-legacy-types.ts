@@ -39,6 +39,17 @@ export const zcodeWorkspaceRefSchema = z
     workspaceKey: nonEmptyString,
   })
   .strict();
+/**
+ * 多目录项目附加目录（docs/specs/multi-root-projects.md 会话契约）：
+ * session create / session resume / V4 冷恢复三通道同形字段。上限 256 项、
+ * 每项非空 trimmed string；信任边界见 spec（CLI 侧只允许进 skills/commands/
+ * subagents 发现与 env-info 展示，禁止接入配置装配）。
+ */
+export const ZCODE_ADDITIONAL_DIRECTORIES_MAX_ITEMS = 256;
+export const zcodeAdditionalDirectoriesSchema = z
+  .array(z.string().trim().min(1))
+  .max(ZCODE_ADDITIONAL_DIRECTORIES_MAX_ITEMS);
+export type ZCodeAdditionalDirectories = z.infer<typeof zcodeAdditionalDirectoriesSchema>;
 export const zcodePermissionDecisionSchema = z.enum(["allow", "deny", "escalate", "modify"]);
 export const zcodePermissionRuleBehaviorSchema = z.enum(["allow", "deny", "ask"]);
 /** Backward-compatible wire/storage key interpreted only for trusted official CUA tools. */

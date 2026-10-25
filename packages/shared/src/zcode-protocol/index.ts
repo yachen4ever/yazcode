@@ -61,6 +61,7 @@ import {
   zcodeSessionRuntimeStateSchema,
   zcodeMessageWithPartsSchema,
   zcodeMessagePartSchema,
+  zcodeAdditionalDirectoriesSchema,
 } from "../zcode-protocol-legacy-types.js";
 
 export {
@@ -1576,6 +1577,10 @@ export const zcodeSessionCreateParamsSchema = z
     // 动态工作流灰度：与 offPeakToolEnabled 同一
     // 模式——host 裁决后下发，缺省不下发 = 不注册工作流工具簇（fail-closed）。
     dynamicWorkflowEnabled: z.boolean().optional(),
+    // 多目录项目附加目录（spec：docs/specs/multi-root-projects.md）：CLI 侧仅白名单消费
+    // （skills/commands/subagents 发现 + env-info），不进配置装配。旧 CLI strict schema
+    // 不认时经 host 侧 omittedFields 兼容重试省略。
+    additionalDirectories: zcodeAdditionalDirectoriesSchema.optional(),
   })
   .strict();
 export type ZCodeSessionCreateParams = z.infer<typeof zcodeSessionCreateParamsSchema>;
@@ -1594,6 +1599,8 @@ export const zcodeSessionResumeParamsSchema = z
     offPeakToolEnabled: z.boolean().optional(),
     // 与 create 同语义；resume 不带会导致冷恢复丢工作流工具簇。
     dynamicWorkflowEnabled: z.boolean().optional(),
+    // 多目录项目附加目录：冷恢复重建 runtime 时与 create 同边界下发；缺省即无附加目录。
+    additionalDirectories: zcodeAdditionalDirectoriesSchema.optional(),
   })
   .strict();
 export type ZCodeSessionResumeParams = z.infer<typeof zcodeSessionResumeParamsSchema>;
