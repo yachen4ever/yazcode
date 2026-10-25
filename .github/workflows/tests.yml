@@ -44,6 +44,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # sqlite schema 只增契约（docs/specs/sqlite-schema-contract.md）：与本地
+      # verify:pre-push 同口径。驱动经 tsx 源码级加载（workspace exports 指向 src），
+      # 不依赖 CLI dist 产物，先于构建执行以尽早失败。
+      - name: Check sqlite schema contract
+        run: pnpm run db:schema:check
+
       # CLI 子包测试与 typecheck:cli 都 import 兄弟包的发布入口（dist/），不构建
       # 就报 ERR_MODULE_NOT_FOUND。CI 是干净环境，这里自己构建，不依赖任何预置产物。
       # 与 release.yml 的 build 步骤同一口径：先构建，再跑类型检查与测试。

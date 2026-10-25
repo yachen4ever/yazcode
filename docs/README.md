@@ -109,6 +109,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `packages/desktop/specs/github-updates.md` | 桌面更新 |
 | `docs/specs/release-acceptance-order.md` | 发版顺序：实机验收先于打 tag，tag 与 release 是两个独立状态 |
 | `docs/specs/test-gate-integration.md` | 测试接入门禁：加载器引入方式、glob 约定与路径断言的平台无关写法 |
+| `docs/specs/sqlite-schema-contract.md` | sqlite schema 只增契约：基线由迁移产物生成、git 防篡改与 `db:schema:check` 门禁 |
 | `docs/upstream-port-tasks-20261018.md` | 上游变更引入评估（基准 main@9cd5e0e4）：已存档的「无需引入」清单与 T1/T2 立项项 |
 | `docs/upstream-port-tasks-20261022.md` | 上游变更引入评估（基准 3.16.2 / ZCodium 1.16.2）：架构治理自测、sqlite schema 只增契约两个建议立项项 |
 | `docs/upstream-port-tasks-20261025.md` | 上游变更引入评估（ZCodium 1.16.3 / #76 / v1.17.0）：仅 #66 浏览器迟到上报一项引入候选，v1.17.0 不引入 |
