@@ -5,8 +5,8 @@
 内嵌浏览器（IAB，`persist:zcode-embedded-browser` partition）按站点固定注入脚本/CSS 的能力缺口：
 页面级优化（隐藏垃圾面板、简化门户元素）目前只能靠命令式 `executeJavaScript` 临时补丁，
 硬刷新即失效。本 spec 定义 P1 最小可用能力：应用内置一个 preload runtime，扫描用户脚本目录，
-按 `@match` 在 document_start 把「启用且校验通过」的脚本注入 IAB guest 的隔离上下文，
-并提供 GM_* 最小集 shim。调研结论见 m5air 调研报告（路线 1：分区级 preload）与
+按 `@match` 在 document*start 把「启用且校验通过」的脚本注入 IAB guest 的隔离上下文，
+并提供 GM*\* 最小集 shim。调研结论见 m5air 调研报告（路线 1：分区级 preload）与
 y430p 立项回执（三条硬性要求）。
 
 P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无确认流 UI、无 fixture 实机测量
@@ -57,15 +57,26 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      任何用户脚本；未来官方「固定 preload」需求并入同一 runtime，禁止再注册第二个
      session 级 preload（guest 的 per-webview preload——对话框桥、录像器——是既有 app 功能
      挂点，不属于用户脚本分发面，与 session preload 叠加生效，互不竞争）。
-   - runtime 在主 frame 的 document_start 注入一次，按 frame 幂等（重复执行守卫）。
-     **P1 只注入主 frame**：Electron 对 sandbox renderer 的 session preload 仅进主 frame，
-     除非 webPreferences 显式开 `nodeIntegrationInSubFrames`——guest 的 `will-attach-webview`
-     强制项未开该 flag，且它优先于 webview tag 上的同名属性（fixture 实测确认，对照实验
-     归因闭合）。iframe **内部**元素的脚本清理因此不在 P1 能力内；外层 CSS 隐藏整个
-     iframe 的常见场景（AI Copilot 面板）不受影响。runtime 侧保留 frame 判定与
-     `sub_frame_denied` 守卫作为 fail-safe 深防线（当前配置下不可达）；未来开
-     `nodeIntegrationInSubFrames` 需过安全评审，并把 GM 存储面一并纳入评审范围。
-     main 侧主 frame 判定以 `event.senderFrame` 为准，不信任 renderer 传参。
+   - runtime 按 frame 自身 URL 匹配 `@match`，对所有命中 frame 各注入一次，按 frame
+     幂等（重复执行守卫）——与 Tampermonkey 的 per-frame 语义对齐（产品裁决 a，
+     2026-10-25 复核 M2 纠正因果后重定）。
+     **注入面因果（纠正本 spec 此前的错误陈述）**：guest 的 `will-attach-webview`
+     强制项（`desktopWindowChrome.ts`）与 IAB `<webview>` tag（`BrowserViewportSurface.tsx`）
+     **都显式开启** `nodeIntegrationInSubFrames`（「仅主 frame」的前提不成立），
+     且 session preload 注册为 `type: "frame"`（帧上下文 vs service-worker 上下文，
+     不区分主/子 frame）。因此：无 src 的**继承型空 frame 不触发 preload**；发生
+     真实导航的**同源/同进程子 frame 会触发 preload**，按该 frame 自身 URL 参与匹配
+     并注入。**跨域 OOPIF（站点隔离子 frame）是否传播该 flag 未实测**，列为 fixture
+     补测项（见验收场景 9 残余）。
+   - **GM 存储仅主 frame 可用**：子 frame 的存储函数位为 `undefined`（runtime 只注入
+     `GM_info`/`GM_addStyle`），脚本调用即抛 TypeError 且被 `executeScript` 的
+     try/catch 吞掉——存储请求根本不会发出。main 侧 `sub_frame_denied` 守卫由此确认
+     为**不可达的纵深防御**，不是可达分支（复核实测结论）。能力边界相应修正：
+     **同源/同进程 iframe 内部元素**的脚本清理在 P1 能力内（脚本会注入并命中）；
+     跨域 iframe 待 OOPIF 补测后定界。外层 CSS 隐藏整个 iframe 的常见场景（AI
+     Copilot 面板）不受影响。GM 存储面若要放开到子 frame 需过安全评审（当前仅主
+     frame 是产品边界）。main 侧主 frame 判定以 `event.senderFrame` 为准，不信任
+     renderer 传参。
    - **非 http(s) scheme（chrome-error、about:blank、devtools 等）上 runtime 直接 no-op**。
 
 6. **IPC 面（恰好 3 个 channel，参数校验在 main）**：
@@ -80,10 +91,10 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
    - GM 存储所有者在 main：每脚本一个 JSON 文件（`{数据根}/.yazcode/userscript-storage/<scriptId>.json`），
      main 内按 scriptId 串行化读改写（并发 frame 不丢更新），单脚本存储上限 2 MB，超限拒绝。
 
-7. **GM_* 语义**：`GM_info`（脚本元数据对象）、`GM_addStyle(css)`（向当前文档插入 `<style>`，
-   document_start 时 head 未就绪则挂到 documentElement 或延迟到 DOMContentLoaded）、
+7. **GM\_\* 语义**：`GM_info`（脚本元数据对象）、`GM_addStyle(css)`（向当前文档插入 `<style>`，
+   document*start 时 head 未就绪则挂到 documentElement 或延迟到 DOMContentLoaded）、
    `GM_getValue(key, defaultValue?)`、`GM_setValue(key, value)`、`GM_deleteValue(key)`、
-   `GM_listValues()`。GM_* 以脚本函数参数注入（不是 window 全局），页面世界物理不可见。
+   `GM_listValues()`。GM*\* 以脚本函数参数注入（不是 window 全局），页面世界物理不可见。
    `@run-at` 等待策略由 runtime 内部实现：start = 立即；end = DOMContentLoaded；
    idle = load 事件（已过则立即）。
 
@@ -99,13 +110,13 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
 
 ## 状态所有者
 
-| 状态 | 所有者 | 说明 |
-| --- | --- | --- |
-| manifest（enabled/sha256） | `AppSettings.embeddedBrowserUserscripts`（SettingService 唯一写路径） | **论证**：回执要求复用现有设置存储、避免自建第二份状态文件（两套状态所有者）。AppSettings 是桌面端应用级持久状态的唯一所有者，`visionFallback` 字段已有同模式先例（storage schema + patch schema + 类型三处登记）。store 不直接落盘，经注入的 manifest 端口（生产实现包 SettingService）读写，测试可替换。 |
-| 脚本文件 | 用户（`~/.yazcode/userscripts/`） | store 只读扫描，永不写脚本文件；用户级资产，跨 workspace 同源，站内作用域用 `@match` 表达。 |
-| GM 运行时数据 | main 侧 userscriptStorage（per-scriptId JSON 文件） | 唯一写者是 main 的 IPC handler；preload 只经 IPC 读写。与 manifest 分离：前者是脚本运行时数据（跟随数据根），后者是用户决策（跟随设置）。 |
-| runtime 本体 | app bundle（tsup preload entry → `out/preload/userscriptRuntime.cjs`） | 可信应用代码；路径解析与既有 preload 一致（dev/打包同构），不做数据目录写入。 |
-| 扫描缓存 | 无 | store 每次匹配请求全量重扫（目录规模为个位数文件、KB 级，重扫同时天然完成 hash 一致性复核）；不做 TTL/事件订阅缓存，避免第二个状态所有者。 |
+| 状态                       | 所有者                                                                 | 说明                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| manifest（enabled/sha256） | `AppSettings.embeddedBrowserUserscripts`（SettingService 唯一写路径）  | **论证**：回执要求复用现有设置存储、避免自建第二份状态文件（两套状态所有者）。AppSettings 是桌面端应用级持久状态的唯一所有者，`visionFallback` 字段已有同模式先例（storage schema + patch schema + 类型三处登记）。store 不直接落盘，经注入的 manifest 端口（生产实现包 SettingService）读写，测试可替换。 |
+| 脚本文件                   | 用户（`~/.yazcode/userscripts/`）                                      | store 只读扫描，永不写脚本文件；用户级资产，跨 workspace 同源，站内作用域用 `@match` 表达。                                                                                                                                                                                                                |
+| GM 运行时数据              | main 侧 userscriptStorage（per-scriptId JSON 文件）                    | 唯一写者是 main 的 IPC handler；preload 只经 IPC 读写。与 manifest 分离：前者是脚本运行时数据（跟随数据根），后者是用户决策（跟随设置）。                                                                                                                                                                  |
+| runtime 本体               | app bundle（tsup preload entry → `out/preload/userscriptRuntime.cjs`） | 可信应用代码；路径解析与既有 preload 一致（dev/打包同构），不做数据目录写入。                                                                                                                                                                                                                              |
+| 扫描缓存                   | 无                                                                     | store 每次匹配请求全量重扫（目录规模为个位数文件、KB 级，重扫同时天然完成 hash 一致性复核）；不做 TTL/事件订阅缓存，避免第二个状态所有者。                                                                                                                                                                 |
 
 事件顺序（注入时序）：
 
@@ -167,15 +178,17 @@ app ready（main）
    清除 sha256 重新锚定后恢复服务；enabled 无 sha → 扫描时锚定（manifest 被写入当前 hash）。
 5. **发现 ≠ 启用**：目录新文件、manifest 无条目 → 不服务。
 6. **IPC 契约**：match 只回服务集脚本且回包无文件路径；非法 url / 非法 scriptId / 超长 key /
-   不可序列化 value 被拒；子 frame（main 侧 `senderFrame.parent` 判定）的存储请求被拒。
+   不可序列化 value 被拒。子 frame 存储面由 runtime 侧失效（存储函数位 `undefined`，
+   调用即 TypeError 被 executeScript 吞掉，请求不会发出）；main 侧 `senderFrame.parent`
+   判定保留为纵深防御，当前配置下不可达（行为规则 5）。
 7. **GM 存储**：set → get 回读一致；deleteValue 后 get 返回默认值；listValues 返回现存键；
    两个并发 set 不丢更新；单脚本存储超 2 MB 拒绝。
 8. **runtime（静态可验证部分 + 纯函数）**：非 http(s) protocol 判定 no-op；frame 幂等守卫
-   存在；runAt 归一化；runtime 源码不引入 electron 之外的 Node 内置模块；GM_* 以函数参数
+   存在；runAt 归一化；runtime 源码不引入 electron 之外的 Node 内置模块；GM\_\* 以函数参数
    注入而非 window 全局；runtime 引用的 channel 常量与 contract 同源。
 9. **fixture 实测项**（2026-10-25 已实测，除标注外全部 PASS；产物 `/tmp/iab-fixture/`）：
    - 断言 A PASS：主世界六个 `GM_*`、runtime 入口标志与 `unsafeWindow` 全 undefined；
-     GM_* 以函数参数注入，隔离世界同样不挂 window 全局。
+     GM\_\* 以函数参数注入，隔离世界同样不挂 window 全局。
    - 断言 B PASS：页面主世界先行设置的 `window.__pageProbe` 隔离世界读不到
      （脚本侧 `GM_setValue` 落盘证据：`typeofPageProbe:"undefined"`，主世界同点实测可见）。
    - 功能链 PASS：GM_addStyle 隐藏 AI Copilot iframe 与 MutationObserver 复活广告节点
@@ -188,6 +201,17 @@ app ready（main）
    - 严格 CSP（`script-src 'self'`）下脚本仍生效：隔离世界 `new Function` 不受页面
      CSP 限制（调研未覆盖项，实测确认）。
    - 附加覆盖 PASS：发现≠启用 / 首扫锚定 sha256 / 文件变更 hash 门停服 / 清 sha 重新批准。
-   - 残余：真实侧栏 tab 的挂起/恢复路径与首屏桥调用插桩，待 dev renderer 修复
-     （main@`b46ae4a`，services barrel browser-safe 回归）后补测；harness 等价路径
-     已覆盖断言本体。
+   - A③ 真实侧栏实测（2026-10-25，dev renderer 修复后回填）：真实 app 全链路 PASS——
+     快照瘦身复现（8160→4944B，-39.4%；elements -50%），收益仍全部来自 display:none
+     过滤；preload 经真实销毁/重建路径自动重放（bootCount 连续）。
+   - residency 挂起链路说明：挂起/恢复的「真实侧栏路径」当前**无 UI 可达触发点**——
+     `browserTabResidencyPolicy` 的唯一触发器是 >32 tab 的 victim 选择，且生产装配
+     不注入 `recoveryStore`（`main/index.ts`：「Browser shell/pageState 不跨进程恢复」），
+     suspended shell 不可达。等价销毁/重建路径已覆盖断言本体；若未来恢复挂起触发器
+     （注入 recoveryStore 或调整 victim 策略），需补真实挂起/恢复 fixture。
+   - `@run-at document-start` 实测注记：该时点 `document.documentElement` 可为 null
+     （文档仍处 loading 态）——脚本与 `GM_addStyle` 实现都需容忍根节点未就绪，runtime
+     的 `appendWhenDocumentReady` 以 MutationObserver 挂载，脚本侧自行操作 DOM 时
+     同样需等待根节点出现。
+   - 残余：跨域 OOPIF（带真实 `src` 的跨域 iframe）是否收到 session preload 注入
+     未实测（行为规则 5 的 fixture 补测项）；首屏桥调用插桩仍缺，快照体量为量化代理。

@@ -51,8 +51,13 @@ position, is_primary, PK(project_id, root_path))`——只增建表，受
    `subscribeConversationV4` 读任务行（projectId/rootPath/executionDirectories）经
    `resolveSessionDirectories` 解析；解析失败降级为不下发（会话仍可恢复，附加目录缺席），
    不阻塞冷恢复。旧 CLI strict schema 不认 create/resume 的新字段时沿用既有
-   omittedFields 兼容重试；v4 subscribe 与 `resumeThoughtLevel` 同策略（无握手协商，
-   Host/CLI 同包发版）。
+   omittedFields 兼容重试；**v4 subscribe 无降级路径**：基 schema 为 strict，旧 CLI 收到
+   `additionalDirectories`/`resumeThoughtLevel` 等新字段时**整条 subscribe 解析失败**
+   （不是「降级为不下发附加目录」），与 `resumeThoughtLevel` 完全同型（无握手协商）。
+   「Host/CLI 同包发版」只在打包态桌面路径成立；两条独立部署路径存在真实错版窗口——
+   `ZCODE_AGENT_SERVER_COMMAND` 环境覆盖与远端 SSH 已部署的 native binary（见
+   `zcodeAgentProcessManager` 的命令解析顺序）。v4 subscribe 参数 schema 收紧或新增
+   字段时，须按协议契约显式评估这两条错版路径（2026-10-25 复核 m3-3 措辞纠正）。
 
 ### 冷恢复语义（P2）
 
