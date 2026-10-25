@@ -85,6 +85,24 @@ CREATE TABLE off_peak_tasks (
         updated_at         INTEGER NOT NULL
       );
 
+CREATE TABLE project_roots (
+        project_id TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+        root_path TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        is_primary INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (project_id, root_path)
+      );
+
+CREATE TABLE projects (
+        project_id TEXT PRIMARY KEY,
+        host_id TEXT NOT NULL DEFAULT 'local',
+        name TEXT NOT NULL,
+        default_name TEXT,
+        pinned INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+
 CREATE TABLE task_group_members (
         group_id TEXT NOT NULL,
         workspace_key TEXT NOT NULL,
@@ -143,7 +161,7 @@ CREATE TABLE tasks (
         archived INTEGER NOT NULL DEFAULT 0,
         deleted INTEGER NOT NULL DEFAULT 0,
         title_overridden INTEGER NOT NULL DEFAULT 0,
-        meta_json TEXT NOT NULL DEFAULT '{}', searchable_text TEXT NOT NULL DEFAULT '', cron_automation_id TEXT, off_peak_task_id TEXT,
+        meta_json TEXT NOT NULL DEFAULT '{}', searchable_text TEXT NOT NULL DEFAULT '', cron_automation_id TEXT, off_peak_task_id TEXT, root_path TEXT, project_id TEXT, execution_directories TEXT,
         PRIMARY KEY (workspace_key, task_id)
       );
 
@@ -172,6 +190,9 @@ CREATE INDEX idx_off_peak_pick
 
 CREATE INDEX idx_off_peak_ws
       ON off_peak_tasks (workspace_key, status);
+
+CREATE INDEX idx_project_roots_project
+      ON project_roots (project_id, position);
 
 CREATE INDEX idx_task_group_members_group_order
       ON task_group_members (group_id, sort_order, added_at);
