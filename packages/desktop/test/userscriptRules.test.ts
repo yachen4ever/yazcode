@@ -24,7 +24,13 @@ describe("isInjectableUrlProtocol / normalizeRunAt", () => {
   it("仅 http(s) 可注入，chrome-error/about/devtools 全部 no-op", () => {
     assert.equal(isInjectableUrlProtocol("http:"), true);
     assert.equal(isInjectableUrlProtocol("https:"), true);
-    for (const protocol of ["chrome-error:", "about:", "devtools:", "file:", "zcode-browser-restore:"]) {
+    for (const protocol of [
+      "chrome-error:",
+      "about:",
+      "devtools:",
+      "file:",
+      "zcode-browser-restore:",
+    ]) {
       assert.equal(isInjectableUrlProtocol(protocol), false, protocol);
     }
   });
@@ -58,7 +64,10 @@ const real = "code";
     assert.ok(header);
     assert.equal(header.name, "门户面板隐藏");
     assert.equal(header.version, "1.2.0");
-    assert.deepEqual(header.matchPatterns, ["https://oa.example.com/*", "http://portal.example.com/*"]);
+    assert.deepEqual(header.matchPatterns, [
+      "https://oa.example.com/*",
+      "http://portal.example.com/*",
+    ]);
     assert.equal(header.runAt, "document-end");
     assert.deepEqual(header.grants, ["GM_addStyle", "GM_getValue"]);
   });
@@ -107,6 +116,16 @@ describe("compileMatchPattern / urlMatchesCompiledPattern", () => {
     assert.equal(matches("http://x.test/a*", "http://x.test:8080/abc"), true);
   });
 
+  it("path 段 * 数量超上限拒编译（m2-1 fail-closed），上限内正常通过", () => {
+    // MAX_MATCH_PATTERN_PATH_WILDCARDS = 8：超限 pattern 回 main 进程多项式回溯，拒载。
+    const overLimit = "https://x.test/" + "a*".repeat(9);
+    assert.equal(compileMatchPattern(overLimit), null);
+    // 恰好达到上限的 pattern 仍可用（正常 match pattern 只需 1-2 个通配）。
+    const atLimit = "https://x.test/" + "a*".repeat(8);
+    assert.ok(compileMatchPattern(atLimit));
+    assert.ok(compileMatchPattern("https://x.test/*"));
+  });
+
   it("非法 pattern 拒编译：缺 path、scheme 越界、host 内嵌星号、携带端口", () => {
     for (const bad of [
       "http://x.test",
@@ -146,10 +165,11 @@ describe("resolveUserScriptGrants", () => {
   });
 
   it("空格/逗号分隔的多 token 单行也接受", () => {
-    assert.deepEqual(
-      resolveUserScriptGrants(["GM_addStyle GM_getValue,GM_setValue"]).grants,
-      ["GM_addStyle", "GM_getValue", "GM_setValue"],
-    );
+    assert.deepEqual(resolveUserScriptGrants(["GM_addStyle GM_getValue,GM_setValue"]).grants, [
+      "GM_addStyle",
+      "GM_getValue",
+      "GM_setValue",
+    ]);
   });
 });
 
@@ -200,7 +220,12 @@ describe("buildUserScriptDef", () => {
       ],
     ];
     for (const [label, code, reason] of cases) {
-      const result = buildUserScriptDef({ scriptId: label, code, sha256: "aa", fallbackName: label });
+      const result = buildUserScriptDef({
+        scriptId: label,
+        code,
+        sha256: "aa",
+        fallbackName: label,
+      });
       assert.ok(!result.ok, label);
       if (!result.ok) assert.match(result.reason, reason, label);
     }

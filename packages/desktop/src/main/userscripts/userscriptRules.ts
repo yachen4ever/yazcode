@@ -97,11 +97,22 @@ export function parseUserScriptHeader(code: string): UserScriptHeaderFields | nu
 }
 
 /**
+ * 单 pattern path 段允许的 `*` 数量上限（复核 m2-1）：path 以 `*` 切段后用 `.*` 顺序
+ * 量词连接，段数越多 main 进程 URL 匹配的回溯常数越大（实测 8 段 `*` 对 12800 字符
+ * URL 已 180ms，且随 URL 长度平方增长）。正常 match pattern 的 path 通配 1-2 个，
+ * 8 是宽松上限；超限既非合法用户脚本需要，又放大匹配成本，按解析失败处理
+ * （fail-closed，该 pattern 拒载 → 整只脚本不入服务集）。
+ */
+export const MAX_MATCH_PATTERN_PATH_WILDCARDS = 8;
+
+/**
  * Chrome match pattern 的 http(s) 子集编译为正则。语义要点：
  * - scheme ∈ { http, https, * }（* = http 或 https）；
  * - host 支持精确、`*`（任意）与 `*.example.com`（含自身与子域），host 内其他位置
  *   的 `*` 非法；pattern 不携带端口（URL 端口在匹配时被忽略，与 Chrome 一致）；
  * - path 以 `/` 开头，`*` 匹配任意字符（含 `/`），匹配对象是 pathname + search；
+ *   单 pattern path 段的 `*` 数量超过 MAX_MATCH_PATTERN_PATH_WILDCARDS 视为非法
+ *   （防 main 进程多项式回溯，复核 m2-1）；
  * - `<all_urls>` 等价 scheme 通配 + 任意 host 与 path，仍限定 http(s)。
  * 非法 pattern 返回 null（该脚本拒载），不做容错修正。
  */
@@ -115,6 +126,7 @@ export function compileMatchPattern(pattern: string): RegExp | null {
   const rawHost = parsed[2];
   const rawPath = parsed[3];
   if (!scheme || !rawHost || !rawPath) return null;
+  if (rawPath.split("*").length - 1 > MAX_MATCH_PATTERN_PATH_WILDCARDS) return null;
   const host = rawHost.toLowerCase();
   // pattern 不携带端口（含 IPv6 字面量的冒号）；URL 端口在匹配时被剥离，作者应写裸 host。
   if (host.includes(":")) return null;
@@ -129,10 +141,7 @@ export function compileMatchPattern(pattern: string): RegExp | null {
     if (host.includes("*")) return null;
     hostPattern = escapeRegExp(host);
   }
-  const pathPattern = rawPath
-    .split("*")
-    .map(escapeRegExp)
-    .join(".*");
+  const pathPattern = rawPath.split("*").map(escapeRegExp).join(".*");
   const schemePattern = scheme === "*" ? "https?" : scheme;
   return new RegExp(`^${schemePattern}://${hostPattern}${pathPattern}$`);
 }

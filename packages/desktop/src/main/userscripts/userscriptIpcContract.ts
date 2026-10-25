@@ -57,6 +57,7 @@ export type UserScriptStorageErrorCode =
   | "invalid_value"
   | "sub_frame_denied"
   | "storage_limit"
+  | "storage_corrupt"
   | "storage_error";
 
 export function isUserScriptStorageErrorCode(value: unknown): value is UserScriptStorageErrorCode {
@@ -67,6 +68,7 @@ export function isUserScriptStorageErrorCode(value: unknown): value is UserScrip
     value === "invalid_value" ||
     value === "sub_frame_denied" ||
     value === "storage_limit" ||
+    value === "storage_corrupt" ||
     value === "storage_error"
   );
 }

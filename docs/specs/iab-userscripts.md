@@ -44,8 +44,10 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
 4. **@match 匹配**：Chrome match pattern 语义的 http(s) 子集——
    `scheme://host/path`，scheme ∈ {`http`, `https`, `*`}（`*` = http 或 https）；host 支持
    精确、`*`（任意）与 `*.example.com`（含自身与子域）；path 以 `/` 开头，`*` 匹配任意字符
-   （含 `/`）；`<all_urls>` 视为 `*://*/` + 任意 path，仍限定 http(s)。非法 pattern 按解析失败
-   处理（该脚本不入服务集并记录）。非 http(s) URL 永不匹配任何 pattern。
+   （含 `/`），单 pattern path 段的 `*` 数量超过宽松上限（8）视为非法——超限会让 main
+   进程 URL 匹配产生多项式回溯放大（复核 m2-1）；`<all_urls>` 视为 `*://*/` + 任意
+   path，仍限定 http(s)。非法 pattern 按解析失败处理（该脚本不入服务集并记录）。
+   非 http(s) URL 永不匹配任何 pattern。
 
 5. **注入面与单一 runtime**（回执硬性要求 ②）：
    - app 创建时对 `persist:zcode-embedded-browser` 分区执行一次
@@ -90,6 +92,9 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      （≤512 字符）、value JSON 可序列化；拒绝时返回明确失败结果（不抛裸异常给隔离世界）。
    - GM 存储所有者在 main：每脚本一个 JSON 文件（`{数据根}/.yazcode/userscript-storage/<scriptId>.json`），
      main 内按 scriptId 串行化读改写（并发 frame 不丢更新），单脚本存储上限 2 MB，超限拒绝。
+     存储文件损坏（JSON 解析失败 / 顶层形状非法）显式回 `storage_corrupt`，损坏文件
+     原样保留、不自动清数据（复核 m2-5：静默当空等于丢数据）；用户修复或删除文件后
+     存储恢复可用。
 
 7. **GM\_\* 语义**：`GM_info`（脚本元数据对象）、`GM_addStyle(css)`（向当前文档插入 `<style>`，
    document*start 时 head 未就绪则挂到 documentElement 或延迟到 DOMContentLoaded）、

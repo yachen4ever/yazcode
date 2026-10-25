@@ -27,10 +27,22 @@ class StorageLimitError extends Error {
   }
 }
 
+/** 存储文件损坏（JSON 解析失败 / 顶层形状非法）：显式失败，不静默当空（复核 m2-5）。 */
+class StorageCorruptError extends Error {
+  constructor(scriptId: string) {
+    super(`storage file for ${scriptId} is corrupt`);
+  }
+}
+
 type StoredPayload = Record<string, unknown>;
 
 function isSafeScriptId(scriptId: string): boolean {
-  return !scriptId.includes("/") && !scriptId.includes("\\") && !scriptId.includes("..");
+  // 按路径段判定（复核 m2-6）：拒绝路径分隔符与 "." / ".." 段即可挡住路径穿越，
+  // 取代旧的「子串含 ..」规则——后者会误拒 my..script 这类合法文件名。
+  if (scriptId.length === 0) return false;
+  if (scriptId.includes("/") || scriptId.includes("\\")) return false;
+  // 无分隔符时整串就是唯一路径段，只需拒 dot 段。
+  return scriptId !== "." && scriptId !== "..";
 }
 
 export function createUserscriptStorage(options: UserscriptStorageOptions) {
@@ -55,20 +67,28 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
   }
 
   async function readPayload(scriptId: string): Promise<StoredPayload> {
+    let raw: string;
     try {
-      const raw = await readFile(storageFilePath(scriptId), "utf8");
-      const parsed = JSON.parse(raw) as unknown;
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
-      return parsed as StoredPayload;
+      raw = await readFile(storageFilePath(scriptId), "utf8");
     } catch (error) {
-      // 不存在 = 空存储；损坏文件视为空并记录（不阻断脚本运行）。
-      if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") {
-        logger.warn(
-          `[userscripts] storage for ${scriptId} unreadable, treating as empty: ${String(error)}`,
-        );
-      }
-      return {};
+      // 不存在 = 空存储；其他读失败（权限等）继续走显式失败路径。
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") return {};
+      throw error;
     }
+    // 损坏文件显式失败（复核 m2-5）：JSON 解析失败与顶层形状非法都按损坏处理，
+    // 静默当空会让脚本侧只看到「key 不存在」，等于丢数据。损坏文件由调用方
+    // 原样保留、不覆盖（写路径只在读成功后到达），用户修复或删除后再恢复使用。
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw) as unknown;
+    } catch {
+      parsed = undefined;
+    }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      logger.warn(`[userscripts] storage for ${scriptId} is corrupt, failing explicitly`);
+      throw new StorageCorruptError(scriptId);
+    }
+    return parsed as StoredPayload;
   }
 
   async function writePayload(scriptId: string, payload: StoredPayload): Promise<void> {
@@ -92,6 +112,13 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
     return { ok: false, error };
   }
 
+  /** 统一错误映射：损坏显式回 storage_corrupt，超限回 storage_limit，其余归 storage_error。 */
+  function failureFrom(error: unknown): UserScriptStorageResult {
+    if (error instanceof StorageCorruptError) return failure("storage_corrupt");
+    if (error instanceof StorageLimitError) return failure("storage_limit");
+    return failure("storage_error");
+  }
+
   return {
     /** GM_getValue：key 缺失时返回 ok 且不带 value（调用方取默认值）。 */
     async getValue(scriptId: string, key: string): Promise<UserScriptStorageResult> {
@@ -100,8 +127,8 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
           const payload = await readPayload(scriptId);
           return key in payload ? { ok: true, value: payload[key] } : { ok: true };
         });
-      } catch {
-        return failure("storage_error");
+      } catch (error) {
+        return failureFrom(error);
       }
     },
 
@@ -112,13 +139,17 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
           const payload = await readPayload(scriptId);
           return { ok: true, keys: Object.keys(payload) };
         });
-      } catch {
-        return failure("storage_error");
+      } catch (error) {
+        return failureFrom(error);
       }
     },
 
     /** GM_setValue：并发写按 scriptId 串行化，size 超限拒绝。 */
-    async setValue(scriptId: string, key: string, value: unknown): Promise<UserScriptStorageResult> {
+    async setValue(
+      scriptId: string,
+      key: string,
+      value: unknown,
+    ): Promise<UserScriptStorageResult> {
       try {
         return await withLock(scriptId, async () => {
           const payload = await readPayload(scriptId);
@@ -127,9 +158,7 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
           return { ok: true };
         });
       } catch (error) {
-        return error instanceof StorageLimitError
-          ? failure("storage_limit")
-          : failure("storage_error");
+        return failureFrom(error);
       }
     },
 
@@ -148,8 +177,8 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
           }
           return { ok: true };
         });
-      } catch {
-        return failure("storage_error");
+      } catch (error) {
+        return failureFrom(error);
       }
     },
 
