@@ -119,6 +119,7 @@ import type {
   ZCodeTaskReadyOutcome,
   ZCodeTaskTerminalOutcome,
 } from "../session/zcodeTaskService.js";
+import type { IProjectService, PreparedProjectSession } from "../project/project.js";
 import { createServiceLogger } from "#src/logger/serviceLogger.js";
 import {
   AUTOMATION_MUTATION_TOOL_NAMES,
@@ -183,6 +184,8 @@ interface CreateZCodeTaskServiceAdapterOptions {
   taskIndexSyncer: ZCodeTaskIndexSyncer;
   settingService?: Pick<ISettingService, "get">;
   cuaProductMcpServerResolver?: CuaProductMcpServerResolver;
+  /** 多目录项目：prepareSession 解析 primary root 与附加目录；未注入时 projectId 即拒绝。 */
+  projectService?: Pick<IProjectService, "prepareSession">;
 }
 
 interface TaskTarget {
@@ -1773,7 +1776,19 @@ export function createZCodeTaskServiceAdapter(
     },
 
     async createTask(params): Promise<ZCodeTaskCreateResult> {
-      const target = normalizeWorkspaceParams(params);
+      // 项目任务：cwd 一律取项目 primary root（prepareSession，文件系统缺失即拒绝），
+      // 附加目录固化进任务行——改项目 roots 不影响已建任务（spec 数据契约）。
+      const projectId = params.projectId?.trim() || undefined;
+      let projectDirectories: PreparedProjectSession | undefined;
+      if (projectId) {
+        if (!options.projectService)
+          throw new Error("project.service-unavailable: 宿主未装配 ProjectService");
+        projectDirectories = await options.projectService.prepareSession({ projectId });
+      }
+      const target = normalizeWorkspaceParams({
+        ...params,
+        ...(projectDirectories ? { workspacePath: projectDirectories.workspacePath } : {}),
+      });
       const requestedSelection =
         params.modelSelection ??
         (params.model
@@ -1895,6 +1910,14 @@ export function createZCodeTaskServiceAdapter(
         ...(params.automationId ? { cronAutomationId: params.automationId } : {}),
         // 闲时派发在创建时即盖章持久归属；月亮图标与后续系统分组归属都只看该标记。
         ...(params.offPeakTaskId ? { offPeakTaskId: params.offPeakTaskId } : {}),
+        // 项目归属三件套在创建边界一次性固化（reserve）；后续快照同步不带这些字段。
+        ...(projectDirectories && projectId
+          ? {
+              projectId,
+              rootPath: projectDirectories.workspacePath,
+              executionDirectories: projectDirectories.additionalDirectories,
+            }
+          : {}),
       });
       await taskIndexRepo.initializeGroupedTaskAtTop({
         workspacePath: meta.workspacePath,

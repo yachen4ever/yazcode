@@ -67,6 +67,9 @@ interface TaskIndexRow {
   forked_from_task_id: string | null;
   cron_automation_id: string | null;
   off_peak_task_id: string | null;
+  project_id: string | null;
+  root_path: string | null;
+  execution_directories: string | null;
   created_at: number;
   updated_at: number;
   unread_at: number | null;
@@ -222,6 +225,12 @@ function rowToMeta(row: TaskIndexRow): ZCodeTaskMeta {
         cronAutomationId: parsed.data.cronAutomationId ?? row.cron_automation_id ?? undefined,
         // off-peak 身份同款策略：meta_json 为准、列兜底——存量迁移只写列即可生效。
         offPeakTaskId: parsed.data.offPeakTaskId ?? row.off_peak_task_id ?? undefined,
+        // 项目归属三件套同款策略：meta_json 为准、列兜底。
+        projectId: parsed.data.projectId ?? row.project_id ?? undefined,
+        rootPath: parsed.data.rootPath ?? row.root_path ?? undefined,
+        executionDirectories:
+          parsed.data.executionDirectories ??
+          parseExecutionDirectoriesColumn(row.execution_directories),
         titleOverridden: row.title_overridden === 1,
       };
     }
@@ -250,12 +259,28 @@ function rowToMeta(row: TaskIndexRow): ZCodeTaskMeta {
     forkedFromTaskId: row.forked_from_task_id ?? undefined,
     cronAutomationId: row.cron_automation_id ?? undefined,
     offPeakTaskId: row.off_peak_task_id ?? undefined,
+    projectId: row.project_id ?? undefined,
+    rootPath: row.root_path ?? undefined,
+    executionDirectories: parseExecutionDirectoriesColumn(row.execution_directories),
     unreadAt: row.unread_at ?? undefined,
     status: (row.task_status as ZCodeTaskMeta["status"]) ?? undefined,
   };
 }
 
 /** 序列化 meta 到 meta_json。cron 身份随 meta 一起写入（单一来源），另在 writeRecord 投影到 cron_automation_id 索引列。 */
+/** execution_directories 列（JSON 文本）的安全解析；非法/空值一律 undefined。 */
+function parseExecutionDirectoriesColumn(raw: unknown): string[] | undefined {
+  if (typeof raw !== "string" || raw.trim() === "") return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return undefined;
+    const list = parsed.filter((item): item is string => typeof item === "string" && item !== "");
+    return list.length > 0 ? list : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function serializeMetaJson(meta: ZCodeTaskMeta): string {
   return JSON.stringify(meta);
 }
@@ -699,6 +724,9 @@ export class TaskIndexRepo {
           forked_from_task_id,
           cron_automation_id,
           off_peak_task_id,
+          project_id,
+          root_path,
+          execution_directories,
           created_at,
           updated_at,
           unread_at,
@@ -1169,6 +1197,9 @@ export class TaskIndexRepo {
           forked_from_task_id,
           cron_automation_id,
           off_peak_task_id,
+          project_id,
+          root_path,
+          execution_directories,
           created_at,
           updated_at,
           unread_at,
@@ -1193,6 +1224,9 @@ export class TaskIndexRepo {
           @forked_from_task_id,
           @cron_automation_id,
           @off_peak_task_id,
+          @project_id,
+          @root_path,
+          @execution_directories,
           @created_at,
           @updated_at,
           @unread_at,
@@ -1216,6 +1250,9 @@ export class TaskIndexRepo {
           forked_from_task_id = excluded.forked_from_task_id,
           cron_automation_id = excluded.cron_automation_id,
           off_peak_task_id = excluded.off_peak_task_id,
+          project_id = excluded.project_id,
+          root_path = excluded.root_path,
+          execution_directories = excluded.execution_directories,
           created_at = excluded.created_at,
           updated_at = excluded.updated_at,
           unread_at = CASE
@@ -1250,6 +1287,12 @@ export class TaskIndexRepo {
         cron_automation_id: record.meta.cronAutomationId ?? null,
         // off-peak 身份同款投影。
         off_peak_task_id: record.meta.offPeakTaskId ?? null,
+        // 项目归属三件套同款投影；附加目录列存 JSON。
+        project_id: record.meta.projectId ?? null,
+        root_path: record.meta.rootPath ?? null,
+        execution_directories: record.meta.executionDirectories
+          ? JSON.stringify(record.meta.executionDirectories)
+          : null,
         created_at: record.meta.createdAt,
         updated_at: record.meta.updatedAt,
         unread_at: record.meta.unreadAt ?? null,
@@ -1348,6 +1391,11 @@ export class TaskIndexRepo {
           cronAutomationId: params.meta.cronAutomationId ?? existingMeta?.cronAutomationId,
           // off-peak 身份同款兜底：快照不带标记时保全既有归属。
           offPeakTaskId: params.meta.offPeakTaskId ?? existingMeta?.offPeakTaskId,
+          // 项目归属同款兜底：运行态快照不带项目字段，不得冲掉创建时固化的归属。
+          projectId: params.meta.projectId ?? existingMeta?.projectId,
+          rootPath: params.meta.rootPath ?? existingMeta?.rootPath,
+          executionDirectories:
+            params.meta.executionDirectories ?? existingMeta?.executionDirectories,
           updatedAt,
           unreadAt: params.meta.unreadAt ?? existingMeta?.unreadAt,
         };

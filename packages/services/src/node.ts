@@ -2323,12 +2323,15 @@ export function createLocalServices(options: {
     commitMessageGenerator: gitCommitMessageGenerator,
   });
   // task wrapper 由 ZCode task service adapter 提供；核心 session 状态由 ZCode agent server 维护。
+  // 项目服务实例在 adapter（任务创建的 prepareSession）与服务集合（RPC 面）共用。
+  const projectService = createProjectService(new ProjectRepository());
   const zcodeTaskService = createZCodeTaskServiceAdapter({
     zcodeAgentService,
     taskIndexRepo,
     taskIndexSyncer: zcodeTaskIndexSyncer,
     settingService,
     cuaProductMcpServerResolver,
+    projectService,
   });
   const botRemoteWorkspaceService = createBotRemoteWorkspaceService({
     parentPort: options?.parentPort,
@@ -2589,7 +2592,7 @@ export function createLocalServices(options: {
     )
     .register(IMemoryService, createMemoryService())
     .register(IOpenVikingService, createOpenVikingService())
-    .register(IProjectService, createProjectService(new ProjectRepository()))
+    .register(IProjectService, projectService)
     .register(ISettingsSyncService, createSettingsSyncService({ settingService }))
     .register(
       IFeedbackService,

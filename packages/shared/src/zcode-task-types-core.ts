@@ -336,6 +336,15 @@ export interface ZCodeTaskMeta {
    * 预分配的 sessionId，标记从创建到运行恒定，供月亮图标与系统分组归属使用。
    */
   offPeakTaskId?: string;
+  /**
+   * 多目录项目归属（docs/specs/multi-root-projects.md）。任务创建时一次性固化；
+   * 运行态快照不带项目字段，同步时以已存值兜底保全（与 cron/off-peak 同款策略）。
+   */
+  projectId?: string;
+  /** 任务固化的 cwd（=创建时项目 primary root）。改项目主目录/增删 roots 不改写本值。 */
+  rootPath?: string;
+  /** 任务固化的附加目录（项目其余 roots，创建时快照）。冷恢复优先读它而非项目当前 roots。 */
+  executionDirectories?: string[];
   /** fork 产物保留来源 taskId，供 UI 做本地化标题兜底和后续追溯。 */
   forkedFromTaskId?: string;
   /** 未读任务记录最近一次标记/产生未读的时间，用于跨重启保留蓝点状态。 */
