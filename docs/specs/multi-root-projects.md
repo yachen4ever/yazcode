@@ -37,6 +37,50 @@ yazcode 目前**没有项目实体**：侧栏「项目」只是按 workspace 路
 - 协议字段进 `packages/shared/src/zcode-protocol/index.ts`：`additionalDirectories`
   `max 256` 项、每项非空。
 
+### 协议三通道（P2）
+
+三处 schema 均为 strict zod，字段同形：`additionalDirectories?: string[]`，
+`array`、`max(256)`、每项 `trim().min(1)`（非空 trimmed string），均可选、缺席即无附加目录：
+
+1. **session create**（`zcodeSessionCreateParamsSchema`）——新任务首发由 Host 在
+   `createTask` 的 session create 载荷下发（来源与 cwd 覆写同一份 `prepareSession` 产物）。
+2. **session resume**（`zcodeSessionResumeParamsSchema`）——旧协议恢复路径由 Host 经
+   `resolveSessionDirectories` 解析后下发。
+3. **V4 冷恢复**（`v4ConversationSubscribeParamsSchema` 的 `additionalDirectories`，与
+   `resumeThoughtLevel` 同族的 host→CLI 恢复 hint，live 订阅不消费）——Host 在
+   `subscribeConversationV4` 读任务行（projectId/rootPath/executionDirectories）经
+   `resolveSessionDirectories` 解析；解析失败降级为不下发（会话仍可恢复，附加目录缺席），
+   不阻塞冷恢复。旧 CLI strict schema 不认 create/resume 的新字段时沿用既有
+   omittedFields 兼容重试；v4 subscribe 与 `resumeThoughtLevel` 同策略（无握手协商，
+   Host/CLI 同包发版）。
+
+### 冷恢复语义（P2）
+
+- Host 重解析优先级：任务行固化值（`rootPath` + `executionDirectories`）优先；
+  固化值缺失时按项目当前 roots 现算。`resolveSessionDirectories` 是唯一解析器。
+- CLI 收到 `additionalDirectories` 后注入 runtime（`AgentRuntimeConfig`），派生运行时
+  （workflow child / subagent child）随 runtimeConfig 继承；CLI 自身不从磁盘重查项目。
+
+## executionDirectories 空数组语义（L1 收敛，P2）
+
+P1b-2 复核遗留（L1）：两处解析器空值语义分叉 + 写路径空数组落列形态需要定死。
+本 spec 为唯一权威，本期收敛为：
+
+- **「空数组」= 任务行固化了「显式空」**（单 root 项目 reserve 的产物），与
+  「无固化值」（列 `null`、meta 缺字段）是两种状态。
+- **写路径**：`meta.executionDirectories` 为 `undefined` → 列 `null`；为 `[]`（JS truthy）→
+  列 `"[]"`。meta_json 始终保留原值（含 `[]`）。
+- **读路径**：以 meta_json 为准、列做兜底（cron/off-peak/projectId 同款策略）。两处解析器
+  （`taskIndexRepo.parseExecutionDirectoriesColumn` 与
+  `projectService.parseExecutionDirectories`）语义逐条对齐：
+  - 非字符串 / 空白串 / 非数组 JSON → 无固化值（`undefined` / `null`）；
+  - 数组 → 过滤非字符串与 trim 后为空的项，**空数组原样返回**（不折叠成无固化值）。
+- **行为差异锚点**：冷恢复 `resolveSessionDirectories` 中，固化值为 `[]` 时
+  `fromTaskRecord: true` 且附加目录为空——不回落项目当前 roots（改项目 roots 不改写
+  旧任务契约在单 root 项目上同样成立）。列兜底行（meta_json 缺失/非法）上 `"[]"` 亦
+  解析为显式空。
+- P1b-2 时点行为（列兜底把 `"[]"` 折叠成无固化值）由本期测试显式替换并锁定。
+
 ## 信任边界（P2，产品裁决）
 
 `additionalDirectories` 在 CLI 侧是**白名单接线**，只允许进入：
@@ -50,6 +94,25 @@ yazcode 目前**没有项目实体**：侧栏「项目」只是按 workspace 路
 config/AGENTS/MCP/hooks/plugins/memory/permissions 的装配——这些仍只沿
 `workingDirectory` 链（上游 `runtime-config.ts` 同语义，注释即契约）。审计验收：
 `additionalDirectories` 标识符在 CLI 侧的引用点必须逐个对应上述白名单。
+
+### CLI 侧消费点清单（P2 实装）
+
+| 消费点 | 文件 | 形态 |
+| --- | --- | --- |
+| skills 发现 | `apps/zcode-cli/packages/adapters/src/skills/roots.ts` | 每附加目录追加 `.zcode/skills` 与 `.agents/skills` project 根，root 带 `namespace = basename`；同名技能经 `qualifiedName = "<namespace>:<name>"` 可辨 |
+| commands 发现 | `apps/zcode-cli/packages/adapters/src/commands/roots.ts` | 每附加目录追加 `.zcode/commands` 与 `.agents/commands` project 根（含 `namespace` 元数据）；同名命令 cwd 优先（先到先赢不变），附加目录侧重复项落既有 duplicate 诊断 |
+| 子代理发现 | `apps/zcode-cli/packages/bootstrap/src/subagents.ts` | 每附加目录追加 `.zcode/agents` project 根；来自附加目录的 profile 名做 `<namespace>:<name>` 前缀（与插件 agent 同机制），project 级 permissionMode 剥离同款生效 |
+| env-info 展示 | `apps/zcode-cli/packages/core/src/context/sections/env-info.ts` | `EnvInfo.additionalDirectories` 渲染 Additional working directories 段 |
+
+传输载体：`AgentRuntimeConfig.additionalDirectories`（core，注释即契约）是 CLI 侧唯一
+runtime 冻结位——skills/commands/subagents/env-info 四个消费点只从它读；派生运行时随
+runtimeConfig 继承。协议侧附加目录只在 create/resume/冷恢复三条通道的 record 装配处进入
+runtimeConfig，**不触碰** `resolveAppRuntimeConfig` 里 config/MCP/hooks/plugins/memory/
+permissions 的任何装配分支。
+
+审计验收（场景 4）：静态扫描 CLI 侧（apps/zcode-cli）全部 `additionalDirectories`
+标识符引用点，逐个断言落在上述四个消费点 + 协议/schema/类型接线位；任何指向
+config/MCP/hooks/plugins/memory/permissions 装配的引用即测试失败（防越期接线）。
 
 ## 远程边界（P4）
 
