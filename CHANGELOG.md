@@ -5,6 +5,24 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.2.3 (2026-10-25)
+
+- **修复 OpenViking MCP 代理拉不起的安装器缺陷**（2026-10-25 workwin 事故根因）：安装器
+  把 MCP stdio command 写成 `process.execPath`（Electron 应用本体），子进程启动的是
+  yazcode GUI 而非 mcp-proxy.mjs——stdout 混入应用日志、无 JSON-RPC 响应、单实例合入后
+  退出，表现为会话内 `openviking` 服务器 `Connection closed`、OV 工具全断（hooks 不受
+  影响，形成「hooks 装载但工具缺失」半开态）。修复：command 附带
+  `ELECTRON_RUN_AS_NODE=1` 以 node 模式执行（workwin 实测打包 exe 支持，node 24.14）。
+- **安装期 MCP 握手自检**：install 写盘后用最终落盘的 command+args+env 真跑一次
+  `initialize → tools/list` 握手，失败即回滚本次 CLI 配置写入并显式报错——半开态在
+  安装当场暴露，不再存活数天。事故记录与复现：workwin 侧任务书
+  `http://192.168.5.7:6157/workwin/ov-mcp-yazcode-fix-1025`。
+- **sqlite schema 只增契约门禁**（T2，`docs/specs/sqlite-schema-contract.md`）：app
+  tasks-index 与 CLI session-store 两个用户数据库纳入只增契约——删列/改约束/无默认值
+  NOT NULL 新列/索引删除在 `db:schema:check` 当场变红；基线由迁移产物生成、git base
+  防篡改、破坏性变更必须 `db:schema:update` 显式刷新进 review。接入 `verify:pre-push`
+  与 CI 同口径。
+
 ## 26.2.2 (2026-10-25)
 
 - **内置 OpenViking 客户端集成同步到上游 v0.5.2（integration 0.5.21 → 0.5.23）**：hook 锁
