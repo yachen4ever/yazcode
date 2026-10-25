@@ -117,6 +117,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
 | `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
+| `docs/specs/iab-userscripts.md` | IAB 内置用户脚本 P1：分区级 preload、GM 子集与 fail-closed 信任门 |
 | `docs/specs/browser-cookies-tool.md` | Browser cookies 工具（get/set，跨后端 session 注入） |
 | `.agents/specs/bots-astrbot-bridge.md` | 机器人 AstrBot 桥接协议 v2 |
 
