@@ -20,11 +20,11 @@
 
 `memoryEnabled: boolean` 改为 `memoryProvider: "disable" | "local" | "openviking"`，取值互斥、**无兜底**：
 
-| provider | 记忆写入 | 记忆检索与注入 | OpenViking 集成 hooks | `openviking_*` MCP |
-|---|---|---|---|---|
-| `disable` | 无 | 无 | 不装载 | 不注册 |
-| `local` | extraction 子代理 | `MEMORY.md` 全文注入 | 不装载 | 不注册 |
-| `openviking` | OV Stop 捕获 + 服务端抽取 | OV `UserPromptSubmit` 语义召回 | 装载 4 事件 | 注册 20 工具 |
+| provider     | 记忆写入                  | 记忆检索与注入                 | OpenViking 集成 hooks | `openviking_*` MCP |
+| ------------ | ------------------------- | ------------------------------ | --------------------- | ------------------ |
+| `disable`    | 无                        | 无                             | 不装载                | 不注册             |
+| `local`      | extraction 子代理         | `MEMORY.md` 全文注入           | 不装载                | 不注册             |
+| `openviking` | OV Stop 捕获 + 服务端抽取 | OV `UserPromptSubmit` 语义召回 | 装载 4 事件           | 注册 20 工具       |
 
 核心约束：
 
@@ -36,16 +36,32 @@
 
 ### 连接校验的错误分类
 
-| 情形 | 判定（reason） | 提示要点 |
-|---|---|---|
-| 地址不通（含数据面网络失败） | `unreachable` | 服务地址、网络可达性 |
-| 鉴权失败（key 缺失 / 401/403，含数据面被拒） | `unauthorized` | 必须是 **user key**；root key 仅管理面 |
-| 服务端错误（非 2xx） | `server_error` | 服务返回状态码原文 |
-| `/health` 非 OV 响应 | `not_openviking` | 该端口未运行 OpenViking |
+| 情形                                         | 判定（reason）   | 提示要点                               |
+| -------------------------------------------- | ---------------- | -------------------------------------- |
+| 地址不通（含数据面网络失败）                 | `unreachable`    | 服务地址、网络可达性                   |
+| 鉴权失败（key 缺失 / 401/403，含数据面被拒） | `unauthorized`   | 必须是 **user key**；root key 仅管理面 |
+| 服务端错误（非 2xx）                         | `server_error`   | 服务返回状态码原文                     |
+| `/health` 非 OV 响应                         | `not_openviking` | 该端口未运行 OpenViking                |
 
 校验在 `/health` 之外**额外打一次数据面请求**确认 user key 真能读——`/health` 是
 公开端点，只信它会漏掉「服务在但 key 无效」；数据面失败按其性质归入
 `unreachable` / `unauthorized`，不设独立类别。
+
+### MCP 代理拉起契约与安装期握手自检
+
+2026-10-25 workwin 事故（hooks 正常、`openviking_*` MCP 全断、模型因找不到工具空转
+「占位」调用）确立两条安装器契约：
+
+1. **command 必须能以 node 语义执行 `mcp-proxy.mjs`**。桌面宿主是 Electron 应用：
+   写入 `process.execPath` 作为 MCP stdio command 时，**必须同时写
+   `env.ELECTRON_RUN_AS_NODE = "1"`**——否则子进程启动的是应用 GUI 本体（stdout 混入
+   应用日志、无 JSON-RPC 响应、单实例合入后退出，宿主侧表现为 `Connection closed`）。
+   禁止把宿主可执行文件裸写为 command（历史遗留配置曾写 `python.exe`，同样跑不了
+   `.mjs`——「宿主二进制能当 node 用」从来不是成立假设）。
+2. **安装写盘后必须用最终落盘的 command+args+env 真做一次 MCP 握手自检**
+   （`initialize` → `notifications/initialized` → `tools/list`，超时约 12s）。握手失败
+   即**回滚本次写入的 CLI 配置**并显式报错，不得留下「配置已写、代理拉不起」的半开
+   态——该半开态正是核心约束 4 禁止的「hooks 装载但工具缺失」，且能存活数天不被发现。
 
 ### 迁移
 

@@ -2,9 +2,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
-  type IOpenVikingService,
-  type OpenVikingVerifyResult,
-} from "./openviking.js";
+  buildOpenVikingMcpServerConfig,
+  INTEGRATION_ID,
+  INTEGRATION_VERSION,
+  verifyMcpProxyHandshake,
+  type OpenVikingMcpServerConfig,
+} from "./mcpProxy.js";
+import { type IOpenVikingService, type OpenVikingVerifyResult } from "./openviking.js";
 
 /**
  * OpenViking 记忆集成服务（本地实现）。
@@ -18,12 +22,6 @@ import {
 const AGENT_INTEGRATION_DIRS = ["zcode", "memory-plugin-shared"] as const;
 const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "Stop"] as const;
 const VERIFY_TIMEOUT_MS = 8000;
-/** 与官方 examples/agent-hook-plugin/hosts/zcode/openviking.integration.json 保持一致。 */
-const INTEGRATION_ID = "openviking-memory";
-// 同步 vendor/openviking 时必须与 vendored integration.json / plugin.json 的 version
-// 字段一起改：安装服务把本常量写进 hook 命令的 OPENVIKING_INTEGRATION_VERSION，
-// 与模板里的 version 不一致会让上游按版本判定集成形态时走错分支。
-const INTEGRATION_VERSION = "0.5.23";
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");
@@ -224,24 +222,21 @@ function writeConnectionFile(params: { url: string; userKey: string }): void {
 function mergeCliConfig(hooks: Record<string, unknown>): void {
   const configPath = cliConfigPath();
   const config = readJsonFile(configPath);
-  const mcp = readJsonFile(path.join(agentIntegrationsRoot(), "zcode", "hosts", "zcode", ".mcp.json"));
+  const mcp = readJsonFile(
+    path.join(agentIntegrationsRoot(), "zcode", "hosts", "zcode", ".mcp.json"),
+  );
   const serverTemplate = (mcp.mcpServers ?? {}) as Record<string, Record<string, unknown>>;
   const openvikingServer = serverTemplate.openviking;
   if (!openvikingServer) {
     throw new Error("OpenViking 运行时缺少 MCP 模板（hosts/zcode/.mcp.json）。");
   }
-  const nodeBin = process.execPath;
 
   const mcpSection = (config.mcp ?? {}) as Record<string, unknown>;
   const servers = (mcpSection.servers ?? {}) as Record<string, unknown>;
-  servers.openviking = {
-    command: nodeBin,
-    args: [path.join(agentIntegrationsRoot(), "zcode", "servers", "mcp-proxy.mjs")],
-    env: {
-      OPENVIKING_INTEGRATION_ID: INTEGRATION_ID,
-      OPENVIKING_HOOK_SOURCE: "zcode",
-    },
-  };
+  servers.openviking = buildOpenVikingMcpServerConfig(
+    process.execPath,
+    path.join(agentIntegrationsRoot(), "zcode", "servers", "mcp-proxy.mjs"),
+  );
   config.mcp = { ...mcpSection, servers };
 
   config.hooks = {
@@ -252,6 +247,18 @@ function mergeCliConfig(hooks: Record<string, unknown>): void {
   writeJsonFile(configPath, config);
 }
 
+/** 读回 CLI 配置里落盘的 openviking MCP 条目——握手自检以磁盘真值为准。 */
+function readInstalledMcpServer(): OpenVikingMcpServerConfig {
+  const config = readJsonFile(cliConfigPath());
+  const mcp = config.mcp as Record<string, unknown> | undefined;
+  const servers = mcp?.servers as Record<string, unknown> | undefined;
+  const entry = servers?.openviking as OpenVikingMcpServerConfig | undefined;
+  if (!entry || typeof entry.command !== "string" || !Array.isArray(entry.args)) {
+    throw new Error("CLI 配置缺少 openviking MCP 条目。");
+  }
+  return entry;
+}
+
 /** 从 CLI 配置里摘掉 openviking 的 hooks 段与 MCP server，其余配置不动。 */
 function removeIntegrationFromCliConfig(): void {
   const configPath = cliConfigPath();
@@ -260,14 +267,15 @@ function removeIntegrationFromCliConfig(): void {
 
   const hooks = config.hooks as Record<string, unknown> | undefined;
   if (hooks?.events && typeof hooks.events === "object") {
-    const events = hooks.events as Record<string, Array<{ hooks?: Array<Record<string, unknown>> }>>;
+    const events = hooks.events as Record<
+      string,
+      Array<{ hooks?: Array<Record<string, unknown>> }>
+    >;
     for (const [event, groups] of Object.entries(events)) {
       const kept = (groups ?? [])
         .map((group) => ({
           ...group,
-          hooks: (group.hooks ?? []).filter(
-            (hook) => !JSON.stringify(hook).includes("openviking"),
-          ),
+          hooks: (group.hooks ?? []).filter((hook) => !JSON.stringify(hook).includes("openviking")),
         }))
         .filter((group) => (group.hooks ?? []).length > 0);
       if (kept.length === 0) delete events[event];
@@ -284,11 +292,17 @@ function removeIntegrationFromCliConfig(): void {
   writeJsonFile(configPath, config);
 }
 
-async function fetchHealth(url: string, headers: Record<string, string>): Promise<OpenVikingVerifyResult> {
+async function fetchHealth(
+  url: string,
+  headers: Record<string, string>,
+): Promise<OpenVikingVerifyResult> {
   const base = url.replace(/\/+$/u, "");
   let response: Response;
   try {
-    response = await fetch(`${base}/health`, { headers, signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS) });
+    response = await fetch(`${base}/health`, {
+      headers,
+      signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
+    });
   } catch {
     return {
       ok: false,
@@ -300,8 +314,7 @@ async function fetchHealth(url: string, headers: Record<string, string>): Promis
     return {
       ok: false,
       reason: "unauthorized",
-      message:
-        "密钥无效或无记忆读写权限。注意必须使用 user key：root key 只能用于管理面。",
+      message: "密钥无效或无记忆读写权限。注意必须使用 user key：root key 只能用于管理面。",
     };
   }
   if (!response.ok) {
@@ -384,7 +397,22 @@ export function createOpenVikingService(): IOpenVikingService {
       releaseRuntime();
       const root = agentIntegrationsRoot();
       writeConnectionFile({ url: url.trim(), userKey: userKey.trim() });
+      // 半开态防线：写盘后用落盘的 command 真跑一次 MCP 握手；失败回滚 CLI 配置，
+      // 不留「hooks 已写、代理拉不起」（2026-10-25 workwin 事故形态，见 spec）。
+      const configPath = cliConfigPath();
+      const previousConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : null;
       mergeCliConfig(renderHooks(path.join(root, "zcode"), INTEGRATION_VERSION));
+      try {
+        await verifyMcpProxyHandshake(readInstalledMcpServer());
+      } catch (error) {
+        if (previousConfig === null) fs.rmSync(configPath, { force: true });
+        else fs.writeFileSync(configPath, previousConfig, "utf8");
+        throw new Error(
+          `OpenViking MCP 握手自检未通过，已回滚 CLI 配置：${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
       // 设置侧把 provider 切到 openviking 前会先跑一次 install；这里再确认配置确实落盘。
       const config = readJsonFile(cliConfigPath());
       if (!JSON.stringify(config).includes("openviking")) {
@@ -403,7 +431,12 @@ export function createOpenVikingService(): IOpenVikingService {
 
     async getStatus() {
       const entry = path.join(agentIntegrationsRoot(), "zcode", "scripts", "hook.mjs");
-      const manifest = path.join(agentIntegrationsRoot(), "memory-plugin-shared", "lib", "MANIFEST");
+      const manifest = path.join(
+        agentIntegrationsRoot(),
+        "memory-plugin-shared",
+        "lib",
+        "MANIFEST",
+      );
       const installed = fs.existsSync(entry) && fs.existsSync(manifest);
       return installed
         ? { installed: true, version: readInstalledVersion(), source: "existing" }
