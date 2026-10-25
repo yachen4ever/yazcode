@@ -21,6 +21,7 @@ import { installGenUiFileProtocol, registerGenUiFileScheme } from "./genUi/genUi
 import { createDesktopBrowserScreenshotSurfaceCoordinator } from "./browserView/browserScreenshotSurfaceCoordinatorWiring.js";
 import { EMBEDDED_BROWSER_PARTITION } from "./browserDataManager.js";
 import { registerIabDownloadAutoSave } from "./desktopIabDownloadAutoSave.js";
+import { installIabUserscripts } from "./userscripts/userscriptBootstrap.js";
 import { EmbeddedBrowserJavaScriptDialogController } from "./embeddedBrowserJavaScriptDialog.js";
 import {
   browserOperationResetsResizeBaseline,
@@ -1733,6 +1734,8 @@ app.whenReady().then(async () => {
   );
   // IAB 下载静默落盘：内嵌浏览器跑无人值守办公流程，原生「另存为」会卡住 agent。
   registerIabDownloadAutoSave({ logger });
+  // IAB 用户脚本 runtime：分区级唯一 session preload + 3 个 IPC channel（docs/specs/iab-userscripts.md）。
+  installIabUserscripts({ logger, settingService: mainSettingService });
   // Bootstrap: 从设置文件读取自定义数据目录，在所有 host 进程启动前生效
   let loadedBootstrapLocale = false;
   let bootstrapSettings: AppSettings | undefined;
