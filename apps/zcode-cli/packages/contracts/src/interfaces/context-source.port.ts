@@ -10,6 +10,12 @@ export interface EnvInfo {
   shell: string;
   osVersion: string;
   nodeVersion: string;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅用于 Environment Info 段展示，不代表任何配置装配边界（config/MCP/hooks/
+   * plugins/memory/permissions 仍只沿 workingDirectory 链）。
+   */
+  additionalDirectories?: readonly string[];
   // 执行模型不是环境事实；只能由当前 model step 的 Model 在 Prompt 渲染时提供。
   isGitRepository?: boolean;
   gitBranch?: string;
@@ -64,6 +70,11 @@ export interface ContextSourceRequest {
   currentDate?: string;
   effectiveShellDisplayName?: string;
   envInfo?: EnvInfo;
+  /**
+   * 多目录项目附加目录（信任边界白名单：仅 env-info 展示）。runtime 从
+   * AgentRuntimeConfig 透传；context source 探测 envInfo 时并入 EnvInfo.additionalDirectories。
+   */
+  additionalDirectories?: readonly string[];
   userInstructions?: UserInstructionsOptions;
   projectContext?: ProjectContext;
   trace?: TraceContext;

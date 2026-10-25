@@ -18,6 +18,11 @@ export interface ListZCodeCustomCommandsOptions {
   skipUserConfig?: boolean;
   userConfigPath?: string;
   workingDirectory?: string;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅 commands 发现消费；每目录追加 project 根（namespace = basename(目录)）。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 export interface InspectZCodeCustomCommandOptions extends ListZCodeCustomCommandsOptions {
@@ -92,6 +97,8 @@ function createCustomCommandDiscovery(options: ListZCodeCustomCommandsOptions) {
       extraResolvedRoots: pluginOutcome.commandRoots,
       disabledPaths: collectDisabledPaths(configResult.config.commandOverrides),
       homeDirectory: options.homeDirectory,
+      // 多目录项目附加目录（信任边界白名单）：仅 commands 发现消费。
+      additionalDirectories: options.additionalDirectories,
     }),
     workingDirectory,
   };

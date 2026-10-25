@@ -26,13 +26,20 @@ const DEFAULT_MAX_BYTES = 100 * 1024;
 
 export interface NodeContextSourceAdapterOptions {
   env?: NodeJS.ProcessEnv;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅并入 env-info 展示；请求显式携带 request.additionalDirectories 时以请求为准。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 export class NodeContextSourceAdapter implements ContextSourcePort {
   private readonly env: NodeJS.ProcessEnv;
+  private readonly additionalDirectories?: readonly string[];
 
   constructor(options: NodeContextSourceAdapterOptions = {}) {
     this.env = options.env ?? process.env;
+    this.additionalDirectories = options.additionalDirectories;
   }
 
   async resolveContextSources(request: ContextSourceRequest): Promise<ContextSourceSnapshot> {
@@ -42,7 +49,11 @@ export class NodeContextSourceAdapter implements ContextSourcePort {
 
     const envInfo =
       request.envInfo ??
-      (await this.detectEnvInfo(workingDirectory, request.effectiveShellDisplayName));
+      (await this.detectEnvInfo(
+        workingDirectory,
+        request.effectiveShellDisplayName,
+        request.additionalDirectories ?? this.additionalDirectories,
+      ));
     const userInstructions = request.userInstructions
       ? await resolveUserInstructions(
           {
@@ -70,6 +81,7 @@ export class NodeContextSourceAdapter implements ContextSourcePort {
   private async detectEnvInfo(
     workingDirectory: string,
     effectiveShellDisplayName?: string,
+    additionalDirectories?: readonly string[],
   ): Promise<EnvInfo> {
     const shellPath = this.env.SHELL ?? this.env.ComSpec ?? this.env.COMSPEC ?? "";
     const shell = effectiveShellDisplayName ?? (shellPath ? basename(shellPath) : "unknown");
@@ -80,6 +92,8 @@ export class NodeContextSourceAdapter implements ContextSourcePort {
       shell,
       osVersion: `${process.platform} ${release()} ${arch()}`,
       nodeVersion: process.version,
+      // 多目录项目附加目录：仅 env-info 展示（信任边界白名单），不参与任何配置装配。
+      ...(additionalDirectories?.length ? { additionalDirectories: [...additionalDirectories] } : {}),
       ...gitSnapshot,
     };
   }

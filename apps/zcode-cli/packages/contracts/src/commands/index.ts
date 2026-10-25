@@ -28,6 +28,12 @@ export interface CustomCommandRoot {
   scope: CustomCommandScope;
   source: CustomCommandSource;
   priority: number;
+  /**
+   * 多目录项目附加目录的来源限定（docs/specs/multi-root-projects.md 信任边界）：
+   * namespace = basename(附加目录)。仅附加目录 root 携带；同名命令 cwd 优先
+   * （先到先赢不变），附加目录侧重复项落既有 duplicate 诊断并保留来源标注。
+   */
+  namespace?: string;
 }
 
 export interface CustomCommandMetadata {
@@ -38,6 +44,8 @@ export interface CustomCommandMetadata {
   frontmatterKeys: string[];
   model?: string;
   name: string;
+  /** 多目录项目附加目录来源标注（namespace = basename(附加目录)）；cwd/用户命令不设置。 */
+  namespace?: string;
   path: string;
   plugin?: HookPluginContext;
   rootPath: string;

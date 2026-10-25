@@ -1450,6 +1450,7 @@ export function createConversationV4Gateway(
       sessionId,
       resumeThoughtLevel,
       workspace?: ZCodeWorkspaceRef,
+      additionalDirectories?: readonly string[],
     ) => {
       const persisted = await context.deps.sessionStore?.getSession(sessionId as SessionId);
       if (!persisted) {
@@ -1469,6 +1470,9 @@ export function createConversationV4Gateway(
           // 已知的 workspace 身份。旧 session 没有 attachment 上下文时仍走原有持久化回退。
           ...(workspace ? { workspace } : {}),
           ...(resumeThoughtLevel ? { thoughtLevel: resumeThoughtLevel } : {}),
+          // 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+          // host 已按任务行固化值重解析，随冷恢复进入 record/runtime 装配。
+          ...(additionalDirectories?.length ? { additionalDirectories: [...additionalDirectories] } : {}),
         },
         { reusePersistedMessages: true },
       );

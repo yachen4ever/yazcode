@@ -47,6 +47,8 @@ export async function ensureContextInitialized(
           currentDate: this.config.currentDate,
           effectiveShellDisplayName: shellDisplayName,
           envInfo: this.config.envInfo,
+          // 多目录项目附加目录：仅并入 env-info 展示（信任边界白名单）。
+          additionalDirectories: this.config.additionalDirectories,
           userInstructions: this.config.userInstructions
             ? {
                 ...this.config.userInstructions,
@@ -270,6 +272,9 @@ export function createConfigOnlyContextSnapshot(
       shell: "unknown",
       osVersion: "unknown",
       nodeVersion: "unknown",
+      ...(this.config.additionalDirectories?.length
+        ? { additionalDirectories: [...this.config.additionalDirectories] }
+        : {}),
     },
     currentDate: this.config.currentDate,
     projectContext: this.config.projectContext,

@@ -54,6 +54,8 @@ export async function buildLiveWorkspaceConfigStateV4(
     env: context.deps.env,
     logger: context.logger,
     workingDirectory: record.workspace.workspacePath,
+    // 多目录项目附加目录（信任边界白名单）：仅 commands 发现消费。
+    additionalDirectories: record.additionalDirectories,
   });
   return toV4WorkspaceConfigState(settings, slashCommands);
 }

@@ -17,7 +17,6 @@ export interface ListProtocolSlashCommandsOptions extends ListZCodeCustomCommand
    */
   dynamicWorkflowEnabled?: boolean;
 }
-
 export async function listProtocolSlashCommands(
   options: ListProtocolSlashCommandsOptions = {},
 ): Promise<ZCodeSlashCommand[]> {

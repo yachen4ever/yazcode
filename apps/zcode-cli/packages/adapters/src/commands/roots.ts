@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
+import { additionalDirectoryNamespace } from "@zcode/contracts";
 import type { CustomCommandRoot, CustomCommandSource } from "@zcode/contracts";
 
 const COMMANDS_DIR = "commands";
@@ -16,6 +17,12 @@ export interface CustomCommandRootResolutionOptions {
   extraResolvedRoots?: CustomCommandRoot[];
   homeDirectory?: string;
   includeZcodeCommands?: boolean;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅 commands 发现消费；每目录追加 `.zcode/commands` 与 `.agents/commands`
+   * project 根（namespace = basename(目录)），排在 cwd 链之后（同名命令 cwd 优先）。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 export async function resolveDefaultCustomCommandRoots(
@@ -51,6 +58,33 @@ export async function resolveDefaultCustomCommandRoots(
   for (const directory of projectDirectories) {
     if (includeZcode) {
       roots.push(...commandRootsForBase(directory, "project", nextPriority));
+    }
+  }
+
+  // 多目录项目附加目录（信任边界白名单）：与 cwd 的 project 根同构，namespace 限定来源；
+  // 排在 cwd 链之后，同名命令 cwd 优先（先到先赢不变），重复项落既有 duplicate 诊断。
+  for (const additionalDirectory of options.additionalDirectories ?? []) {
+    const base = resolve(additionalDirectory);
+    if (base === resolvedWorkingDirectory) continue;
+    if (includeZcode) {
+      roots.push(
+        root(
+          join(base, PROJECT_ZCODE_DIR, COMMANDS_DIR),
+          "project",
+          "zcode",
+          nextPriority(),
+          additionalDirectoryNamespace(base),
+        ),
+      );
+      roots.push(
+        root(
+          join(base, AGENTS_DIR, COMMANDS_DIR),
+          "project",
+          "agents",
+          nextPriority(),
+          additionalDirectoryNamespace(base),
+        ),
+      );
     }
   }
 
@@ -110,12 +144,14 @@ function root(
   scope: CustomCommandRoot["scope"],
   source: CustomCommandSource,
   priority: number,
+  namespace?: string,
 ): CustomCommandRoot {
   return {
     path: resolve(path),
     scope,
     source,
     priority,
+    ...(namespace ? { namespace } : {}),
   };
 }
 

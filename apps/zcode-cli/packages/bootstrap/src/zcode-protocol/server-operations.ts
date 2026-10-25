@@ -3383,6 +3383,12 @@ async function createRecord(
       // 身份隔离与路径执行分开：core 只把 identity 写入 session.workspace_id，
       // workingDirectory 仍是远端机器上的实际路径；本地 workspace 保持 undefined。
       workspaceIdentity: workspace.workspaceIdentity as WorkspaceId | undefined,
+      // 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+      // 只进 runtime 的 skills/subagents/env-info 消费点，不触碰 config/MCP/hooks/
+      // plugins/memory/permissions 装配（下方 runtimeConfig 其余键保持只沿 workingDirectory）。
+      ...(params.additionalDirectories?.length
+        ? { additionalDirectories: params.additionalDirectories }
+        : {}),
     },
     // ZCode Protocol app-server 以前没有注入可等待的交互 broker，
     // core 遇到 permission / AskUserQuestion 只能走默认拒绝，UI 永远收不到阻塞请求。
@@ -3434,6 +3440,10 @@ async function createRecord(
     traceContext,
     updatedAt: now,
     workspace,
+    // record 冻结 create/resume/冷恢复参数携带的附加目录，供 snapshot 的 slash 命令目录读取。
+    ...(params.additionalDirectories?.length
+      ? { additionalDirectories: params.additionalDirectories }
+      : {}),
   };
   const unsubscribeSessionEvents = app.runtime.subscribeEvents({
     onSessionEvent: (event) => onSessionEvent(context, record, event),
@@ -3598,6 +3608,8 @@ async function snapshotWithDiagnostics(
       dynamicWorkflowEnabled: context.appRuntimePreferences.dynamicWorkflowEnabled,
       env: context.deps.env,
       logger: context.logger,
+      // 多目录项目附加目录（信任边界白名单）：仅 commands 发现消费。
+      additionalDirectories: record.additionalDirectories,
     },
     stateRevision: record.stateRevision,
     target: persistedTarget,

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { migrateUserSubagentMarkdown, migrateSubagentStateFile } from "@zcode/shared/node";
+import { additionalDirectoryNamespace } from "@zcode/contracts";
 import {
   parseAgentProfileFromMarkdown,
   type AgentProfile,
@@ -21,6 +22,12 @@ interface LoadZCodeAgentProfilesInput {
   logger?: Logger;
   storageRoot: string;
   workingDirectory: string;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅 subagents 发现消费——每目录追加 `.zcode/agents` project 根，
+   * 来自附加目录的 profile 名做 `<basename>:<name>` 前缀（与插件 agent 同机制）。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 interface LoadZCodeAgentProfilesResult {
@@ -51,9 +58,23 @@ export async function loadZCodeAgentProfiles(
 ): Promise<LoadZCodeAgentProfilesResult> {
   const migration = await migrateUserSubagentMarkdown(join(input.storageRoot, "agents"));
   await migrateSubagentStateFile(join(input.storageRoot, "v2", "agents-state.json"));
-  const roots = [
-    { path: join(input.storageRoot, "agents"), source: "user" as const },
-    { path: join(input.workingDirectory, ".zcode", "agents"), source: "project" as const },
+  const workingDirectory = input.workingDirectory;
+  // 多目录项目附加目录（信任边界白名单）：project 作用域根，namespace = basename(目录)，
+  // profile 名做前缀限定来源；permissionMode 剥离与 cwd 项目根同款生效（sanitizeProjectAgentProfile）。
+  const additionalRoots = (input.additionalDirectories ?? [])
+    .map((directory) => directory.trim())
+    .filter((directory) => directory.length > 0)
+    .map((directory) => ({
+      path: join(directory, ".zcode", "agents"),
+      source: "project" as const,
+      namespace: additionalDirectoryNamespace(directory),
+    }))
+    // cwd 自身已在下方 project root 覆盖，不重复注册。
+    .filter((root) => root.path !== join(workingDirectory, ".zcode", "agents"));
+  const roots: Array<{ path: string; source: "user" | "project"; namespace?: string }> = [
+    { path: join(input.storageRoot, "agents"), source: "user" },
+    { path: join(workingDirectory, ".zcode", "agents"), source: "project" },
+    ...additionalRoots,
   ];
   const diagnostics: AgentProfileParseDiagnostic[] = [];
   for (const failure of migration.failures) {
@@ -89,7 +110,12 @@ export async function loadZCodeAgentProfiles(
         });
       }
       if (result.profile) {
-        const profile = sanitizeProjectAgentProfile(result.profile);
+        const baseProfile = sanitizeProjectAgentProfile(result.profile);
+        // 附加目录来源的 profile 以 `<namespace>:<name>` 限定（与插件 agent 同机制）；
+        // cwd/用户 profile 保持原名，同名冲突时原名（cwd）可辨地优先。
+        const profile = root.namespace
+          ? { ...baseProfile, name: `${root.namespace}:${baseProfile.name}` }
+          : baseProfile;
         if (isDisabledUserProfile(profile, agentState.disabledAgentIds)) {
           continue;
         }

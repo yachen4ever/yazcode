@@ -244,6 +244,13 @@ export interface AgentRuntimeConfig {
   agentName?: string; // Default: "zcode-agent"
   workingDirectory?: string; // Required for context builder
   /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界，产品裁决）：
+   * **白名单接线**——只允许进入 skills/commands/subagents 发现与 env-info 展示，
+   * 禁止接入 config/AGENTS/MCP/hooks/plugins/memory/permissions 装配（这些仍只沿
+   * workingDirectory 链）。派生运行时（workflow / subagent child）随 runtimeConfig 继承。
+   */
+  additionalDirectories?: readonly string[];
+  /**
    * 调用方传入的实际工作区路径表示，用于 session 持久化与本地身份恢复。
    * 文件和命令执行仍只使用规范化后的 workingDirectory。
    */

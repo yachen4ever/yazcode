@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { additionalDirectoryNamespace } from "@zcode/contracts";
 import type { SkillRoot, SkillSource } from "@zcode/contracts";
 
 const GIT_MARKER = ".git";
@@ -16,6 +17,12 @@ export interface SkillRootResolutionOptions {
   extraRoots?: string[];
   extraResolvedRoots?: SkillRoot[];
   includeZcodeSkills?: boolean;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * 仅 skills 发现消费；每目录追加 `.zcode/skills` 与 `.agents/skills` project 根，
+   * namespace = basename(目录)，排在 cwd 链之后（cwd 同名优先）。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 export async function resolveDefaultSkillRoots(
@@ -51,6 +58,26 @@ export async function resolveDefaultSkillRoots(
   for (const directory of projectDirectories) {
     if (includeZcode) {
       roots.push(...skillRootsForBase(directory, "project", nextPriority));
+    }
+  }
+
+  // 多目录项目附加目录（信任边界白名单：只进 skills/commands/subagents 发现与 env-info）：
+  // 与 cwd 的 project 根同构（.zcode + .agents 双生态），namespace 限定来源；
+  // 排在 cwd 链之后，同名技能 cwd 优先，附加目录侧以 `<namespace>:<name>` 可辨。
+  for (const additionalDirectory of options.additionalDirectories ?? []) {
+    const base = resolve(additionalDirectory);
+    if (base === resolvedWorkingDirectory) continue;
+    if (includeZcode) {
+      roots.push(
+        root(join(base, PROJECT_ZCODE_DIR, SKILLS_DIR), "project", "zcode", nextPriority(), {
+          namespace: additionalDirectoryNamespace(base),
+        }),
+      );
+      roots.push(
+        root(join(base, AGENTS_DIR, SKILLS_DIR), "project", "agents", nextPriority(), {
+          namespace: additionalDirectoryNamespace(base),
+        }),
+      );
     }
   }
 
@@ -110,12 +137,14 @@ function root(
   scope: SkillRoot["scope"],
   source: SkillSource,
   priority: number,
+  extra: Pick<SkillRoot, "namespace"> = {},
 ): SkillRoot {
   return {
     path: resolve(path),
     scope,
     source,
     priority,
+    ...extra,
   };
 }
 

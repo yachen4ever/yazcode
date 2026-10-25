@@ -32,6 +32,12 @@ export interface SkillRoot {
   priority: number;
   /** 所属 plugin 的完整 id；仅 plugin root 可用。 */
   pluginId?: string;
+  /**
+   * 多目录项目附加目录的来源限定（docs/specs/multi-root-projects.md 信任边界）：
+   * namespace = basename(附加目录)。同名技能经 `qualifiedName = "<namespace>:<name>"` 可辨；
+   * 仅附加目录 root 携带，cwd/用户/插件 root 不设置。
+   */
+  namespace?: string;
 }
 
 export interface SkillPolicy {

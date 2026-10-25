@@ -115,6 +115,12 @@ export interface ZCodeProtocolSessionRecord {
   restoreWarning?: { message: string; type: string };
   /** 冷恢复候选只供初始投影；新的选模事件立即清除，不能替代 Runtime 执行绑定。 */
   restoredModelSelection?: ModelSelection;
+  /**
+   * 多目录项目附加目录（docs/specs/multi-root-projects.md 信任边界白名单）：
+   * create/resume/冷恢复参数在 record 装配边界冻结，供 snapshot 的 slash 命令目录
+   * 读取；runtime 内由 AgentRuntimeConfig 承载（skills/subagents/env-info 消费）。
+   */
+  additionalDirectories?: readonly string[];
 }
 
 export interface ZCodeProtocolClientRequestOptions {

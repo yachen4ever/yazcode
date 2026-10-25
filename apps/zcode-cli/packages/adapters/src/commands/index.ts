@@ -210,6 +210,8 @@ export class NodeCustomCommandAdapter implements CustomCommandPort {
       frontmatterKeys: parsed.keys,
       model: parseScalar(parsed.values.model),
       name,
+      // 多目录项目附加目录来源标注（namespace = basename(附加目录)）。
+      ...(root.namespace ? { namespace: root.namespace } : {}),
       path,
       plugin: root.plugin,
       rootPath: root.path,

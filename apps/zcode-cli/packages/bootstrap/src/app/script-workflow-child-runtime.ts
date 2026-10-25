@@ -223,6 +223,8 @@ function createRuntimeDeps(
             extraRoots: deps.configResult.config.skills.roots,
             // 脚本 workflow child runtime 不能绕过用户禁用的 SKILL.md 路径。
             disabledPaths: collectDisabledPaths(deps.configResult.config.skillOverrides),
+            // 派生运行时继承父 runtimeConfig 的附加目录（信任边界白名单内的发现点）。
+            additionalDirectories: deps.runtimeConfig.additionalDirectories,
           }))
         : undefined,
     traceContext,

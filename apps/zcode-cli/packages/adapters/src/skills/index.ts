@@ -217,12 +217,20 @@ export class NodeSkillAdapter implements SkillPort {
     // 第三方/旧版 skill 常带 version、homepage 等扩展字段。
     // 这些字段不影响加载，不再作为 warning 暴露，只保留 safeToAutoLoad 的保守判断。
     const pluginAlias = await this.resolvePluginSkillAlias(name, root);
+    // 多目录项目附加目录 root：同名技能以 `<namespace>:<name>` 限定来源
+    // （与 plugin qualifiedName 同机制；裸名仍可命中，cwd 优先）。
+    const namespaceAlias = root.namespace
+      ? {
+          qualifiedName: `${root.namespace}:${name}`,
+        }
+      : {};
 
     return {
       name,
       description,
       whenToUse: parseScalar(parsed.values.when_to_use),
       ...pluginAlias,
+      ...namespaceAlias,
       path,
       directory: dirname(path),
       rootPath: root.path,

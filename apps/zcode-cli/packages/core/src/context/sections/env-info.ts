@@ -8,6 +8,7 @@ import { estimateTokens } from "../utils.js";
 
 const ENVIRONMENT_HEADING = "# Environment";
 const WORKING_DIRECTORY_LABEL = "Primary working directory";
+const ADDITIONAL_DIRECTORIES_LABEL = "Additional working directories";
 const IS_GIT_REPOSITORY_LABEL = "Is a git repository";
 const PLATFORM_LABEL = "Platform";
 const SHELL_LABEL = "Shell";
@@ -69,6 +70,13 @@ function buildEnvInfoContent(info: EnvInfo, model?: Model): string {
     ENVIRONMENT_HEADING,
     "You have been invoked in the following environment:",
     `- ${WORKING_DIRECTORY_LABEL}: ${info.cwd}`,
+    // 多目录项目附加目录（信任边界白名单）：仅展示事实，帮助模型了解可提及的
+    // 其他项目根；不代表配置装配边界（AGENTS/MCP/hooks 等仍只沿 cwd 链）。
+    ...(info.additionalDirectories?.length
+      ? [
+          `- ${ADDITIONAL_DIRECTORIES_LABEL}: ${info.additionalDirectories.join(", ")}`,
+        ]
+      : []),
     `- ${IS_GIT_REPOSITORY_LABEL}: ${hasGitRepository ? YES_LABEL : NO_LABEL}`,
     `- ${PLATFORM_LABEL}: ${info.platform}`,
     `- ${SHELL_LABEL}: ${info.shell}`,

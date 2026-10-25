@@ -320,7 +320,11 @@ function createWorkflowChildRuntime(
       artifactStore: deps.artifactStore,
       contextSourcePort:
         deps.appOptions.contextSourcePort ??
-        createNodeContextSourceAdapter({ env: deps.appOptions.env }),
+        createNodeContextSourceAdapter({
+          env: deps.appOptions.env,
+          // 子代理 env-info 继承父 runtimeConfig 的附加目录（仅展示，白名单内）。
+          additionalDirectories: deps.runtimeConfig.additionalDirectories,
+        }),
       skillPort:
         deps.configResult.config.features.skill && deps.configResult.config.skills.enabled
           ? (deps.appOptions.skillPort ??
@@ -328,6 +332,8 @@ function createWorkflowChildRuntime(
               extraRoots: deps.configResult.config.skills.roots,
               // workflow 子 agent 复用同一套 skill 发现逻辑，也必须继承主配置里的禁用路径。
               disabledPaths: collectDisabledPaths(deps.configResult.config.skillOverrides),
+              // 派生运行时继承父 runtimeConfig 的附加目录（信任边界白名单内的发现点）。
+              additionalDirectories: deps.runtimeConfig.additionalDirectories,
             }))
           : undefined,
       mcpPort: deps.mcpPort,

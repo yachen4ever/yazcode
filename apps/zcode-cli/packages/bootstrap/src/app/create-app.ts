@@ -212,6 +212,8 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       logger,
       storageRoot,
       workingDirectory,
+      // 多目录项目附加目录（信任边界白名单）：仅 subagents 发现消费。
+      additionalDirectories: options.runtimeConfig?.additionalDirectories,
     });
     const zcodeSubagentProfiles = zcodeSubagentProfileOutcome.profiles;
     const pluginOutcome = resolveStartupPlugins({
@@ -744,12 +746,19 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       pdfDocumentPort,
       artifactStore,
       contextSourcePort:
-        options.contextSourcePort ?? createNodeContextSourceAdapter({ env: options.env }),
+        options.contextSourcePort ??
+        createNodeContextSourceAdapter({
+          env: options.env,
+          // 多目录项目附加目录（信任边界白名单）：仅 env-info 展示。
+          additionalDirectories: options.runtimeConfig?.additionalDirectories,
+        }),
       skillPort:
         configResult.config.features.skill && configResult.config.skills.enabled
           ? (options.skillPort ??
             createNodeSkillAdapter({
               extraRoots: configResult.config.skills.roots,
+              // 多目录项目附加目录（信任边界白名单）：仅 skills 发现消费。
+              additionalDirectories: options.runtimeConfig?.additionalDirectories,
               extraResolvedRoots: [
                 ...filterVisualizeSkillRoots(pluginOutcome.skillRoots, options.includeVisualize),
                 ...bundledSkillRoots,
