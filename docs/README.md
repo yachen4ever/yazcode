@@ -126,7 +126,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 | 门禁 | 位置 | 拦什么 |
 | --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `architecture:check --changed` + `check:skill-residue` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test`（9 个套件 372 个用例） |
+| `verify:pre-push` | `package.json` | `lint` + `typecheck`（根包）+ `architecture:check --changed` + `check:skill-residue` + `db:schema:check` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test` |
 | `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
 | `tests` | `.github/workflows/tests.yml` | push / PR 时跑根 `pnpm test`，与本地门禁同口径 |
 | `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |

@@ -104,7 +104,9 @@ export class ProjectRepository {
     const roots = [...new Set(input.roots.map((root) => root.trim()).filter(Boolean))];
     if (roots.length === 0) throw new Error(ROOTS_EMPTY);
     const primary = input.primaryRoot?.trim() || roots[0];
-    if (!roots.includes(primary)) throw new Error(PRIMARY_NOT_IN_ROOTS);
+    // roots 非空已由上一行保证，但 noUncheckedIndexedAccess 下 roots[0] 仍是
+    // string | undefined；收窄做在判空上，不用非空断言（m5air 任务书修复要点 3）。
+    if (primary === undefined || !roots.includes(primary)) throw new Error(PRIMARY_NOT_IN_ROOTS);
     const db = this.getDatabase();
     const projectId = input.projectId?.trim() || `proj_${randomUUID()}`;
     const hostId = input.hostId?.trim() || "local";

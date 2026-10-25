@@ -50,6 +50,12 @@ jobs:
       - name: Check sqlite schema contract
         run: pnpm run db:schema:check
 
+      # 根包类型检查：tsc -b 覆盖 packages/client/server/services 等根 workspace。
+      # tsx 跑测试不做类型检查，2026-10-25 P1b-1 的 5 个类型错误曾因此静默上 main
+      #（typecheck:cli 只覆盖 apps/zcode-cli），与本地 verify:pre-push 同口径补上。
+      - name: Typecheck root packages
+        run: pnpm typecheck
+
       # CLI 子包测试与 typecheck:cli 都 import 兄弟包的发布入口（dist/），不构建
       # 就报 ERR_MODULE_NOT_FOUND。CI 是干净环境，这里自己构建，不依赖任何预置产物。
       # 与 release.yml 的 build 步骤同一口径：先构建，再跑类型检查与测试。

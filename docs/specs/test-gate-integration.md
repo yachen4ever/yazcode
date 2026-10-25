@@ -109,6 +109,15 @@ devDependency 既不会把 `tsx` 装进该包目录，也不会把它放进嵌�
 - 不为「让测试通过」而修改生产代码。测试暴露的实现缺陷按缺陷处理，走各自的 spec。
 - 不在本次把 `packages/desktop` 等包的 `test` 目录结构统一（超出范围）。
 
+## 根包 typecheck 纳入门禁（2026-10-25 补记）
+
+P1b-1（94542675）给 `IServiceAccessor` 加必填字段后，client/server 的
+`RemoteServiceAccess` 未同步——5 个类型错误静默上 main：tsx 跑测试不做类型检查，
+`typecheck:cli` 只覆盖 `apps/zcode-cli`，根包 `tsc -b` 两头（本地门禁与 CI）都没跑。
+修复同批把根 `pnpm typecheck` 置于 `verify:pre-push` 的 lint 之后、CI `tests.yml`
+在 `pnpm test` 之前，本地与 CI 同口径。新增服务字段时必须同步 client/server 两侧
+的远端代理实现（`RemoteServiceAccess`「新增服务只需加一个 getter」）。
+
 ## 验收场景
 
 1. **从根跑通**：根 `pnpm test` 一次执行完所有有测试的包，全绿。

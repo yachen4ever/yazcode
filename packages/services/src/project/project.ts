@@ -1,3 +1,4 @@
+import { ServiceChannels } from "@zcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
 import type { ProjectRecord, SaveProjectInput } from "../session/projectRepository.js";
 
@@ -45,4 +46,4 @@ export interface IProjectService {
   adoptRecentProjects(paths: readonly string[]): Promise<number>;
 }
 
-export const IProjectService = createServiceDescriptor<IProjectService>("ProjectService");
+export const IProjectService = createServiceDescriptor<IProjectService>(ServiceChannels.Project);
