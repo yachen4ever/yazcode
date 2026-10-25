@@ -5,6 +5,32 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.3.0 (2026-10-25)
+
+新批次（y 位）：内嵌浏览器用户脚本 + 多目录项目 P2。
+
+- **IAB 内置用户脚本（monkey 类）P1**（`docs/specs/iab-userscripts.md`）：分区级
+  session preload（Electron 41 `registerPreloadScript`，单一 runtime、内容全走 IPC），
+  `~/.yazcode/userscripts/*.user.js` 按 `==UserScript==` 元数据与 @match 注入；
+  GM_* 最小集（GM_info/addStyle/getValue/setValue/deleteValue/listValues，同步语义）；
+  信任门：发现≠启用、首扫 sha256 锚定、内容变更即失活、grant fail-closed、存储仅主
+  frame 可用（对齐 Tampermonkey 的全 frame 注入语义，存储面收紧）。实测：真实侧栏
+  全链路 PASS，快照 8160→4944 字节（-39.4%）、动作元素 16→8（-50%），硬刷新免疫
+  （立项原始痛点：临时 CSS 补丁不再随刷新失效）。
+- **多目录项目 P2**（`docs/specs/multi-root-projects.md`）：协议三通道
+  `additionalDirectories`（session create / resume / V4 冷恢复，strict zod max 256）；
+  CLI 白名单接线——只进 skills/commands/subagents 发现（namespace=basename）与
+  env-info 展示，配置装配零流动（审计测试含流动级断言与 18 引用点集合相等）；
+  L1 收敛：executionDirectories 空数组=固化显式空，与「无固化值」区分，冷恢复不回落。
+- **services 根 barrel browser-safe 修复**：三个带 node:* 顶层依赖的值导出移出根
+  barrel（dev renderer 黑屏回归，其中 openvikingService 自 26.0.0 起即带伤）；新增
+  browser-safe 静态守卫（services+shared 双 barrel，覆盖动态 import() 与单双引号）。
+- **CLI 构建对宿主运行时环境免疫**：buildCli 剔除宿主注入的 builtin 配置路径变量，
+  `build:cli` 不再被宿主 staged 旧 schema 配置打红。
+- **批次一复核处置**（y430p 复核：BLOCKER 0 / MAJOR 3 / MINOR 15）：3 MAJOR 全部
+  落地（守卫动态 import 口径、spec 因果重写、审计流动级升级），可直修 MINOR 随批
+  处置（@match 通配上限、存储损坏显式失败、scriptId 路径段判定、V4 错版措辞）。
+
 ## 26.2.3 (2026-10-25)
 
 - **修复 OpenViking MCP 代理拉不起的安装器缺陷**（2026-10-25 workwin 事故根因）：安装器
