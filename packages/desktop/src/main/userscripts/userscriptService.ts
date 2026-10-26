@@ -75,6 +75,24 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     },
 
     /**
+     * 设置卡状态查询（P2）：inspect 状态 + GM 存储健康探测（仅有存储文件的脚本）。
+     * 与 agent 观察面分离——存储健康是用户运维信息，不进 agent 命令回包。
+     */
+    async statusOverview(): Promise<
+      Array<UserScriptStatusItem & { storageHealth: "ok" | "corrupt" }>
+    > {
+      const statuses = await store.inspect();
+      return await Promise.all(
+        statuses.map(async (item) => ({
+          ...item,
+          storageHealth: (await storage.hasStorageFile(item.scriptId))
+            ? await storage.probeHealth(item.scriptId)
+            : ("ok" as const),
+        })),
+      );
+    },
+
+    /**
      * userscript_reload：立即执行一次完整扫描（含 P1 锚定语义）后重导出状态。
      * 无扫描缓存可失效，命令幂等；存在意义是给 agent 一个明确的「刷新事实」动作。
      */

@@ -2,6 +2,7 @@ import { ipcMain, session, type IpcMainEvent, type IpcMainInvokeEvent } from "el
 import { join } from "node:path";
 import { getZCodeDataRootDir, createServiceLogger } from "@zcode/services/node";
 import type { ISettingService } from "@zcode/services";
+import { PlatformChannels, type IabUserscriptStatusResponse } from "@zcode/shared";
 import { EMBEDDED_BROWSER_PARTITION } from "../embeddedBrowserPartition.js";
 import {
   USERSCRIPT_IPC_CHANNELS,
@@ -22,7 +23,8 @@ import type { UserscriptManifestPort } from "./userscriptStore.js";
  * 1. 对 persist:zcode-embedded-browser 分区注册唯一的 session 级 preload runtime
  *    （Electron 41 registerPreloadScript，`setPreloads` 已废弃）——一次注册，
  *    挂起/恢复销毁重建 guest 后由 Electron 对每次加载自动生效；
- * 2. 注册恰好 3 个 IPC channel（match / get / set），信任判定全在 main。
+ * 2. 注册 guest IPC 面（恰好 3 个 channel：match / get / set，信任判定全在 main），
+ *    以及 renderer 宿主面的状态查询（P2 设置卡，PlatformChannels.IabUserscriptsStatus）。
  * 装配幂等：重复调用不产生第二个 preload 或重复 handler。
  * electron 依赖收敛在本文件；service/store/storage 保持 electron-free 可直测。
  */
@@ -138,5 +140,11 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
         event.returnValue = { ok: false, error: "storage_error" } satisfies UserScriptStorageResult;
       },
     );
+  });
+
+  // P2 设置卡状态查询（renderer → main）：与 guest IPC 面（恰好 3 个 channel）分离，
+  // 走 PlatformChannels 的宿主 invoke 面。只读投影，不做锚定写（契约见 spec P2 行为规则 3）。
+  ipcMain.handle(PlatformChannels.IabUserscriptsStatus, async (): Promise<IabUserscriptStatusResponse> => {
+    return { scripts: await service.statusOverview() };
   });
 }

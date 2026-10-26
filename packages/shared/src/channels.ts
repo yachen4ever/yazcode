@@ -191,6 +191,8 @@ export const PlatformChannels = {
   ListSSHConfigAliases: "zcode:list-ssh-config-aliases",
   /** Renderer → Main：从用户目录加载 CLI MCP 配置 */
   LoadMcpFromUserDirectory: "zcode:load-mcp-from-user-directory",
+  /** Renderer → Main：IAB 用户脚本状态查询（只读扫描投影，P2 设置卡） */
+  IabUserscriptsStatus: "zcode:iab-userscripts-status",
   /** Renderer → Main：保存 CLI MCP 配置到用户目录 */
   SaveMcpToUserDirectory: "zcode:save-mcp-to-user-directory",
   /** Renderer 日志转发到 main 进程统一存储 */

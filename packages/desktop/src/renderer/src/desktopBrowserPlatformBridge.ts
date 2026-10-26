@@ -19,6 +19,7 @@ type DesktopBrowserPlatformBridge = Pick<
   | "browserViewUpdateViewport"
   | "importChromeBrowserData"
   | "clearEmbeddedBrowserData"
+  | "getIabUserscriptStatus"
   | "getPathForFile"
   | "saveFile"
   | "printPageToPdf"
@@ -74,4 +75,8 @@ export const desktopBrowserPlatformBridge = {
   clearEmbeddedBrowserData: (mode) =>
     window.zcode.clearEmbeddedBrowserData?.(mode) ??
     Promise.resolve({ success: false, error: "unsupported" }),
+  // 条件定义（能力检测）：旧 preload 下保持 undefined，设置卡降级为 manifest 派生展示。
+  getIabUserscriptStatus: window.zcode.getIabUserscriptStatus
+    ? () => window.zcode.getIabUserscriptStatus!()
+    : undefined,
 } satisfies DesktopBrowserPlatformBridge;

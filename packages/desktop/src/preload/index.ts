@@ -644,6 +644,9 @@ contextBridge.exposeInMainWorld("zcode", {
   /** 清理内置浏览器缓存或全部站点数据。 */
   clearEmbeddedBrowserData: (mode: "cache" | "all") =>
     ipcRenderer.invoke(PlatformChannels.ClearEmbeddedBrowserData, mode),
+  /** IAB 用户脚本状态查询（P2 设置卡）：main 的只读扫描投影。 */
+  getIabUserscriptStatus: (): Promise<import("@zcode/shared").IabUserscriptStatusResponse> =>
+    ipcRenderer.invoke(PlatformChannels.IabUserscriptsStatus),
   /** 读取开发态 stdio tap proxy 开关状态 */
   getZCodeStdioTapDevState: (): Promise<ZCodeStdioTapDevState> =>
     ipcRenderer.invoke(PlatformChannels.GetZCodeStdioTapDevState),

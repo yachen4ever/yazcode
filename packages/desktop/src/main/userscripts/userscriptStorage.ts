@@ -191,6 +191,22 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
         return false;
       }
     },
+
+    /**
+     * 健康探测（P2 设置卡状态查询）：读取并校验存储文件形状。
+     * 无文件 = ok（空存储）；损坏 = corrupt；其余读失败（权限等）按 ok 上报，
+     * 避免把环境问题误报成数据损坏——真正写入时仍会显式失败。
+     */
+    async probeHealth(scriptId: string): Promise<"ok" | "corrupt"> {
+      try {
+        await withLock(scriptId, async () => {
+          await readPayload(scriptId);
+        });
+        return "ok";
+      } catch (error) {
+        return error instanceof StorageCorruptError ? "corrupt" : "ok";
+      }
+    },
   };
 }
 

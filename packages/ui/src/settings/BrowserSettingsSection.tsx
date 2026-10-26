@@ -21,6 +21,7 @@ import { useZCodeSessionService } from "@/hooks/useZCodeSessionService.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { invalidateDeferredDraftSessionForSkillChange } from "@/lib/zcodeDraftSkillInvalidation.js";
 import { logger } from "@/logger.js";
+import { IabUserscriptsSettingsCard } from "@/settings/IabUserscriptsSettingsCard.js";
 import { SettingsGroupCard, SettingsRow } from "@/settings/SettingsPageParts.js";
 import { usePluginManagementStore } from "@/store/pluginManagementStore.js";
 import { useSkillStore } from "@/store/skillStore.js";
@@ -298,6 +299,14 @@ export function BrowserSettingsSection({
           </SettingsGroupCard>
         </section>
       ) : null}
+
+      {/* IAB 用户脚本（P2）：桌面端显示实时扫描状态，Web 端降级为 manifest 派生行。 */}
+      <section className="space-y-3">
+        <div className="text-ui-base font-medium text-foreground-subtle">
+          {intl.formatMessage({ id: "settings.browser.userscripts.section" })}
+        </div>
+        <IabUserscriptsSettingsCard />
+      </section>
 
       <section className="space-y-3">
         <div className="text-ui-base font-medium text-foreground-subtle">

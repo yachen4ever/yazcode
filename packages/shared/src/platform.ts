@@ -384,6 +384,37 @@ export interface EmbeddedBrowserDataClearResult {
   error?: string;
 }
 
+/**
+ * IAB 用户脚本状态查询（P2 设置卡）的单条记录：desktop main 只读扫描投影。
+ * 不含脚本代码与文件路径；status 词汇与 docs/specs/iab-userscripts.md P2 一致。
+ */
+export interface IabUserscriptStatusItem {
+  scriptId: string;
+  name: string;
+  version?: string;
+  runAt: string;
+  grants: string[];
+  match: string[];
+  status:
+    | "serving"
+    | "enabled_pending_anchor"
+    | "hash_mismatch"
+    | "disabled"
+    | "pending_approval"
+    | "parse_failed"
+    | "grant_rejected";
+  /** 当前文件内容 sha256（hex）。 */
+  sha256: string;
+  /** 拒载/失活原因（parse_failed / grant_rejected / hash_mismatch）。 */
+  detail?: string;
+  /** GM 存储文件健康探测（有存储文件时）：corrupt 表示 storage_corrupt。 */
+  storageHealth?: "ok" | "corrupt";
+}
+
+export interface IabUserscriptStatusResponse {
+  scripts: IabUserscriptStatusItem[];
+}
+
 export interface WindowControlsOverlayMetrics {
   leftPaddingPx?: number;
   rightPaddingPx?: number;
@@ -861,6 +892,13 @@ export interface IPlatformService {
 
   /** 清理内置浏览器持久化分区；cache 模式保留认证数据，all 模式清理全部站点数据。 */
   clearEmbeddedBrowserData?(mode: "cache" | "all"): Promise<EmbeddedBrowserDataClearResult>;
+
+  /**
+   * IAB 用户脚本状态查询（P2 设置卡）：desktop main 对脚本目录 + manifest 的
+   * 只读扫描投影（不做锚定写）。无宿主环境（普通 Web）不实现，调用方降级为
+   * manifest 派生展示。契约见 docs/specs/iab-userscripts.md P2。
+   */
+  getIabUserscriptStatus?(): Promise<IabUserscriptStatusResponse>;
 
   /** 注册新版本已下载完毕的回调，参数为新版本号，返回 disposer */
   onUpdateReady(callback: (version: string) => void): () => void;

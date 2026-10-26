@@ -173,6 +173,8 @@ export type {
   BrowserGuestAttachResult,
   EmbeddedBrowserDataClearResult,
   EmbeddedBrowserOpenUrlRequest,
+  IabUserscriptStatusItem,
+  IabUserscriptStatusResponse,
   IPlatformService,
   OpenInEditorRemoteTarget,
   OpenInEditorOptions,
