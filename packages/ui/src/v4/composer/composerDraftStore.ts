@@ -5,6 +5,8 @@
 // 旧键清理仍归 chatComposerDraftStorage 的 janitor。
 // 语义：scope = sessionId（draft 态 = "__draft__"）；保存 text + editorStateJson，外部预填在
 // Lexical 尚未挂载时额外保存 mention（保证重挂载不降级为纯文本）。
+// P3d：__draft__ scope 的存储键在草稿归属项目时追加 projectId 段（同 cwd 双项目不串）；
+// 正式 session 的后续草稿仍按 workspace + sessionId 存取，不改为按项目存储。
 // mode/modelSelection 与正文同 scope 保存；发送只清内容，显式清理才删除整个 scope。
 // 附件不入草稿（objectUrl/File 不可序列化，localPath 附件重启后归属难校验——
 // 与「v4 composer 不做附件草稿持久化」的裁决一致）。
@@ -58,9 +60,27 @@ function getStorage(): Storage | null {
   }
 }
 
-function getV4ComposerDraftStorageKey(workspacePath: string, workspaceIdentity?: string): string {
+/** 草稿存储键（P3d 导出供测试）：workspaceKey + 可选项目段；无项目段与存量键完全一致。 */
+export function buildV4ComposerDraftStorageKey(
+  workspacePath: string,
+  workspaceIdentity?: string,
+  draftProjectId?: string | null,
+): string {
+  return getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity, draftProjectId);
+}
+
+function getV4ComposerDraftStorageKey(
+  workspacePath: string,
+  workspaceIdentity?: string,
+  draftProjectId?: string | null,
+): string {
   const workspaceKey = workspaceIdentity?.trim() || workspacePath;
-  return `${STORAGE_KEY_PREFIX}${encodeURIComponent(workspaceKey)}`;
+  const projectId = draftProjectId?.trim();
+  // P3d 草稿隔离（docs/specs/multi-root-projects.md「P3d」）：草稿归属项目时键追加
+  // projectId 段，同 cwd 双项目不串草稿；无项目上下文回落原键，存量草稿继续可读。
+  return `${STORAGE_KEY_PREFIX}${encodeURIComponent(workspaceKey)}${
+    projectId ? `#p:${encodeURIComponent(projectId)}` : ""
+  }`;
 }
 
 function readDraftFile(key: string): V4DraftFile {
@@ -165,8 +185,9 @@ export function readV4ComposerDraft(
   workspacePath: string,
   workspaceIdentity: string | undefined,
   scopeId: string,
+  draftProjectId?: string | null,
 ): V4ComposerDraft | null {
-  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity);
+  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity, draftProjectId);
   const draft = readDraftFile(key).scopes[scopeId];
   if (!draft || typeof draft.text !== "string") {
     return null;
@@ -179,8 +200,9 @@ export function persistV4ComposerDraft(
   workspaceIdentity: string | undefined,
   scopeId: string,
   draft: Omit<V4ComposerDraft, "updatedAt">,
+  draftProjectId?: string | null,
 ) {
-  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity);
+  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity, draftProjectId);
   const file = readDraftFile(key);
   if (
     !draft.text.trim() &&
@@ -201,8 +223,9 @@ export function clearV4ComposerDraft(
   workspacePath: string,
   workspaceIdentity: string | undefined,
   scopeId: string,
+  draftProjectId?: string | null,
 ) {
-  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity);
+  const key = getV4ComposerDraftStorageKey(workspacePath, workspaceIdentity, draftProjectId);
   const file = readDraftFile(key);
   if (!(scopeId in file.scopes)) {
     return true;

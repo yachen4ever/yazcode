@@ -43,6 +43,7 @@ export function ChatPromptEditor({
   workspaceIdentity,
   taskId,
   skillCatalogSessionId,
+  additionalFileRoots,
   initialValue,
   syncInitialValueOnMount = true,
   placeholder,
@@ -94,6 +95,8 @@ export function ChatPromptEditor({
   taskId: string | null;
   /** 仅供 Composer Skill catalog；可为草稿的 prewarm Session。 */
   skillCatalogSessionId?: string | null;
+  /** @ 文件分组搜索的附加 roots（P3d 项目跨目录）；透传 LexicalChatInput。 */
+  additionalFileRoots?: readonly string[];
   initialValue?: string;
   syncInitialValueOnMount?: boolean;
   placeholder?: string;
@@ -375,6 +378,7 @@ export function ChatPromptEditor({
           workspaceIdentity={workspaceIdentity}
           taskId={taskId}
           skillCatalogSessionId={skillCatalogSessionId}
+          additionalFileRoots={additionalFileRoots}
           inputTestId={inputTestId}
           editorApiRef={resolvedInputApiRef}
           promptHistory={promptHistory}

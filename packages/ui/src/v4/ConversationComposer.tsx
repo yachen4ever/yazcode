@@ -159,6 +159,9 @@ import { ConversationSelectionReferenceChip } from "@/v4/composer/ConversationSe
 import type { AttachmentPutFn } from "@/v4/composer/attachmentUpload.js";
 import type { ComposerSubmissionConfig } from "@/v4/composer/composerSubmissionConfig.js";
 import { resolveAttachableShareContext } from "@/lib/conversationShareContext.js";
+import { useWorkspaceProjectContext } from "@/hooks/useProjects.js";
+import { useTaskQueryCacheStore } from "@/store/taskQueryCacheStore.js";
+import { buildTaskEntityKey } from "@/lib/taskQueryCache.js";
 
 const MODEL_SELECTION_LOADING_STATE: ModelSelectionState = { status: "loading" };
 
@@ -520,6 +523,28 @@ function ConversationComposerImpl({
   const services = useOptionalServices();
   const draftScopeId = sessionId ?? V4_DRAFT_SCOPE_ROOT;
   const workspaceKey = workspaceIdentity?.trim() || workspacePath;
+  // P3d 文件提及跨 roots：草稿态用项目当前 roots；已有会话优先任务行固化值
+  // （改项目 roots 不改写旧任务的提及范围），缓存未命中回落项目当前 roots。
+  const composerProjectContext = useWorkspaceProjectContext(workspacePath, { workspaceIdentity });
+  const taskEntityKey = useMemo(
+    () =>
+      sessionId
+        ? buildTaskEntityKey({ taskId: sessionId, workspacePath, workspaceIdentity })
+        : null,
+    [sessionId, workspacePath, workspaceIdentity],
+  );
+  const cachedTaskMeta = useTaskQueryCacheStore((state) =>
+    taskEntityKey ? state.taskMetaByEntityKey[taskEntityKey] : undefined,
+  );
+  const additionalFileRoots = useMemo(() => {
+    // 任务行固化值是数组即权威（空数组 = 固化了显式空 = 无附加目录，spec L1 收敛口径）；
+    // 非数组（无固化值）回落项目当前 roots。
+    const solidified = cachedTaskMeta?.executionDirectories;
+    const projectRoots = composerProjectContext.mentionRoots;
+    const candidates = Array.isArray(solidified) ? solidified : projectRoots ?? [];
+    const deduped = [...new Set(candidates.map((root) => root.trim()).filter(Boolean))];
+    return deduped.filter((root) => root !== workspacePath);
+  }, [cachedTaskMeta, composerProjectContext, workspacePath]);
   const configPickerScopeKey = `${workspaceKey}\0${draftScopeId}`;
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
@@ -2084,6 +2109,7 @@ function ConversationComposerImpl({
           onModifiedSubmit={modifiedEnterSubmits ? handleModifiedEditorSubmit : undefined}
           submitLabel={sendTooltipTitle}
           showSlashButton
+          additionalFileRoots={additionalFileRoots}
           // @ 是 Plugin / 文件 / 对话 / 画板主入口；# 会话与 $ / ¥ / ￥ Skills
           // 仍由 MentionPlugin 保留兼容触发，但不在 + 菜单重复展示。
           showMentionButton

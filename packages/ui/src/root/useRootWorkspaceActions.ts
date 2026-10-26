@@ -29,6 +29,8 @@ import { resolveWorkbenchNewTaskTarget } from "@/v4/workbenchNewTaskTarget.js";
 import type { WorkbenchNewTaskTarget } from "@/v4/workbenchNewTaskTarget.js";
 import { useWorkbenchGroupStore } from "@/v4/workbenchGroupStore.js";
 import { persistV4ComposerDraft, V4_DRAFT_SCOPE_ROOT } from "@/v4/composer/composerDraftStore.js";
+import { resolveProjectForWorkspacePath } from "@/lib/projectPresentation.js";
+import { useProjectStore } from "@/store/projectStore.js";
 
 interface OpenRemoteConnectionPreference {
   preferredKind?: RemoteTarget["kind"];
@@ -259,6 +261,15 @@ export function useRootWorkspaceActions({
         // insert request 被首个 composer 消费后会清空；如果随后因 pane/config
         // 切换 remount，新 composer 会从空的 __draft__ 恢复并覆盖预填。先写草稿事实源，
         // 再发即时插入请求：当前 composer 立即可见，后续 remount 也恢复同一文本。
+        // P3d 草稿隔离：workspace 命中项目时预填写入项目段键（与 composer 读取同一
+        // 派生口径）；项目读模型未就绪时不带项目段，最坏情况是预填不被项目键恢复
+        // （正文仍经 composerTextInsert 即时插入，降级可接受）。
+        const projects = useProjectStore.getState().projects;
+        const draftProjectId =
+          resolveProjectForWorkspacePath(
+            projects,
+            newTaskTarget.workspacePath,
+          )?.projectId ?? null;
         persistV4ComposerDraft(
           newTaskTarget.workspacePath,
           newTaskTarget.workspaceIdentity ?? undefined,
@@ -267,6 +278,7 @@ export function useRootWorkspaceActions({
             text: initialPrompt,
             ...(initialPromptMention ? { mention: initialPromptMention } : {}),
           },
+          draftProjectId,
         );
         useZCodeSessionStore
           .getState()

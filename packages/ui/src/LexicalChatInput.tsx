@@ -1310,6 +1310,8 @@ interface LexicalChatInputProps {
   taskId: string | null;
   /** 仅影响 Skill 引用目录；草稿可使用 prewarm Session runtime。 */
   skillCatalogSessionId?: string | null;
+  /** @ 文件分组搜索的附加 roots（P3d 项目跨目录）；透传 MentionPlugin。 */
+  additionalFileRoots?: readonly string[];
   inputTestId?: string;
   editorApiRef?: React.MutableRefObject<LexicalChatInputHandle | null>;
   promptHistory?: readonly string[];
@@ -1342,6 +1344,7 @@ export function LexicalChatInput({
   workspaceIdentity,
   taskId,
   skillCatalogSessionId,
+  additionalFileRoots,
   inputTestId,
   editorApiRef,
   promptHistory = [],
@@ -1502,6 +1505,7 @@ export function LexicalChatInput({
             sessionId={skillCatalogSessionId ?? taskId}
             provider={activeTaskProvider}
             container={triggerPanelContainer}
+            additionalFileRoots={additionalFileRoots}
             disabled={disabled}
             onWhiteboardMentionSelected={onWhiteboardMentionSelected}
           />
