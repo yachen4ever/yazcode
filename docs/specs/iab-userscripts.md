@@ -1,4 +1,4 @@
-# Spec：IAB 内置用户脚本（monkey 类）P1——分区级 preload
+# Spec：IAB 内置用户脚本（monkey 类）——P1 分区级 preload / P2 工具面 + 确认流 + 设置卡
 
 ## 背景
 
@@ -220,3 +220,120 @@ app ready（main）
      同样需等待根节点出现。
    - 残余：跨域 OOPIF（带真实 `src` 的跨域 iframe）是否收到 session preload 注入
      未实测（行为规则 5 的 fixture 补测项）；首屏桥调用插桩仍缺，快照体量为量化代理。
+
+## P2：agent 工具面 + 确认流 + 设置卡
+
+P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信任门（发现≠启用 /
+首扫锚定 sha256 / 内容变更即失活）的前提下，补齐三条运维路径：agent 工具面（BrowserCommand
+三命令）、用户确认流（approve-once-per-content 的 UI 化）、设置卡（脚本清单与状态呈现）。
+
+### 行为规则
+
+1. **agent 工具面三命令**（BrowserCommand 判别联合新增三个方法，均不携带 `tabId`——
+   userscript 不是 view 作用域命令）：
+   - `userscript_list`（无参）：触发一次状态扫描，返回
+     `value.scripts: [{ scriptId, name, version?, runAt, grants, match, status, sha256 }]`。
+     `match` 是脚本声明的原始 pattern 列表；`status` ∈ `serving | enabled_pending_anchor |
+     hash_mismatch | disabled | pending_approval | parse_failed | grant_rejected`；
+     `sha256` 是当前文件 hash（hex）。**回包不含脚本代码与任何文件路径**。
+   - `userscript_reload`（无参）：触发一次完整扫描（含 P1 锚定语义——对已批准待锚定条目
+     写回 manifest），返回与 `userscript_list` 同构的状态列表。P1 无扫描缓存，命令语义是
+     「立即重导出事实」而非「失效缓存」，天然幂等；保留它是因为 agent 在用户改完脚本文件后
+     需要一个明确的刷新动作语义（与未来若引入缓存时的命令面兼容）。
+   - `userscript_set_enabled { scriptId, enabled }`：agent 侧启用请求**不直接启用**（见
+     确认流），禁用请求直接生效（降低权限不引入新执行内容）。返回操作后的该脚本状态。
+
+2. **确认流红线（承重语义）**：agent 不得造成「未经用户确认的新内容被执行」。P1 的
+   approve-once-per-content = manifest `enabled + sha256` 锚定。P2 采用**方案 (a)：分来源
+   的 set_enabled**，论证：
+   - **agent 来源识别不需要新机制**：BrowserCommand 的唯一入口是 host 运行时 →
+     `runBrowserCommandOnView`（main/index.ts），设置卡从不发 browser 命令，用户对
+     manifest 的写路径只有 SettingService patch（经 UI）。因此「命令面来的 set_enabled」
+     按构造即 agent 来源，无需在命令上附带 origin 字段（附带反而给了伪造面）。
+   - **agent `set_enabled(scriptId, true)`**：只写「待批准」状态——manifest 条目变为
+     `{ enabled: false, pendingApproval: true }`（同时清除旧 sha256；对 hash_mismatch
+     条目同样如此，失活事实由扫描状态呈现）。除非条目已经处于「enabled 且（无 sha 或
+     sha 与当前一致）」的已批准态（此时为幂等 no-op，不写）。**任何情况下该命令都不能让
+     一个当前未在服务的脚本进入服务**。
+   - **agent `set_enabled(scriptId, false)`**：直接写 `{ enabled: false }`（清 sha 与
+     pendingApproval）。禁用是降权，允许 agent 直达。
+   - **用户批准（设置卡）**：patch 条目为 `{ enabled: true }`（清 sha 与 pendingApproval）
+     ——与 P1 手工路径完全一致，下一次扫描锚定当前内容后开始服务。用户拒绝/忽略 = 保持
+     pendingApproval 或显式 dismiss（patch `{ enabled: false }`）。
+   - 内容变更后的重新启用路径不变：hash mismatch → 停服（enabled 仍 true 但不服务，
+     状态 `hash_mismatch`）→ 用户在设置卡重新批准 → 清 sha → 重锚定。方案 (b)（完全不给
+     agent set_enabled）被否决：它同样需要设置卡与状态呈现，省下的只是 pendingApproval
+     一个字段，却让 agent 无法表达「建议启用」，用户得手工对照文件名操作。
+   - `pendingApproval` 是新 schema 字段（`embeddedBrowserUserscript` 条目
+     `{ enabled: boolean; sha256?: string; pendingApproval?: boolean }`，向后兼容，旧条目
+     缺省 false）。**服务集判定不看 pendingApproval**：条目 `enabled !== true` 即不服务，
+     pendingApproval 条目恒为 enabled=false，fail-closed 不依赖新字段的读取正确性。
+
+3. **设置卡**：挂在浏览器设置区（`BrowserSettingsSection`），不放模型设置区——用户脚本
+   是 IAB 分区行为，与「证书策略」「浏览器数据」同域；模型设置区的 VisionBridge 卡是
+   provider 能力补偿，语义不同。呈现与动作：
+   - 脚本行：scriptId、name（扫描元数据；无扫描数据时缺省 scriptId）、状态徽标
+     （serving/enabled/hash-mismatch/disabled/pending-approval/parse-failed/
+     grant-rejected/storage-corrupt）、sha256 前 8 位 hex、启停开关。
+   - 待批准行：pendingApproval 徽标 + 「批准」按钮（patch `{ enabled: true }`）；开关
+     关闭 = dismiss（patch `{ enabled: false }`）。
+   - 损坏态：hash mismatch（内容变更）与 storage_corrupt（GM 存储文件损坏，状态查询时
+     对有存储文件的脚本做一次读探测）均以状态徽标呈现，不自动修复。
+   - 数据来源：开关与批准动作经 `useSettings()` 走 SettingService patch（唯一写路径）；
+     实时状态（name/match/当前 hash/损坏态）经可选平台方法
+     `IPlatformService.getIabUserscriptStatus?()`（Desktop 经
+     `zcode:iab-userscripts-status` invoke → main 状态扫描；Web/无宿主环境不实现——
+     卡片降级为 manifest 派生行（enabled + 已锚定 sha 短码），不猜测 name 与
+     hash-mismatch）。
+   - 状态查询是只读投影：**不做锚定写**（锚定仍只发生在 match 扫描路径），避免「打开
+     设置页」成为隐藏的批准动作。
+   - 三语文案（zh-CN / en-US / fa）。
+
+4. **desktop main 装配**：
+   - 命令 handler 在 `browserView/browserCommandUserscriptsHandler.ts`（照 cookies
+     handler 先例）：识别三个 userscript 方法，经 userscript 服务端口执行；未安装
+     （`installIabUserscripts` 未跑）返回 `backend_unavailable`。接入点在
+     `runBrowserCommandOnView`（main/index.ts）顶部——不进 `browserGuestManager`
+     （userscript 不是 tab/view 作用域命令，且该文件不在本次改动面）。
+   - `userscriptService` 扩展命令面方法：`listStatus()`（只读状态投影）、
+     `reload()`（扫描 + 锚定，P1 语义）、`setAgentEnabled(scriptId, enabled)`
+     （确认流状态机）。状态扫描的共享内部与 `scan()` 同源（同一份 parse + manifest
+     判定），不引第二状态所有者。
+   - 服务实例经 bootstrap 的 `getIabUserscriptService()` 暴露（未安装返回 null）。
+   - 日志：`createServiceLogger("userscripts")`（main 进程）。
+
+### 状态词汇（status 联合，命令回包与设置卡共用）
+
+`serving`（enabled ∧ 已锚定 ∧ hash 一致）｜`enabled_pending_anchor`（enabled 无 sha，
+下次扫描锚定；仅在批准后未扫描的窗口可见）｜`hash_mismatch`（enabled 但内容变更失活）｜
+`disabled`（无条目或 enabled=false 且无 pendingApproval）｜`pending_approval`（agent
+请求启用待用户批准）｜`parse_failed` / `grant_rejected`（静态校验拒载）。
+优先级：静态拒载 > manifest 状态。
+
+### 验收场景（P2）
+
+1. **命令 schema 边界**：三个命令 strict（未知字段拒）；`userscript_set_enabled` 空
+   scriptId 拒、enabled 非布尔拒；list/reload 带额外字段拒。
+2. **agent set_enabled 进待批准不执行**：manifest 无条目 + agent set_enabled(true) →
+   条目 `{enabled:false, pendingApproval:true}`，match 扫描服务集不含该脚本；对
+   hash_mismatch 条目执行同样只落 pendingApproval。
+3. **用户批准后执行**：pendingApproval 条目 → 设置卡批准（patch `{enabled:true}`）→
+   下一次 match 扫描锚定并服务。
+4. **hash mismatch 停服后 UI 呈现**：已锚定脚本文件内容变更 → 状态 `hash_mismatch`、
+   不服务；设置卡显示对应徽标；用户重新批准后恢复。
+5. **reload 幂等**：连续两次 reload 返回同构状态，manifest 不因 reload 产生额外写
+   （除批准后首扫锚定的一次性写）。
+6. **agent 禁用直达**：agent set_enabled(false) → 条目 enabled=false，立即不服务。
+7. **状态查询只读**：getIabUserscriptStatus 对 enabled 无 sha 条目不做锚定写（返回
+   `enabled_pending_anchor`），锚定仍只由 match 扫描完成。
+8. **未安装降级**：`installIabUserscripts` 未执行时三个命令返回 `backend_unavailable`。
+9. **设置卡**：manifest 派生行（无平台方法时）不显示 name/mismatch 猜测；批准/开关
+   patch 只经 SettingService；三语文案齐备。
+
+### P2 明确不做
+
+- 不给 agent 任何「批准」能力（pendingApproval 只能由用户在设置卡转正）。
+- 不做脚本安装/下载/编辑 UI（脚本文件仍由用户手工放入 `~/.yazcode/userscripts`）。
+- 不做 guest IPC 面扩张（仍是恰好 3 个 channel）；preload 的 `console.warn` 经 IPC
+  转发 main 日志（m2-3）涉及第 4 个 channel 的契约修订，留待后续。
+- 不做 fs.watch / 缓存（reload 命令的存在不改变「每次请求全量重扫」的 P1 架构）。
