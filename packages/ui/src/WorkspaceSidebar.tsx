@@ -19,6 +19,7 @@ import {
   Cloud,
   Folder,
   FolderOpen,
+  FolderPlus,
   Hash,
   ListFilter,
   Maximize2,
@@ -47,6 +48,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { Locale, RemoteTarget, UserInfo, ZCodeTaskMeta } from "@zcode/shared";
+import type { ProjectRecord } from "@zcode/services";
 import {
   TID_CONVERSATION_NEW_TASK,
   TID_CONVERSATION_SECTION,
@@ -90,6 +92,13 @@ import {
 } from "@/lib/sidebarPurposeSectionPreferences.js";
 import { useShortcutCommandLabel } from "@/shortcuts/useShortcutBindings.js";
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
+import { ProjectEditorDialog } from "@/project-editor/ProjectEditorDialog.js";
+import {
+  projectDisplayName,
+  projectRootsBadgeCount,
+  resolveProjectForWorkspacePath,
+} from "@/lib/projectPresentation.js";
+import { useProjects } from "@/hooks/useProjects.js";
 import {
   increaseWorkspaceTaskVisibleLimit,
   resolveVisibleWorkspaceTaskKeys,
@@ -372,6 +381,43 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
     () => partitionWorkspaceTabsByPurpose(workspaceTabs),
     [workspaceTabs],
   );
+  // P3c 侧栏项目化：呈现层按 primary root 关联项目（P3a 纯函数）；行标注对象与
+  // 编辑回调按 tabId memo 化，避免打穿 WorkspaceSidebarItem 的行级 memo。
+  const { projects } = useProjects();
+  const [projectEditorTarget, setProjectEditorTarget] = useState<ProjectRecord | null | undefined>(
+    undefined,
+  );
+  const projectPresentationByTabId = useMemo(() => {
+    const presentation = new Map<
+      string,
+      {
+        displayName: string;
+        rootsBadgeCount: number | null;
+        rootsTooltip: string | null;
+        onEditProject: (() => void) | undefined;
+      }
+    >();
+    for (const tab of projectWorkspaceTabs) {
+      const project = resolveProjectForWorkspacePath(projects, tab.workspacePath);
+      if (!project) continue;
+      // 远端 workspace 只标注不提供编辑入口（spec P3c：P4 与 remote-policy 一起收口）。
+      const isRemoteTab = Boolean(
+        tab.remoteSessionId || tab.remoteTarget || tab.workspaceIdentity,
+      );
+      const roots = project.roots.map((root) => root.rootPath);
+      presentation.set(tab.id, {
+        displayName: projectDisplayName(project),
+        rootsBadgeCount: projectRootsBadgeCount(project),
+        rootsTooltip: roots.length > 1 ? roots.join("\n") : null,
+        onEditProject: isRemoteTab
+          ? undefined
+          : () => {
+              setProjectEditorTarget(project);
+            },
+      });
+    }
+    return presentation;
+  }, [projectWorkspaceTabs, projects]);
   const workspacePaths = useMemo(
     () => projectWorkspaceTabs.map((tab) => tab.workspacePath),
     [projectWorkspaceTabs],
@@ -1466,6 +1512,16 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                                     </DropdownMenuTrigger>
                                   </ControlHintTooltip>
                                   <DropdownMenuContent align="end" className="min-w-44">
+                                    <DropdownMenuItem
+                                      onSelect={() => {
+                                        setProjectEditorTarget(null);
+                                      }}
+                                    >
+                                      <FolderPlus className="size-4" />
+                                      {intl.formatMessage({
+                                        id: "workspaceSidebar.newProject",
+                                      })}
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onSelect={onOpenFolderFromWorkspaceMenu}>
                                       <FolderOpen className="size-4" />
                                       {intl.formatMessage({
@@ -1553,6 +1609,13 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                                             }
                                             onReconnectRemoteWorkspace={onReconnectRemoteWorkspace}
                                             onOpenFileTree={handleOpenWorkspaceFileTree}
+                                            projectPresentation={
+                                              projectPresentationByTabId.get(tab.id)
+                                            }
+                                            onEditProject={
+                                              projectPresentationByTabId.get(tab.id)
+                                                ?.onEditProject
+                                            }
                                           />
                                         );
                                       })}
@@ -1694,6 +1757,15 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
           ) : null}
         </div>
       </div>
+      {/* P3b 项目编辑器：undefined=关闭，null=新建，record=编辑；成功后经 projectStore 就地刷新行标注。 */}
+      {projectEditorTarget !== undefined ? (
+        <ProjectEditorDialog
+          project={projectEditorTarget}
+          onClose={() => {
+            setProjectEditorTarget(undefined);
+          }}
+        />
+      ) : null}
     </aside>
   );
 });

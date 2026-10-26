@@ -264,6 +264,7 @@ import {
   dispatchConversationSelectionAdd,
   type ConversationSelectionReference,
 } from "@/lib/conversationSelectionReference.js";
+import { useWorkspaceProjectContext } from "@/hooks/useProjects.js";
 
 export interface SessionPaneProps {
   paneId: string;
@@ -1142,6 +1143,11 @@ export function SessionPane({
     modelSelectionService,
   });
 
+  // P3d：workspace 的项目上下文（呈现层派生，primary root 匹配）；草稿态的
+  // __draft__ scope 按项目段存取，正式 session scope 不带项目段。hook 顺序必须在
+  // useDraftConfigControl 之前无条件调用（Rules of Hooks）。
+  const draftProjectContext = useWorkspaceProjectContext(workspacePath, { workspaceIdentity });
+
   // Composer 保存下一次 Submission 的 renderer intent；prewarm session 仅承载草稿预热。
   const {
     composerDraft,
@@ -1164,6 +1170,9 @@ export function SessionPane({
     sessionConfig: snapshot?.sessionId === sessionId ? snapshot.config : null,
     agentStartupAllowed: draftAgentStartupAllowed,
     modelSelectionService,
+    // P3d 草稿隔离：草稿态（sessionId=null）的 __draft__ scope 按项目段存取；
+    // 正式 session scope 不带项目段（见 useDraftConfigControl）。
+    draftProjectId: sessionId === null ? draftProjectContext.project?.projectId ?? null : null,
   });
   const modelSelectionView =
     modelSelectionRead.state.status === "ready" ? modelSelectionRead.state.view : null;

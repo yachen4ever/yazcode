@@ -33,10 +33,17 @@ export function seedImportedSessionDraft(result: {
   workspaceIdentity?: string;
   sessionId: string;
   reused: boolean;
+  /** 草稿归属项目（P3d）；Root 草稿按项目键读取。 */
+  draftProjectId?: string | null;
 }): void {
-  const { workspacePath, workspaceIdentity, sessionId, reused } = result;
+  const { workspacePath, workspaceIdentity, sessionId, reused, draftProjectId } = result;
   if (reused || readV4ComposerDraft(workspacePath, workspaceIdentity, sessionId)) return;
-  const root = readV4ComposerDraft(workspacePath, workspaceIdentity, V4_DRAFT_SCOPE_ROOT);
+  const root = readV4ComposerDraft(
+    workspacePath,
+    workspaceIdentity,
+    V4_DRAFT_SCOPE_ROOT,
+    draftProjectId,
+  );
   // 导入已创建真实 Session，旧初始化把空 snapshot 当成确定选择，跳过了新任务规则。
   // 显式标记首次导入来源，而非按“会话没模型”猜测；Root 的明确空选择也必须保留。
   persistV4ComposerDraft(

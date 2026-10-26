@@ -110,6 +110,8 @@ export function useDraftConfigControl(params: {
   /** provider registry 已通过 renderer readiness 门禁后才允许拉起 Agent。 */
   agentStartupAllowed?: boolean;
   modelSelectionService: IModelSelectionService | null;
+  /** 草稿归属项目（P3d 草稿隔离）：只作用于 __draft__ scope 的键；正式 session scope 不带项目段。 */
+  draftProjectId?: string | null;
 }): DraftConfigControl {
   const {
     workspacePath,
@@ -119,6 +121,7 @@ export function useDraftConfigControl(params: {
     sessionConfig,
     agentStartupAllowed = true,
     modelSelectionService,
+    draftProjectId,
   } = params;
   const workspaceKey = workspaceIdentity?.trim() || workspacePath;
   const displayProvider = provider ?? ZCODE_AGENT_PROVIDER;
@@ -126,14 +129,17 @@ export function useDraftConfigControl(params: {
   const { settings: sharedSettings } = useSettings();
   const appFollowupMode = resolveAppFollowupMode(sharedSettings);
   const scopeId = sessionId ?? V4_DRAFT_SCOPE_ROOT;
-  const scopeKey = JSON.stringify([workspaceKey, scopeId]);
+  // 仅草稿 scope 携带项目段；正式 session 的草稿键保持 workspace + sessionId。
+  const draftScopeProjectId = scopeId === V4_DRAFT_SCOPE_ROOT ? draftProjectId : undefined;
+  const scopeKey = JSON.stringify([workspaceKey, scopeId, draftScopeProjectId ?? ""]);
   const loadedScope = useMemo(
     () => ({
       scopeKey,
-      draft: readV4ComposerDraft(workspacePath, workspaceIdentity, scopeId) ?? {
-        text: "",
-        updatedAt: 0,
-      },
+      draft:
+        readV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, draftScopeProjectId) ?? {
+          text: "",
+          updatedAt: 0,
+        },
     }),
     [scopeKey],
   );
@@ -200,7 +206,13 @@ export function useDraftConfigControl(params: {
       stateRef.current.draft === draft &&
       stateRef.current.scopeKey === scopeKey
     ) {
-      persistV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, draft);
+      persistV4ComposerDraft(
+        workspacePath,
+        workspaceIdentity,
+        scopeId,
+        draft,
+        draftScopeProjectId,
+      );
       lastPersistedDraftRef.current = draft;
     }
   }, [draft, scopeKey]);
@@ -225,10 +237,10 @@ export function useDraftConfigControl(params: {
         thought: selection?.options?.reasoningLevel ?? "",
       };
       setStoredState(nextState);
-      persistV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, next);
+      persistV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, next, draftScopeProjectId);
       lastPersistedDraftRef.current = next;
     },
-    [scopeKey, workspacePath, workspaceIdentity, scopeId],
+    [scopeKey, workspacePath, workspaceIdentity, scopeId, draftScopeProjectId],
   );
   const updateDraftConfig = useCallback(
     (update: (current: Partial<SessionConfigState>) => Partial<SessionConfigState>) => {
@@ -315,9 +327,9 @@ export function useDraftConfigControl(params: {
         stateRef.current.draft,
       );
       if (!written) return;
-      clearV4ComposerDraft(workspacePath, workspaceIdentity, V4_DRAFT_SCOPE_ROOT);
+      clearV4ComposerDraft(workspacePath, workspaceIdentity, V4_DRAFT_SCOPE_ROOT, draftProjectId);
     },
-    [scopeId, scopeKey, workspaceIdentity, workspacePath],
+    [scopeId, scopeKey, workspaceIdentity, workspacePath, draftProjectId],
   );
 
   // ── workspace 目录水合（见文件头说明）──

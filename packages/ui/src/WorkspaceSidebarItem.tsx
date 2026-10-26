@@ -21,6 +21,7 @@ import {
   ListTree,
   LoaderCircle,
   RefreshCwIcon,
+  Settings2Icon,
   MessageCirclePlus,
   XIcon,
 } from "lucide-react";
@@ -147,6 +148,8 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
   reconnectingRemoteWorkspaceLogsByWorkspaceKey,
   onReconnectRemoteWorkspace,
   onOpenFileTree,
+  projectPresentation,
+  onEditProject,
   itemRef,
   itemStyle,
   sortableBindings,
@@ -181,6 +184,14 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
     workspaceIdentity?: string;
     workspaceRemoteSessionId?: string;
   }) => void;
+  /** 项目标注（P3c）：primary root 匹配的呈现层派生；无匹配项目时不传，行回落路径 leaf。 */
+  projectPresentation?: {
+    displayName: string;
+    rootsBadgeCount: number | null;
+    rootsTooltip: string | null;
+  };
+  /** 「编辑项目」入口；仅本地 workspace 且有匹配项目时由上层传入（远端 P4 收口）。 */
+  onEditProject?: () => void;
   itemRef?: (node: HTMLLIElement | null) => void;
   itemStyle?: CSSProperties;
   sortableBindings?: SortableBindings;
@@ -744,8 +755,25 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         {renderWorkspaceIcon()}
       </span>
       <div className="min-w-0 truncate text-ui-base text-foreground-subtle">
-        {workspaceSidebarLabel}
+        {projectPresentation ? projectPresentation.displayName : workspaceSidebarLabel}
       </div>
+      {projectPresentation?.rootsBadgeCount ? (
+        <ControlHintTooltip
+          title={
+            projectPresentation.rootsTooltip ??
+            projectPresentation.displayName
+          }
+          side="right"
+          align="center"
+        >
+          <span
+            data-testid="workspace-project-roots-badge"
+            className="flex shrink-0 items-center rounded-sm border border-border px-1 text-ui-xs leading-4 text-foreground-subtle"
+          >
+            {projectPresentation.rootsBadgeCount}
+          </span>
+        </ControlHintTooltip>
+      ) : null}
       {!isExpanded && taskListHasUnread ? (
         <span
           aria-hidden="true"
@@ -921,6 +949,22 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
                           </DropdownMenuTrigger>
                         </ControlHintTooltip>
                         <DropdownMenuContent align="end" onClick={handleActionMenuClick}>
+                          {onEditProject ? (
+                            <DropdownMenuItem
+                              data-testid="workspace-edit-project"
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                              }}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                onEditProject();
+                              }}
+                            >
+                              <Settings2Icon className="h-3.5 w-3.5" />
+                              {intl.formatMessage({ id: "workspaceSidebar.editProject" })}
+                            </DropdownMenuItem>
+                          ) : null}
                           <RemoteSyncMenuItems
                             canSyncSkills={showRemoteSkillSyncAction}
                             canSyncMcp={showRemoteSkillSyncAction}

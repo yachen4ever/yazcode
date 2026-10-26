@@ -63,6 +63,8 @@ interface MentionPluginProps {
   workspaceIdentity?: string;
   /** 已有 Session 的 id；null/undefined = 新建草稿。决定 Plugins 分组的 catalog authority。 */
   sessionId?: string | null;
+  /** @ 文件分组搜索的附加 roots（P3d 项目跨目录）；调用方需 memo 化数组引用。 */
+  additionalFileRoots?: readonly string[];
   disabled?: boolean;
   onWhiteboardMentionSelected?: (boardId: string) => void | Promise<void>;
 }
@@ -135,6 +137,7 @@ export function MentionPlugin({
   sessionId,
   provider,
   container,
+  additionalFileRoots,
   disabled = false,
   onWhiteboardMentionSelected,
 }: MentionPluginProps & { provider: ZCodeProvider }) {
@@ -188,6 +191,7 @@ export function MentionPlugin({
     intl.formatMessage({ id: "chat.mention.files.empty" }),
     intl.formatMessage({ id: "chat.mention.files.title" }),
     fileDefaultPreviewLimit,
+    additionalFileRoots,
   );
   const whiteboardResult = useWhiteboardMentionProvider(
     workspacePath,
