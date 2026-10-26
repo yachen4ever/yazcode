@@ -42,6 +42,16 @@
 3. **登记候选**：远程资产版本注入与双架构清单（随 prepare-prebuilds 迁移 backlog 一并评估）；
 4. **进行中**：多目录 UI（P3）即上游 v1.17.0 UI 面的对应实现，进行时无需额外引入。
 
+## y430p 独立复核（2026-10-27，报告 `/y430p/yazcode-zcodium-sync-contrib-result-1027`）
+
+三阶段执行（fork 同步 + 引入复核 + 反向贡献分析），对本评估的修正与确认：
+
+1. **结论①（DMG）成立**，移植成本细化：97 行契约测试为 vitest，本仓移植需 3 处适配（vitest→node:test、坐标断言 370→按本仓事实源 365、`ZCodium.app`→`yazcode.app` 文案），约 20 行级改动。
+2. **结论②（版本注入）成立，边界修正**：`stageCli.ts` 的缺失消费点**实际存在于本仓**（`packages/zcode-server-cli/src/packaging/stageCli.ts:236`，与上游修复前同型）但**游离于发布链外**（仅包内 dev 脚本消费）；实际发布链（build-metadata:89 / prepare-prebuilds:48 / publish-remote-assets:195）**全部具备** env 优先级——26.3.0 产物不受影响。缺口定性维持「随 prepare-prebuilds 迁移 backlog」。
+3. **结论③（61eef508）降为备忘**：其动机（mac 双架构 matrix 先后覆盖同名 latest-mac.yml）在本仓不存在——桌面 matrix 自 2026-10-07 起仅 arm64 单架构，linux 双架构用不同文件名。残余价值仅真实资产 digest 校验的一般性加固。
+4. **fork 已同步**：`yachen4ever/ZCodium` main `9b1af0b9 → 3c66e680`（merge upstream v1.17.1，1 处台账冲突按重算 sha256 处理），fork 现含 v1.17.1 全部内容。
+5. **反向贡献**：A 类（上游现存缺陷）为空——本仓 browser-safe 修复与安装器 MCP 修复的经验证候选均不成立于上游 v1.17.1（逐项亲验证据见报告）；B 类三条真实可贡献（根 typecheck 进 verify 管线 / barrel 守卫测试 / sqlite 契约门禁接线——上游工具在库但完全未接线），处置见贡献任务书 `/m5air/yazcode-contrib-impl-request`。
+
 ## 关联
 
 - 上一轮评估：`docs/upstream-port-tasks-20261022.md`（T1 自测、T2 sqlite 门禁均已交付于 26.2.3/26.3.0）。
