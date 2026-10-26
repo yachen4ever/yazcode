@@ -137,19 +137,108 @@ SSH / Source Server 项目**硬约束单 root**：保存、root 初始化、任�
 
 ## UI 契约（P3）
 
-- 项目编辑器：本地经系统多选（`IPlatformService` 目录选择）、继续添加、去重（UI 与
-  Repository 双层）、移除、改名、设置主目录；主目录被移除时回落首个 root。
-- 文件提及（@）：对 `[cwd, ...roots]` 逐 root 搜索、按绝对路径去重、`rootName`
-  （basename）标注来源；非 cwd root 的提及用**绝对路径**引用，cwd 用相对路径。
-- 草稿隔离：composer 草稿按 `{clientNamespace, hostId, projectId}` 复合键存储，
-  同 cwd 的不同项目不串草稿。
-- 迟到防护：编辑器保存/浏览的异步回执以 epoch/alive 失效（卸载或换代即丢弃）。
+### P3 总则（状态所有者与身份口径）
+
+- **项目事实的唯一持久所有者是 ProjectRepository（tasks-index.sqlite）**，经
+  `IProjectService` 暴露。UI 侧任何项目状态都是它的**派生读模型**：Zustand
+  `projectStore` 只缓存 `listProjects()` 快照并提供显式 refresh，不落盘、不接收
+  远端广播（项目当前没有跨端同步面）；编辑器保存/删除成功后以服务返回的
+  `ProjectRecord` 就地更新缓存，不重放写路径。不得出现第二份持久项目事实。
+- **workspace 身份口径沿用全局统一键** `workspaceIdentity?.trim() || workspacePath`
+  （AGENTS.md「Workspace Identity」）。多 root 会话的 workspaceKey 天然落
+  primary root（P1b-2 语义），侧栏分组、去重、绑定一律按该键，不另起炉灶。
+- **workspace → project 的呈现层关联是纯派生**：`project.primaryRoot === workspacePath`
+  （本地单 host）即视为该 workspace 的项目上下文。同 cwd 双项目时呈现层取
+  pinned 优先、创建时间次之的**确定性选择**，仅用于标注与 roots 提示；任务归属
+  仍以任务行固化的 `projectId` 为准（见 G1 缺口）。
+- **远端 workspace（remoteSessionId / workspaceIdentity 非空）**：P4 单 root 约束
+  未落地前，呈现层不得假设远端永远单 root——项目标注与 roots 提示对远端 tab 同样
+  生效（按 primary root 匹配）；项目编辑器对远端 workspace 不提供入口（P4 收口）。
+- **迟到防护**：编辑器保存/删除、目录选择的异步回执一律以 epoch/alive 失效
+  （卸载、对话框换代、目录响应晚于下一次交互即丢弃），不用超时掩盖竞态。
+
+### P3a 状态底座
+
+- `projectStore`（Zustand，内存态）：`projects: ProjectRecord[]`、`status`
+  （idle/loading/ready/error）、`load()`（幂等单飞）、`refresh()`、`upsert(record)`、
+  `remove(projectId)`。唯一写入口是 `IProjectService` 的返回值；store 不生成 projectId、
+  不改写 roots。
+- `resolveProjectForWorkspacePath(projects, workspacePath)` 纯函数：按 primary root
+  匹配返回唯一项目或 null；同 cwd 多项目按 pinned 优先、`projectId` 字典序兜底，
+  保证同输入同输出。
+- 验收：store 不持久化（无 localStorage/SQLite 写点）；同 cwd 双项目解析确定性可测。
+
+### P3b 项目编辑器（ProjectEditorDialog）
+
+- 行为：新建（名称默认取首个 root 的 basename，可改名）与编辑（改名、增删 roots、
+  设置主目录、删除项目）共用一个对话框。目录选择走 `IPlatformService.selectDirectory()`
+  **单选 + 继续添加**（yazcode 平台面当前无系统多选；spec 以单选为准，多选是后续平台
+  增强而非 P3 阻塞项）。添加时按绝对路径去重（UI 层先去重，Repository 层兜底）；
+  移除主目录时主目录回落首个 root；roots 清空即禁用保存。
+- 保存经 `projectService.saveProject({ name, roots, primaryRoot })`（编辑时带
+  `projectId`）；删除经 `projectService.deleteProject`，删除前必须确认；删除只解绑
+  组织归属，不触碰文件与任务。
+- 状态所有者：对话框内表单态（name/roots/primary）是组件局部 state；提交成功后以
+  服务返回记录更新 projectStore。错误直显服务错误码文案（`project.roots-empty` 等
+  映射 i18n）。
+- 验收：主目录被移除回落首个 root；双去重；保存后侧栏同名即时刷新（同一 store）；
+  关闭对话框后迟到的保存回执不弹错。
+
+### P3c 侧栏项目化
+
+- 「项目」分区在现有 workspace tab 列表上**叠加项目标注**，不重建列表结构：
+  - 行标题优先显示项目名（primary root 匹配），无匹配项目回落原路径 leaf；
+    行内追加 roots 数徽标（>1 时显示，tooltip 列出全部 roots）。
+  - 行上下文菜单新增「编辑项目」（该 workspace 有匹配项目时），打开 P3b 编辑器；
+    「添加项目」菜单新增「新建项目」入口（无匹配项目时也始终可用）。
+  - 任务分组仍按 workspaceKey（= primary root）展开，遵循 P1b-2 口径；任务行
+    `projectId` 存在且与行项目一致时任务归属以任务行为准（现状即同 bucket）。
+- 展开态、拖拽排序等既有偏好不动；远端 tab 只标注不提供编辑入口。
+- 验收：同 cwd 双项目时侧栏显示确定性项目名（P3a 规则）；改名后侧栏即时更新；
+  手机远控（web replayable）下侧栏降级可用（无项目匹配时回落路径 leaf，不报错）。
+
+### P3d 文件提及跨 roots + 草稿隔离
+
+- 文件提及（@）：对 `[workspacePath, ...additionalRoots]` 逐 root 调用
+  `fileService.searchWorkspaceFiles`（该服务面接受任意 rootPath，P2 后无需新协议），
+  按**绝对路径**去重（cwd 命中优先）；非 cwd root 的命中以 `rootName`（basename）
+  标注来源，引用用**绝对路径**；cwd 命中沿用相对路径。additionalRoots 来源：
+  - 草稿/新任务：workspace 匹配项目的当前 roots（排除 workspacePath）；
+  - 已有会话：任务行固化 `executionDirectories` + `rootPath`（改项目 roots 不改写
+    旧任务的提及范围），任务行缺固化值时回落项目当前 roots。
+  - 附加 root 的搜索失败（目录缺失/权限）降级为该 root 静默缺席，不阻塞 cwd 搜索。
+- 草稿隔离：v4 composer 草稿持久化键从 `workspaceKey` 扩展为
+  `workspaceKey + projectId 段`（仅当草稿归属项目时）；无项目上下文回落原键，
+  存量草稿（无项目段）继续可读。**正式 session 的后续草稿仍按
+  workspace + sessionId 存取，不改为按项目存储**（ZCodium 同语义）。Recent/默认配置
+  不在 P3 改键。
+- 提交链路：桌面 v4 草稿首发当前无法携带项目归属（G1）；composer 在有项目上下文时
+  仅消费项目 roots（提及、草稿键）与项目名展示。已支持 `projectId` 的
+  `createTask` 面（replayable facade / automation / off-peak）语义不变。
+- 验收：同 cwd 双项目草稿互不串；附加 root 文件可被 @ 命中且标注来源；附加 root
+  目录被删后 @ 面板仍可用（cwd 命中不受影响）。
+
+### G1 协议缺口登记（桌面 v4 草稿路径的项目归属，P3 不实施）
+
+桌面 v4 草稿路径不经 `createTask`：预热走 v4 `createSession` 命令，任务行由
+syncer 首次快照同步落库（`buildMetaFromSnapshot` 无项目字段），v4
+`createSession`/`sendText` 载荷也没有 projectId 通道。因此**桌面首发任务当前无法
+在创建边界固化 projectId/rootPath/executionDirectories**；replayable facade、
+automation、off-peak 走 `createTask` 的路径不受影响（P1/P2 已接线）。
+
+修复设计（留待独立小期，非本批）：仿 `clientMode` 先例
+（`ZCodeAgentConversationCommandParams` 的 host 内部字段，不进 v4 wire envelope），
+在 conversation command 参数上加 host 内部 `projectContext`；Host 在 createSession
+ACK 后经 `prepareSession` 解析三件套，由 syncer 首写盖章（merge-preserve 已兜底保全）。
+UI 侧 P3 已按此预留：composer/侧栏的项目上下文解析、草稿键、roots 消费均已就位，
+补通道时只需在预热派发处多传一个字段。
 
 ## 不做（本批次范围外）
 
 - 手机 paired project bridge、`mobileTaskView` 协议（ZCodium 侧亦未完成授权入口）。
 - 随 v1.17.0 搭车的 Gen UI 交互式/插件后台事件、Source Server 管理 UI。
-- 远程多 root。
+- 远程多 root；远端项目编辑入口（P4 与 remote-policy 一起收口）。
+- `IPlatformService` 系统目录**多**选（P3 以单选 + 继续添加交付）。
 
 ## 分期
 
@@ -157,10 +246,10 @@ SSH / Source Server 项目**硬约束单 root**：保存、root 初始化、任�
 | --- | ----------------------------------------------------------------- | ------------------------------------------- |
 | P1  | 数据层 + Host 项目服务（CRUD、prepareSession、任务 reserve 固化） | 表 + 迁移 + 服务 + 单测（schema 门禁随行）  |
 | P2  | 协议字段 + CLI 白名单消费（三条通道 + 发现点 + env-info）         | 协议 schema + CLI 注入点 + 信任边界审计测试 |
-| P3  | UI（编辑器、侧栏项目化、文件提及、草稿隔离）                      | 组件 + 交互测试                             |
+| P3  | UI（状态底座 → 编辑器 → 侧栏项目化 → 提及 + 草稿隔离）           | 组件 + 交互测试 + G1 缺口登记               |
 | P4  | 远程单 root 边界 + 自动化/闲时任务携带 projectId/hostId           | remote-policy + 调度归属                    |
 
-P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3。
+P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3；P3 的 G1 通道补齐不阻塞 P4。
 
 ## 验收场景
 
