@@ -80,6 +80,19 @@ function resolveCommitId() {
 }
 
 export function collectBuildMetadata() {
+  // 前缀级环境洗涤（P2 任务书主题二）：宿主 ZCode 注入的 ZCODE_* 变量随继承环境
+  // 污染构建，ZCODE_APP_VERSION 已发「版本元数据烤入宿主版本号」事故——本地构建
+  // 必须回退 package.json 版本；ZCODE_COMMIT 同前缀一并洗涤（宿主注入的 commit
+  // 同样不可信）。CI 豁免：GitHub Actions 注入 CI=true，release.yml 合法注入的
+  // ZCODE_APP_VERSION 必须保留。常规桌面构建管线中本脚本以 prepare:build-meta
+  // 独立进程先于 tsup/vite/electron-builder 执行，此处的 process.env 洗涤不波及
+  // 后续构建进程；若 build-meta.json 缺席而由 vite/tsup 配置内联触发 collect，
+  // 洗涤同样让宿主注入值不进构建，方向一致。
+  if (!process.env.CI) {
+    for (const key of Object.keys(process.env)) {
+      if (key.startsWith("ZCODE_")) delete process.env[key];
+    }
+  }
   const rootPackageJson = readJson(resolve(workspaceDir, "package.json"));
   const desktopPackageJson = readJson(resolve(desktopDir, "package.json"));
 

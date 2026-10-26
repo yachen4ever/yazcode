@@ -12,6 +12,18 @@ import {
 } from "./zcode-distribution/assets.mjs";
 import { installScriptSource } from "./zcode-distribution/installer.mjs";
 
+// 前缀级环境洗涤（P2 任务书主题二）：宿主 ZCode 注入的 ZCODE_* 变量随继承环境
+// 污染分发构建（三类已发事故：staged 配置 schema 拒绝、版本烤入宿主版本号、构建
+// 环境翻转）。必须在本模块读取 ZCODE_DIST_BASE_URL 之前执行——loadEndpointEnv 以
+// process.env 覆盖 .env 解析值，先洗后读时开发者的 .env / --base-url 显式传参仍存活。
+// CI 豁免：GitHub Actions 注入 CI=true，release.yml 合法注入的
+// ZCODE_APP_VERSION / ZCODE_ENV 保留；后续 spawnSync 的子构建继承已洗涤的环境。
+if (!process.env.CI) {
+  for (const key of Object.keys(process.env)) {
+    if (key.startsWith("ZCODE_")) delete process.env[key];
+  }
+}
+
 const root = resolve(import.meta.dirname, "..");
 const defaultOutDir = resolve(root, "dist", "zcode");
 const defaultBaseUrl = (await loadEndpointEnv()).ZCODE_DIST_BASE_URL?.trim() || "";

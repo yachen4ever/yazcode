@@ -230,15 +230,22 @@ export const buildCli = async ({
   }),
 } = {}) => {
   const cliVersion = await version;
-  // 镜像 scripts/dev-desktop-env.mjs:29-30 的既有先例：剔除宿主运行时注入的 builtin
-  // 配置路径（ZCODE_BUILTIN_PROVIDER_CONFIG_FILE / ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE）。
-  // 宿主运行时 staged 的 builtin 配置（~/.zcode/.../endpoint-*/zcode-builtin.json）用的是
-  // 宿主自身 schema；仓库构建必须消费仓库自己的 config/provider/zcode-builtin.json——
-  // 宿主注入的路径会让下方 stageBuiltinProviderConfig 的 Release schema 校验失败直接
-  // 打红构建（从 Host shell 直跑 pnpm build:cli 可稳定复现）。只删这两个变量：
-  // ZCODE_ENV 是文档化的构建环境选择器（缺省有 .env 兜底），不动。
-  delete env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE;
-  delete env.ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE;
+  // 前缀级环境洗涤（升级自原先对 ZCODE_BUILTIN_PROVIDER_CONFIG_FILE /
+  // ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE 的点名删除——那是开放集合上的补丁）：
+  // 宿主 ZCode 运行时会向子进程注入 ~20 个 ZCODE_* 变量，随继承环境污染构建，
+  // 已发三类事故：staged 配置 schema 拒绝（builtin 配置路径被指到宿主副本）、
+  // 版本元数据烤入宿主版本号（ZCODE_APP_VERSION）、构建环境翻转（ZCODE_ENV）。
+  // - CI 豁免：GitHub Actions 注入 CI=true；release.yml 合法注入的
+  //   ZCODE_APP_VERSION / ZCODE_ENV 必须保留，不能在发布链路上洗掉；
+  // - 仅默认 env === process.env 场景生效：调用方显式传自定义 env 对象的不动
+  //   （尊重显式传参；经 runCommand spawn 的子进程 env 是独立副本，不受本进程影响）；
+  // - 开发者显式传参走 .env 文件属预期（脚本/下游自行加载，先洗后读时 .env 值存活）；
+  // - ZCODE_E2E_COVERAGE 由 resolveBuildOptions 在本函数实参求值时读取，不受影响。
+  if (env === process.env && !process.env.CI) {
+    for (const key of Object.keys(process.env)) {
+      if (key.startsWith("ZCODE_")) delete process.env[key];
+    }
+  }
   const outfile = resolve(cliDirectory, "dist/zcode.cjs");
   const sourcemapFile = `${outfile}.map`;
   const notices = await readThirdPartyNotices(resolve(rootDirectory, "../.."));
