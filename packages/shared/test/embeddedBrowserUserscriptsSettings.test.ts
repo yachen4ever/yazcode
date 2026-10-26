@@ -60,3 +60,34 @@ test("embeddedBrowserUserscripts：整表非对象降级为空表", () => {
     assert.deepEqual(parsed, {});
   }
 });
+
+test("embeddedBrowserUserscripts：M4 不变量 pendingApproval ⇒ enabled=false（放行/拒绝矩阵）", () => {
+  const parseEntry = (entry: unknown) =>
+    appSettingsSchema.parse({ embeddedBrowserUserscripts: { s: entry } })
+      .embeddedBrowserUserscripts?.s;
+
+  // 放行矩阵：合法组合原样保留（enabled 缺省补 false）。
+  assert.deepEqual(parseEntry({ enabled: true, sha256: "abc123" }), {
+    enabled: true,
+    sha256: "abc123",
+  });
+  assert.deepEqual(parseEntry({ enabled: true }), { enabled: true });
+  assert.deepEqual(parseEntry({ enabled: false, pendingApproval: true }), {
+    enabled: false,
+    pendingApproval: true,
+  });
+  assert.deepEqual(parseEntry({ enabled: false }), { enabled: false });
+
+  // 拒绝矩阵：禁态 {enabled:true, pendingApproval:true} 违反 superRefine，
+  // 整条目拒绝（catch 降级禁用），不让整份设置文件解析失败。
+  assert.deepEqual(parseEntry({ enabled: true, pendingApproval: true }), { enabled: false });
+  assert.deepEqual(parseEntry({ enabled: true, sha256: "abc123", pendingApproval: true }), {
+    enabled: false,
+  });
+
+  // patch 写入路径共用同一条目 schema，禁态同样拒绝（手工 patch 造不出待批准启用态）。
+  const patched = appSettingsPatchSchema.parse({
+    embeddedBrowserUserscripts: { s: { enabled: true, pendingApproval: true } },
+  });
+  assert.deepEqual(patched.embeddedBrowserUserscripts?.s, { enabled: false });
+});

@@ -34,7 +34,8 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      文件内容变更 → hash 不一致 → 停止注入并记录 warn（不自动重锚定——任何修改都必须
      经显式重新批准）。
    - **重新批准**：把条目改回 `{ enabled: true }`（清除 sha256）即重新锚定。P2 的确认流
-     （approve-once-per-content UI）替换这一手工路径，语义不变。
+     （approve-once-per-content UI）替换这一手工路径：设置卡批准改为钉住所见 sha256
+     （M1 修订，见 P2 行为规则 2），手工清 sha 重锚路径保留。
 
 3. **grant fail-closed**（回执硬性要求 ③）：仅接受
    `none / GM_addStyle / GM_getValue / GM_setValue / GM_deleteValue / GM_listValues`。
@@ -257,9 +258,15 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
      一个当前未在服务的脚本进入服务**。
    - **agent `set_enabled(scriptId, false)`**：直接写 `{ enabled: false }`（清 sha 与
      pendingApproval）。禁用是降权，允许 agent 直达。
-   - **用户批准（设置卡）**：patch 条目为 `{ enabled: true }`（清 sha 与 pendingApproval）
-     ——与 P1 手工路径完全一致，下一次扫描锚定当前内容后开始服务。用户拒绝/忽略 = 保持
-     pendingApproval 或显式 dismiss（patch `{ enabled: false }`）。
+   - **用户批准（设置卡，M1 修订）**：patch 条目为
+     `{ enabled: true, sha256: <liveStatus.sha256> }`——批准即钉住用户所见内容指纹
+     （整条目替换，pendingApproval 随之清除），关闭「批准 → 首扫锚定」窗口内 agent
+     改文件并 reload 使未确认内容被锚定的红线缺口；其后内容变更落 hash_mismatch 停服，
+     批准后未改则 sha 一致直接服务（无首扫锚定写）。**边界**：liveStatus.sha256 为空
+     （文件从未成功扫描/读取失败，或无宿主降级行且 manifest 无锚）时「用户所见」无哈希
+     可钉，回退 `{ enabled: true }` 首扫锚定——该窗口固有，由扫描语义承接（任何修改
+     仍须再次显式批准）。用户拒绝/忽略 = 保持 pendingApproval 或显式 dismiss
+     （patch `{ enabled: false }`）。
    - 内容变更后的重新启用路径不变：hash mismatch → 停服（enabled 仍 true 但不服务，
      状态 `hash_mismatch`）→ 用户在设置卡重新批准 → 清 sha → 重锚定。方案 (b)（完全不给
      agent set_enabled）被否决：它同样需要设置卡与状态呈现，省下的只是 pendingApproval
@@ -317,8 +324,9 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
 2. **agent set_enabled 进待批准不执行**：manifest 无条目 + agent set_enabled(true) →
    条目 `{enabled:false, pendingApproval:true}`，match 扫描服务集不含该脚本；对
    hash_mismatch 条目执行同样只落 pendingApproval。
-3. **用户批准后执行**：pendingApproval 条目 → 设置卡批准（patch `{enabled:true}`）→
-   下一次 match 扫描锚定并服务。
+3. **用户批准后执行**：pendingApproval 条目 → 设置卡批准（patch
+   `{enabled:true, sha256:<所见>}`）→ 文件未改即直接服务（sha 一致，无首扫锚定写）；
+   批准后文件被改 → `hash_mismatch` 停服，未确认内容不被锚定（M1）。
 4. **hash mismatch 停服后 UI 呈现**：已锚定脚本文件内容变更 → 状态 `hash_mismatch`、
    不服务；设置卡显示对应徽标；用户重新批准后恢复。
 5. **reload 幂等**：连续两次 reload 返回同构状态，manifest 不因 reload 产生额外写
@@ -329,6 +337,9 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
 8. **未安装降级**：`installIabUserscripts` 未执行时三个命令返回 `backend_unavailable`。
 9. **设置卡**：manifest 派生行（无平台方法时）不显示 name/mismatch 猜测；批准/开关
    patch 只经 SettingService；三语文案齐备。
+10. **schema 不变量（M4）**：条目 schema superRefine 强制 `pendingApproval:true ⇒
+    enabled:false`；违禁组合（含手改设置文件的旁路写入）整条目拒绝并经 catch 降级
+    禁用，不连累整份设置文件解析；storage 与 patch 两条登记路径同矩阵放行/拒绝。
 
 ### P2 明确不做
 

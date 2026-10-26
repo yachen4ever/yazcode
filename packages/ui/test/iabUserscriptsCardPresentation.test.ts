@@ -68,6 +68,24 @@ describe("buildIabUserscriptRows（live 模式）", () => {
     assert.equal(toShaShort("short"), null);
     assert.equal(toShaShort(undefined), null);
   });
+
+  it("行携带完整 sha256 供批准钉住；读取失败的空串归一 null（M1）", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({ scriptId: "ok", sha256: "ABCDEF0123456789" }),
+        statusItem({ scriptId: "unreadable", sha256: "" }),
+      ],
+      manifest: {},
+    });
+    assert.equal(rows.find((row) => row.scriptId === "ok")?.sha256, "ABCDEF0123456789");
+    assert.equal(rows.find((row) => row.scriptId === "unreadable")?.sha256, null);
+    // 降级模式行携带 manifest 已锚 hash（钉住它比盲锚当前内容更 fail-closed）。
+    const degraded = buildIabUserscriptRows({
+      liveStatus: null,
+      manifest: { pinned: { enabled: true, sha256: "a1b2c3d4e5f6" } },
+    });
+    assert.equal(degraded[0]?.sha256, "a1b2c3d4e5f6");
+  });
 });
 
 describe("buildIabUserscriptRows（降级模式：无平台查询）", () => {
@@ -95,15 +113,21 @@ describe("buildIabUserscriptRows（降级模式：无平台查询）", () => {
 });
 
 describe("nextManifestEntry（动作 → 下一条目）", () => {
-  it("approve 恒为 {enabled:true}（清 sha 与 pendingApproval，P1 重新锚定语义）", () => {
+  it("approve 钉住所见 sha（M1：批准即锁内容指纹，关闭批准→首扫锚定窗口）", () => {
     assert.deepEqual(
-      nextManifestEntry({ enabled: true, sha256: "a".repeat(64) }, "approve"),
-      { enabled: true },
+      nextManifestEntry({ enabled: true, sha256: "a".repeat(64) }, "approve", "b".repeat(64)),
+      { enabled: true, sha256: "b".repeat(64) },
     );
-    assert.deepEqual(nextManifestEntry({ enabled: false, pendingApproval: true }, "approve"), {
-      enabled: true,
-    });
+    assert.deepEqual(
+      nextManifestEntry({ enabled: false, pendingApproval: true }, "approve", "c".repeat(64)),
+      { enabled: true, sha256: "c".repeat(64) },
+    );
+  });
+
+  it("approve 无所见 sha（未扫描/读取失败）回退 {enabled:true} 首扫锚定（窗口固有）", () => {
     assert.deepEqual(nextManifestEntry(undefined, "approve"), { enabled: true });
+    assert.deepEqual(nextManifestEntry(undefined, "approve", null), { enabled: true });
+    assert.deepEqual(nextManifestEntry(undefined, "approve", ""), { enabled: true });
   });
 
   it("disable 关闭启用或驳回待批准；无变化返回 null（免写）", () => {

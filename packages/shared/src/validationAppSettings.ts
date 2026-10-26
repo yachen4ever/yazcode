@@ -487,6 +487,19 @@ export const embeddedBrowserUserscriptEntrySchema = z
     sha256: nonEmptyStringSchema.optional(),
     pendingApproval: z.boolean().optional(),
   })
+  // M4（P2 复核）不变量：pendingApproval 恒伴随 enabled=false。服务集判定只看
+  // enabled、不看 pendingApproval，禁态 {enabled:true, pendingApproval:true} 会让
+  // 脚本实际被服务、设置卡却呈现「待批准」——写入方构造不出该组合（整条目替换），
+  // 但手改设置文件等旁路通道可以。此处 fail-closed：违规整条目拒绝，经 catch
+  // 降级为禁用，不让整份设置文件解析失败（与条目损坏降级同一策略）。
+  .superRefine((entry, ctx) => {
+    if (entry.pendingApproval === true && entry.enabled === true) {
+      ctx.addIssue({
+        code: "custom",
+        message: "pendingApproval requires enabled=false (forbidden state: enabled+pendingApproval)",
+      });
+    }
+  })
   .catch({ enabled: false });
 export type EmbeddedBrowserUserscriptEntry = z.infer<typeof embeddedBrowserUserscriptEntrySchema>;
 

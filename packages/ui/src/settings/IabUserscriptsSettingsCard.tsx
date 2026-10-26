@@ -84,7 +84,9 @@ export function IabUserscriptsSettingsCard() {
     async (scriptId: string, action: "approve" | "disable") => {
       const currentManifest: NonNullable<AppSettings["embeddedBrowserUserscripts"]> =
         settings?.embeddedBrowserUserscripts ?? {};
-      const entry = nextManifestEntry(currentManifest[scriptId], action);
+      // M1（P2 复核）：批准钉住用户所见 sha，其后内容变更落 hash_mismatch 而非被静默锚定。
+      const seenSha256 = rows.find((row) => row.scriptId === scriptId)?.sha256 ?? null;
+      const entry = nextManifestEntry(currentManifest[scriptId], action, seenSha256);
       if (!entry) return;
       setPendingScriptIds((current) => new Set(current).add(scriptId));
       try {
@@ -107,7 +109,7 @@ export function IabUserscriptsSettingsCard() {
         });
       }
     },
-    [intl, refreshStatus, settings?.embeddedBrowserUserscripts, update],
+    [intl, refreshStatus, rows, settings?.embeddedBrowserUserscripts, update],
   );
 
   const renderBadges = (badges: IabUserscriptBadgeKind[]) => (
