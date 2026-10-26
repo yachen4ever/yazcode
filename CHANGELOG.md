@@ -5,6 +5,31 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.4.0 (2026-10-26)
+
+- **IAB 用户脚本 P2：agent 工具面 + 确认流 + 设置卡**（`docs/specs/iab-userscripts.md` P2 节）：
+  agent 经 `browser.userscripts` 工具面获得 `list/reload/set_enabled` 三命令（shared strict
+  schema → desktop handler → core facade → manifest → 插件 api.json v12 五层接线）；确认流
+  方案 (a)——命令面 set_enabled 只落 `{enabled:false, pendingApproval:true}`，`enabled:true`
+  在命令面物理不可构造（BrowserCommand 唯一入口为 host 运行时，构造性来源识别，经 y430p
+  复核三路攻击验证）；用户批准经浏览器设置区新设置卡（approve-once-per-content，批准钉住
+  用户所见 sha256——P2 复核 M1 修复，关闭「批准→首扫」窗口）；GM 存储健康徽标与
+  hash_mismatch/pendingApproval 状态呈现；manifest schema 强制 `pendingApproval ⇒
+  enabled=false`（M4）。手机 Web 远控降级可用（远端 SettingService 信任路径）。
+- **多目录项目 P3：UI 期**（`docs/specs/multi-root-projects.md` P3a-P3d）：项目状态底座
+  （workspace→project 纯函数派生 + 读模型缓存，唯一持久所有者仍为 ProjectRepository）；
+  项目编辑器对话框（新建/编辑/删除、epoch/alive 迟到防护，参考 ZCodium ProjectEditor 模式
+  按本仓重建）；侧栏项目化（项目名标注 + roots 徽标 + 行菜单，分组口径保持
+  workspaceKey=primary root 不另起炉灶）；文件提及跨 roots（@-mention 并发扇出附加目录）；
+  草稿按 projectId 隔离。已知边界：桌面 v4 草稿首发的项目归属固化（G1）待协议通道补齐，
+  已登记 spec；远端项目编辑入口待 P4。
+- **构建入口 ZCODE_* 前缀级环境洗涤**：三个构建入口（buildCli/build-metadata/build-zcode）
+  对宿主注入的全部 `ZCODE_*` 变量按前缀洗涤（CI 豁免保发布注入），构建输入确定性化——
+  终结宿主运行时环境与仓库构建的三类冲突（staged 配置 schema 拒绝、版本烤入宿主版本号、
+  构建环境翻转）。
+- **IAB P2 复核 minor 修复**（y430p 复核：无 blocker/major，5 minor 中 3 项随批处置，
+  M2/M3 informational 记录）。
+
 ## 26.3.0 (2026-10-25)
 
 新批次（y 位）：内嵌浏览器用户脚本 + 多目录项目 P2。
