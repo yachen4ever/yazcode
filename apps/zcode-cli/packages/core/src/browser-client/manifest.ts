@@ -42,6 +42,10 @@ const FALLBACK_MANIFEST: BrowserApiManifest = {
     BrowserViewportSize: "{ width: number; height: number }",
     TabInfo:
       "{ id: string; active?: boolean; title?: string; url?: string; viewport: BrowserViewportSize }",
+    BrowserUserscriptStatusItem:
+      "{ scriptId: string; name: string; version?: string; runAt: string; grants: string[]; match: string[]; status: BrowserUserscriptStatus; sha256: string; detail?: string }",
+    BrowserUserscriptSetEnabledResult:
+      "{ scriptId: string; changed: boolean; status: BrowserUserscriptStatusItem }",
   },
   objects: {
     Agent: {
@@ -76,6 +80,11 @@ const FALLBACK_MANIFEST: BrowserApiManifest = {
           name: "cookies",
           kind: "property",
           signature: "cookies: BrowserCookiesAPI",
+        },
+        {
+          name: "userscripts",
+          kind: "property",
+          signature: "userscripts: BrowserUserscriptsAPI",
         },
         {
           name: "capabilities",
@@ -211,6 +220,29 @@ const FALLBACK_MANIFEST: BrowserApiManifest = {
           signature: "cancel(recordingId): Promise<BrowserRecordingJob>",
           command: "recordingCancel",
           unsupportedByDefaultIn: ["extension", "cdp"],
+        },
+      ],
+    },
+    BrowserUserscriptsAPI: {
+      members: [
+        {
+          name: "list",
+          kind: "method",
+          signature: "list(): Promise<BrowserUserscriptStatusItem[]>",
+          command: "userscript_list",
+        },
+        {
+          name: "reload",
+          kind: "method",
+          signature: "reload(): Promise<BrowserUserscriptStatusItem[]>",
+          command: "userscript_reload",
+        },
+        {
+          name: "setEnabled",
+          kind: "method",
+          signature:
+            "setEnabled(scriptId: string, enabled: boolean): Promise<BrowserUserscriptSetEnabledResult>",
+          command: "userscript_set_enabled",
         },
       ],
     },

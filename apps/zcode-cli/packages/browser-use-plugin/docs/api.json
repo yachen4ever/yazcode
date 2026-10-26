@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 12,
   "entrypoints": [
     "agent.browsers.get(\"iab\")",
     "agent.browsers.getDefault()",
@@ -52,7 +52,9 @@
     "BrowserHistoryOptions": "{ from?: string | Date; limit?: number; queries?: string[]; to?: string | Date }",
     "BrowserHistoryEntry": "{ dateVisited: string; title?: string; url: string }",
     "FinalizeTabStatus": "handoff | deliverable",
-    "FinalizeTabsOptions": "{ keep?: Array<{ status: FinalizeTabStatus; tab: string | Tab | { id: string } }> }"
+    "FinalizeTabsOptions": "{ keep?: Array<{ status: FinalizeTabStatus; tab: string | Tab | { id: string } }> }",
+    "BrowserUserscriptStatusItem": "{ scriptId: string; name: string; version?: string; runAt: string; grants: string[]; match: string[]; status: BrowserUserscriptStatus; sha256: string; detail?: string }",
+    "BrowserUserscriptSetEnabledResult": "{ scriptId: string; changed: boolean; status: BrowserUserscriptStatusItem }"
   },
   "objects": {
     "Agent": {
@@ -123,6 +125,11 @@
           "name": "cookies",
           "kind": "property",
           "signature": "cookies: BrowserCookiesAPI"
+        },
+        {
+          "name": "userscripts",
+          "kind": "property",
+          "signature": "userscripts: BrowserUserscriptsAPI"
         },
         {
           "name": "tabs",
@@ -916,6 +923,28 @@
           "name": "dismiss",
           "kind": "method",
           "signature": "dismiss(): Promise<void>"
+        }
+      ]
+    },
+    "BrowserUserscriptsAPI": {
+      "members": [
+        {
+          "name": "list",
+          "kind": "method",
+          "signature": "list(): Promise<BrowserUserscriptStatusItem[]>",
+          "command": "userscript_list"
+        },
+        {
+          "name": "reload",
+          "kind": "method",
+          "signature": "reload(): Promise<BrowserUserscriptStatusItem[]>",
+          "command": "userscript_reload"
+        },
+        {
+          "name": "setEnabled",
+          "kind": "method",
+          "signature": "setEnabled(scriptId: string, enabled: boolean): Promise<BrowserUserscriptSetEnabledResult>",
+          "command": "userscript_set_enabled"
         }
       ]
     }

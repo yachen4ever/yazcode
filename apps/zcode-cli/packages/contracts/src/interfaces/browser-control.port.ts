@@ -418,6 +418,36 @@ export type BrowserErrorCode =
   | "cancelled"
   | "execution_error";
 
+/** userscript_list / userscript_reload 返回的脚本状态（P2，镜像 shared 的状态词汇）。 */
+export type BrowserUserscriptStatus =
+  | "serving"
+  | "enabled_pending_anchor"
+  | "hash_mismatch"
+  | "disabled"
+  | "pending_approval"
+  | "parse_failed"
+  | "grant_rejected";
+
+export interface BrowserUserscriptStatusItem {
+  scriptId: string;
+  name: string;
+  version?: string;
+  runAt: string;
+  grants: string[];
+  match: string[];
+  status: BrowserUserscriptStatus;
+  /** 当前文件内容 sha256（hex）。 */
+  sha256: string;
+  detail?: string;
+}
+
+/** userscript_set_enabled 的返回：操作后的该脚本状态；changed=false 为幂等 no-op。 */
+export interface BrowserUserscriptSetEnabledResult {
+  scriptId: string;
+  changed: boolean;
+  status: BrowserUserscriptStatusItem;
+}
+
 export interface BrowserPageState {
   url: string;
   title: string;

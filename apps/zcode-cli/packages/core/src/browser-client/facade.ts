@@ -17,6 +17,8 @@ import {
   type BrowserSnapshotElement,
   type BrowserTabSummary,
   type BrowserUserTabInfo,
+  type BrowserUserscriptSetEnabledResult,
+  type BrowserUserscriptStatusItem,
   type BrowserViewportSize,
 } from "@zcode/contracts/browser-control";
 import { loadBrowserDocumentation } from "./documentation.js";
@@ -866,6 +868,57 @@ export class BrowserUser {
 }
 
 /**
+ * IAB 用户脚本三命令的 agent 工具面（browser 级；docs/specs/iab-userscripts.md P2）。
+ * 确认流红线：setEnabled(scriptId, true) 在 main 侧只落 pendingApproval——新内容的
+ * 启用必须由用户在设置卡批准；setEnabled(..., false) 是降权，直达生效。
+ */
+export class BrowserUserscriptsAPI {
+  private readonly execute: BrowserExecuteFn;
+  constructor(execute: BrowserExecuteFn) {
+    this.execute = execute;
+  }
+
+  private async requestScripts(command: BrowserCommand): Promise<BrowserUserscriptStatusItem[]> {
+    const result = expectOk(command, await this.execute(command));
+    const scripts = (result.value as { scripts?: unknown })?.scripts;
+    if (!Array.isArray(scripts)) {
+      throw new Error(`Browser userscripts result is missing a scripts array (${command.method})`);
+    }
+    return scripts as BrowserUserscriptStatusItem[];
+  }
+
+  /** 只读状态投影（不做锚定写）。 */
+  async list(): Promise<BrowserUserscriptStatusItem[]> {
+    return await this.requestScripts({ method: "userscript_list" });
+  }
+
+  /** 立即重扫（含批准后的锚定）并返回最新状态；幂等。 */
+  async reload(): Promise<BrowserUserscriptStatusItem[]> {
+    return await this.requestScripts({ method: "userscript_reload" });
+  }
+
+  async setEnabled(
+    scriptId: string,
+    enabled: boolean,
+  ): Promise<BrowserUserscriptSetEnabledResult> {
+    if (typeof scriptId !== "string" || scriptId.trim().length === 0) {
+      throw new TypeError("userscripts.setEnabled requires a non-empty scriptId");
+    }
+    const command: BrowserCommand = {
+      method: "userscript_set_enabled",
+      scriptId,
+      enabled: enabled === true,
+    };
+    const result = expectOk(command, await this.execute(command));
+    const value = result.value as Partial<BrowserUserscriptSetEnabledResult> | undefined;
+    if (!value || value.scriptId !== scriptId || !value.status) {
+      throw new Error("Browser userscripts result is missing set_enabled status");
+    }
+    return { scriptId, changed: value.changed === true, status: value.status };
+  }
+}
+
+/**
  * cookies 读写（browser 级）：经 CDP Storage 域操作当前 browser context 的全量 cookies
  * （含 httpOnly）。cookies 是会话凭据级数据——结果含登录凭据，调用方不得写入日志。
  */
@@ -900,6 +953,7 @@ export class Browser {
   readonly tabs: BrowserTabs;
   readonly user: BrowserUser;
   readonly cookies: BrowserCookiesAPI;
+  readonly userscripts: BrowserUserscriptsAPI;
   readonly capabilities: BrowserCapabilityCollection;
   private readonly defaultTab: Tab;
   private info: BrowserInfo;
@@ -947,6 +1001,7 @@ export class Browser {
       this.policy,
     );
     this.cookies = new BrowserCookiesAPI(this.execute);
+    this.userscripts = new BrowserUserscriptsAPI(this.execute);
     this.defaultTab = wrapTab(
       new Tab(
         this.execute,
