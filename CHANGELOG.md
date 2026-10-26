@@ -30,6 +30,36 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **IAB P2 复核 minor 修复**（y430p 复核：无 blocker/major，5 minor 中 3 项随批处置，
   M2/M3 informational 记录）。
 
+### 验收结论（2026-10-27，y430p 实机验收）
+
+- **发布判定**：A 全 PASS + B 核心 PASS（含 B1 环境注记）+ C PARTIAL 无 FAIL → v26.4.0 发布。
+  台账回填走 artifact 路线（`1b2a0079`，重推后 licenses-notices + tests 双绿）；draft 构建
+  run `40389095538` 全 job 绿。
+- **三端哈希链**：CI `sha256.txt` = y430p 源端 = workwin 目标端，`yazcode-26.4.0-win-x64.exe`
+  = `d20eb080f4fdebd1cd42ddfa66bd37092b6c0801e097cdb677be728b3ea2208e`（154,227,302 字节）；
+  安装后 ProductVersion 26.4.0.0。
+- **A 基线回归（全 PASS）**：OV 接入插件 0.5.23 + MCP `tools/list` 24 工具握手、服务端可达
+  凭据通过；桌面 surface 技能清单含 visualize；CLI 直跑上下文无可视化目录声明注入、引用按
+  纯文本输出；gen-ui 五类安全边界实机复现（根外/符号链接/超 5MB → 错误卡「未通过安全校验，
+  已拒绝读取」，非 html/非法文件名 → 解析层「可视化引用无效，已跳过」），正例柱状图卡片
+  正常渲染。
+- **B IAB P2（核心 PASS）**：设置卡呈现 hide-ai-copilot serving/sha `3c49df95`（26.3.0 锚定
+  保持）；确认流实测——agent 工具面 `setEnabled(true)` 仅落 `{enabled:false, pendingApproval:true}`
+  且不注入（红线断言：命令面无 `enabled:true` 写入，manifest 落盘为证）；用户批准钉住所见
+  sha `44a4ca4f` → serving 注入（标记页 title 后缀 + 注入 flag 出现）；脚本内容变更即
+  hash_mismatch 停服（注入消失、卡片「内容已变更」徽标）；开关 patch 双向生效；
+  `list/reload/setEnabled` 工具面可用。注记：门户页隐藏效果因 workwin 零信任内网通道失效
+  未能本机复现（脚本 serving、sha 与 26.3.0 验收一致、P1 注入链路未改动，无回归依据）。
+- **C 多目录 P3 UI（PARTIAL，无 FAIL）**：项目编辑器新建路径全链路 PASS（对话框语义、
+  主目录标记、原生选目录、`saveProject` → ProjectRepository sqlite 落库 position/is_primary
+  正确）；侧栏项目名标注 PASS（工作区按 primary root 关联显示项目名）；编辑模式对话框打开
+  PASS。未执行（环境阻塞，非产品缺陷）：第二 root 添加与 roots 徽标、同 cwd 双项目草稿
+  隔离、@-mention 附加 root——headless 控制台 200% DPI 下原生对话框自动化受限且窄视口
+  触发移动布局，本地无 FAIL 项。
+- **遗留记录**：`browser-userscripts.md` 声明 `setEnabled` 返回 `{scriptId, changed, status}`
+  （status 为六值枚举字符串），实机返回 status 为完整状态对象——文档契约偏差，随下批修正；
+  命令 schema 边界（strict 拒绝/空 scriptId/非布尔）由单测覆盖（tests 绿）。
+
 ## 26.3.0 (2026-10-25)
 
 新批次（y 位）：内嵌浏览器用户脚本 + 多目录项目 P2。
