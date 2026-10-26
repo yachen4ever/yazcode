@@ -192,6 +192,8 @@ export interface UserScriptDef {
   description?: string;
   runAt: UserScriptRunAt;
   grants: string[];
+  /** 声明的原始 @match pattern（P2 状态面回显用）；编译产物见 compiledPatterns。 */
+  matchPatterns: string[];
   compiledPatterns: RegExp[];
   code: string;
   sha256: string;
@@ -243,6 +245,7 @@ export function buildUserScriptDef(input: {
       ...(header.description ? { description: header.description } : {}),
       runAt,
       grants: grantResolution.grants,
+      matchPatterns: [...header.matchPatterns],
       compiledPatterns,
       code,
       sha256: input.sha256,

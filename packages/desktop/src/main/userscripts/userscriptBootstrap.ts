@@ -1,6 +1,6 @@
 import { ipcMain, session, type IpcMainEvent, type IpcMainInvokeEvent } from "electron";
 import { join } from "node:path";
-import { getZCodeDataRootDir } from "@zcode/services/node";
+import { getZCodeDataRootDir, createServiceLogger } from "@zcode/services/node";
 import type { ISettingService } from "@zcode/services";
 import { EMBEDDED_BROWSER_PARTITION } from "../embeddedBrowserPartition.js";
 import {
@@ -13,6 +13,7 @@ import {
   isSenderMainFrame,
   readSenderSession,
   type UserscriptRequestContext,
+  type UserscriptService,
 } from "./userscriptService.js";
 import type { UserscriptManifestPort } from "./userscriptStore.js";
 
@@ -36,6 +37,13 @@ export interface InstallIabUserscriptsOptions {
 const RUNTIME_PRELOAD_ID = "yazcode-iab-userscript-runtime";
 
 let installed = false;
+/** 已安装的 service 实例；BrowserCommand 面（P2 三命令）经 getIabUserscriptService 取用。 */
+let installedService: UserscriptService | null = null;
+
+/** 未安装（app 未 ready 或测试环境）时返回 null，命令面按 backend_unavailable 降级。 */
+export function getIabUserscriptService(): UserscriptService | null {
+  return installedService;
+}
 
 /** 用户脚本目录：{数据根}/.yazcode/userscripts，默认即 ~/.yazcode/userscripts。 */
 export function resolveUserscriptsDir(): string {
@@ -84,12 +92,18 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
   });
   options.logger.info(`[userscripts] runtime preload registered: ${runtimePreloadPath}`);
 
+  // 服务层日志走 createServiceLogger（scope: userscripts）；store/storage 只需 info/warn 端口。
+  const serviceLogger = createServiceLogger("userscripts");
   const service = createUserscriptService({
     scriptsDir: options.paths?.scriptsDir ?? resolveUserscriptsDir(),
     storageRootDir: options.paths?.storageRootDir ?? resolveUserscriptStorageDir(),
     manifestPort: createSettingServiceManifestPort(options.settingService),
-    logger: options.logger,
+    logger: {
+      info: (...args: unknown[]) => serviceLogger.info(undefined, ...args),
+      warn: (...args: unknown[]) => serviceLogger.warn(undefined, ...args),
+    },
   });
+  installedService = service;
 
   function requestContext(event: IpcMainEvent | IpcMainInvokeEvent): UserscriptRequestContext {
     return {

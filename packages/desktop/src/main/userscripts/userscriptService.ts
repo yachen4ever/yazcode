@@ -8,13 +8,19 @@ import {
   type UserScriptStorageResult,
 } from "./userscriptIpcContract.js";
 import { isValidStorageKey, urlMatchesAnyPattern } from "./userscriptRules.js";
-import { createUserscriptStore, type UserscriptManifestPort } from "./userscriptStore.js";
+import {
+  createUserscriptStore,
+  type UserscriptManifestPort,
+  type UserScriptStatusItem,
+} from "./userscriptStore.js";
 import { createUserscriptStorage } from "./userscriptStorage.js";
 
 /**
  * 用户脚本服务层（无 electron 运行时依赖，测试可直跑）：
  * match 按当前扫描结果过滤；get/set 做「合法形状 → 主 frame → scriptId 在服务集内」
  * 三级守卫后落到 GM 存储。信任判定全部在 main，回包不含文件路径。
+ * P2 命令面（listStatus/reload/setAgentEnabled）是 BrowserCommand 的 agent 工具面
+ * 实现，确认流状态机见 docs/specs/iab-userscripts.md P2 行为规则 2。
  */
 
 export interface UserscriptServiceLogger {
@@ -48,9 +54,10 @@ function storageFailure(error: NonNullable<UserScriptStorageResult["error"]>): U
 }
 
 export function createUserscriptService(options: CreateUserscriptServiceOptions) {
+  const manifestPort = options.manifestPort;
   const store = createUserscriptStore({
     scriptsDir: options.scriptsDir,
-    manifestPort: options.manifestPort,
+    manifestPort,
     logger: options.logger,
   });
   const storage = createUserscriptStorage({
@@ -59,6 +66,62 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
   });
 
   return {
+    /**
+     * userscript_list：只读状态投影（不做锚定写）。agent 观察面，
+     * 回包不含脚本代码与文件路径。
+     */
+    async listStatus(): Promise<UserScriptStatusItem[]> {
+      return await store.inspect();
+    },
+
+    /**
+     * userscript_reload：立即执行一次完整扫描（含 P1 锚定语义）后重导出状态。
+     * 无扫描缓存可失效，命令幂等；存在意义是给 agent 一个明确的「刷新事实」动作。
+     */
+    async reload(): Promise<UserScriptStatusItem[]> {
+      await store.scan();
+      return await store.inspect();
+    },
+
+    /**
+     * userscript_set_enabled（agent 来源确认流状态机）：
+     * - enabled=false：直接禁用（降权直达），清 sha 与 pendingApproval；
+     * - enabled=true：绝不直接启用——落 pendingApproval（enabled=false + 清 sha），
+     *   待用户在设置卡批准；已处于已批准态（serving / enabled_pending_anchor）时幂等 no-op。
+     * manifest 读改写与 P1 锚定写共享同一条 SettingService 写路径；目录规模个位数，
+     * 并发写风险与 P1 锚定路径一致（last-write-wins，下次扫描自愈）。
+     */
+    async setAgentEnabled(
+      scriptId: string,
+      enabled: boolean,
+    ): Promise<
+      | { ok: true; changed: boolean; status: UserScriptStatusItem }
+      | { ok: false; error: "unknown_script" }
+    > {
+      const statuses = await store.inspect();
+      const target = statuses.find((item) => item.scriptId === scriptId);
+      if (!target) {
+        return { ok: false, error: "unknown_script" };
+      }
+      if (enabled && (target.status === "serving" || target.status === "enabled_pending_anchor")) {
+        // 已批准态：agent 的启用请求已满足，不写 manifest（幂等）。
+        return { ok: true, changed: false, status: target };
+      }
+
+      const manifest = await manifestPort.getManifest();
+      manifest[scriptId] = enabled
+        ? { enabled: false, pendingApproval: true }
+        : { enabled: false };
+      await manifestPort.saveManifest(manifest);
+      options.logger.info(
+        `[userscripts] agent set_enabled ${scriptId} enabled=${enabled} -> ${
+          enabled ? "pendingApproval" : "disabled"
+        }`,
+      );
+
+      const next = (await store.inspect()).find((item) => item.scriptId === scriptId);
+      return { ok: true, changed: true, status: next ?? target };
+    },
     /**
      * match：非 http(s)、非法入参或非 IAB 分区请求返回空集（no-op），
      * 与 runtime 的 scheme 守卫互为冗余防线。

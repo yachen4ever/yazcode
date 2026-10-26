@@ -21,7 +21,8 @@ import { installGenUiFileProtocol, registerGenUiFileScheme } from "./genUi/genUi
 import { createDesktopBrowserScreenshotSurfaceCoordinator } from "./browserView/browserScreenshotSurfaceCoordinatorWiring.js";
 import { EMBEDDED_BROWSER_PARTITION } from "./browserDataManager.js";
 import { registerIabDownloadAutoSave } from "./desktopIabDownloadAutoSave.js";
-import { installIabUserscripts } from "./userscripts/userscriptBootstrap.js";
+import { getIabUserscriptService, installIabUserscripts } from "./userscripts/userscriptBootstrap.js";
+import { maybeHandleUserscriptCommand } from "./browserView/browserCommandUserscriptsHandler.js";
 import { EmbeddedBrowserJavaScriptDialogController } from "./embeddedBrowserJavaScriptDialog.js";
 import {
   browserOperationResetsResizeBaseline,
@@ -396,6 +397,20 @@ async function runBrowserCommandOnView(params: {
   sessionContext?: "live" | "cached";
   command: unknown;
 }): Promise<{ ok: boolean; [k: string]: unknown }> {
+  // IAB 用户脚本三命令（P2）不是 view 作用域命令：在进入 guest manager 与
+  // dialog automation 之前拦截（userscript 命令不触碰页面，也不该占用 requestId 生命周期）。
+  const userscriptResult = await maybeHandleUserscriptCommand(
+    params.command,
+    getIabUserscriptService(),
+  );
+  if (userscriptResult) {
+    logger.debug(
+      `[browser-use] userscript command method=${
+        (params.command as { method?: string })?.method ?? "?"
+      } ok=${userscriptResult.ok}`,
+    );
+    return userscriptResult;
+  }
   const endDialogAutomation = embeddedBrowserDialogController.beginAutomation(params.win.id);
   const command = params.command as { method?: string; tabId?: unknown } | null;
   const method = command?.method ?? "?";
