@@ -1643,6 +1643,8 @@ const enUS: Record<string, string> = {
   "workspaceSidebar.reorderSection": "Move {section} section",
   "workspaceSidebar.addProject": "Add project",
   "workspaceSidebar.noConversations": "No tasks yet",
+  "workspaceSidebar.newProject": "New Project",
+  "workspaceSidebar.editProject": "Edit Project",
   "workspaceSidebar.noProjects": "No open projects",
   "workspaceSidebar.viewByWorkspace": "By project",
   "workspaceSidebar.organizeChronologicalList": "Timeline",

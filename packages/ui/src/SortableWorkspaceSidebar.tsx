@@ -32,6 +32,8 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
   reconnectingRemoteWorkspaceLogsByWorkspaceKey,
   onReconnectRemoteWorkspace,
   onOpenFileTree,
+  projectPresentation,
+  onEditProject,
 }: {
   tab: WorkspaceTabState;
   isActiveWorkspace: boolean;
@@ -62,6 +64,13 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
     workspaceIdentity?: string;
     workspaceRemoteSessionId?: string;
   }) => void;
+  /** 项目标注（P3c）；上层已按 tabId memo 化，避免打穿行级 memo。 */
+  projectPresentation?: {
+    displayName: string;
+    rootsBadgeCount: number | null;
+    rootsTooltip: string | null;
+  };
+  onEditProject?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
@@ -125,6 +134,8 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
       reconnectingRemoteWorkspaceLogsByWorkspaceKey={reconnectingRemoteWorkspaceLogsByWorkspaceKey}
       onReconnectRemoteWorkspace={onReconnectRemoteWorkspace}
       onOpenFileTree={onOpenFileTree}
+      projectPresentation={projectPresentation}
+      onEditProject={onEditProject}
       itemRef={setNodeRef}
       itemStyle={style}
       sortableBindings={sortableBindings}

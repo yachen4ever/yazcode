@@ -1635,6 +1635,8 @@ const faIR: Record<string, string> = {
   "workspaceSidebar.reorderSection": "جابه‌جایی بخش {section}",
   "workspaceSidebar.addProject": "افزودن پروژه",
   "workspaceSidebar.noConversations": "هنوز وظیفه‌ای وجود ندارد",
+  "workspaceSidebar.newProject": "پروژه جدید",
+  "workspaceSidebar.editProject": "ویرایش پروژه",
   "workspaceSidebar.noProjects": "پروژه بازی وجود ندارد",
   "workspaceSidebar.viewByWorkspace": "بر اساس پروژه",
   "workspaceSidebar.organizeChronologicalList": "خط زمانی",
