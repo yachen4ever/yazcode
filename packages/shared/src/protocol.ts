@@ -349,14 +349,15 @@ export interface AppSettings {
     modelId?: string;
   };
   /**
-   * IAB 内置用户脚本 manifest：scriptId → { enabled, sha256? }。
+   * IAB 内置用户脚本 manifest：scriptId → { enabled, sha256?, pendingApproval? }。
    * sha256 是「批准时」的内容锚定，与当前文件不一致即停用（fail-closed）；
+   * pendingApproval 是 agent 请求启用的待批准标记（P2 确认流），恒伴随 enabled=false。
    * 结构定义见 validationAppSettings.ts 的 embeddedBrowserUserscriptsSettingsSchema，
    * 契约见 docs/specs/iab-userscripts.md。
    */
   embeddedBrowserUserscripts?: Record<
     string,
-    { enabled: boolean; sha256?: string }
+    { enabled: boolean; sha256?: string; pendingApproval?: boolean }
   >;
   onboardingOccupation?:
     | "office"

@@ -106,6 +106,9 @@ export type BrowserCommandMethod =
   | "playwrightWaitForTimeout"
   | "cookies"
   | "capabilities"
+  | "userscript_list"
+  | "userscript_reload"
+  | "userscript_set_enabled"
   | "browserVisibilityGet"
   | "browserVisibilitySet"
   | "browserViewportSet"
@@ -368,6 +371,10 @@ export type BrowserCommand =
       tabId?: string;
     }
   | { method: "capabilities"; tabId?: string }
+  // IAB 用户脚本三命令（P2）：非 view 作用域，不携带 tabId；set_enabled 的确认流语义见 spec。
+  | { method: "userscript_list" }
+  | { method: "userscript_reload" }
+  | { method: "userscript_set_enabled"; scriptId: string; enabled: boolean }
   | { method: "browserVisibilityGet" }
   | { method: "browserVisibilitySet"; visible: boolean }
   | { method: "browserViewportSet"; width: number; height: number; tabId?: string }

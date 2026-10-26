@@ -476,6 +476,8 @@ export type VisionFallbackSettings = z.infer<typeof visionFallbackSettingsSchema
  * IAB 内置用户脚本 manifest 的单条目：scriptId → 启用状态与内容锚定 hash。
  * sha256 是「批准时」的内容指纹：条目缺 sha256 表示待锚定；与当前文件不一致即停用
  * （fail-closed），契约见 docs/specs/iab-userscripts.md。
+ * pendingApproval（P2）：agent 经 userscript_set_enabled 请求启用的「待批准」标记——
+ * 该状态恒伴随 enabled=false，服务集判定只看 enabled，不依赖本字段。
  * 条目损坏时降级为「禁用」而不是让整个设置文件解析失败——manifest 子树的损坏
  * 不能连累 locale/provider 等无关设置。
  */
@@ -483,6 +485,7 @@ export const embeddedBrowserUserscriptEntrySchema = z
   .object({
     enabled: z.boolean().default(false),
     sha256: nonEmptyStringSchema.optional(),
+    pendingApproval: z.boolean().optional(),
   })
   .catch({ enabled: false });
 export type EmbeddedBrowserUserscriptEntry = z.infer<typeof embeddedBrowserUserscriptEntrySchema>;

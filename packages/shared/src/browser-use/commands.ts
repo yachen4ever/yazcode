@@ -562,6 +562,18 @@ export const browserCommandSchema = z.discriminatedUnion("method", [
     })
     .strict(),
   z.object({ method: z.literal("capabilities"), tabId: z.string().optional() }).strict(),
+  // IAB 用户脚本三命令（docs/specs/iab-userscripts.md P2）：不是 view 作用域命令，不携带 tabId。
+  // set_enabled 的确认流红线：命令面按构造即 agent 来源，enabled=true 只能落 pendingApproval，
+  // 由 main 侧 handler 执行；schema 只约束参数形状。
+  z.object({ method: z.literal("userscript_list") }).strict(),
+  z.object({ method: z.literal("userscript_reload") }).strict(),
+  z
+    .object({
+      method: z.literal("userscript_set_enabled"),
+      scriptId: z.string().trim().min(1),
+      enabled: z.boolean(),
+    })
+    .strict(),
   z.object({ method: z.literal("browserVisibilityGet") }).strict(),
   z.object({ method: z.literal("browserVisibilitySet"), visible: z.boolean() }).strict(),
   browserViewportInputSchema
