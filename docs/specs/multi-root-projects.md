@@ -233,14 +233,16 @@ ACK 后经 `prepareSession` 解析三件套，由 syncer 首写盖章（merge-pr
 UI 侧 P3 已按此预留：composer/侧栏的项目上下文解析、草稿键、roots 消费均已就位，
 补通道时只需在预热派发处多传一个字段。
 
-**已补齐（2026-10-28）**：`ZCodeAgentConversationCommandParams.projectContext`
+**已补齐（2026-10-28，同日 y430p 复核修正键控）**：`ZCodeAgentConversationCommandParams.projectContext`
 （host 内部参数，UI 预热派发随参携带 projectId）→ 宿主 ACK accepted 后经
-`prepareSession` 解析三件套 → `sessionProjectContextRegistry` 按 workspaceKey 登记 →
-syncer 首次快照落库消费盖章（取即清，仅主任务消费防 child 抢占）。wire envelope
-零改动（createSession payload schema 形状断言锚定不含 projectContext；该 schema 非
-strict，「不进 wire」由类型与构建路径保证）。无 projectContext 时行为与补齐前
-完全一致。已知边界：同 cwd 双项目并发首发的登记交叠为罕见竞态（登记按
-workspaceKey、取即清，单会话场景精确）。
+`prepareSession` 解析三件套 → `sessionProjectContextRegistry` 按 **sessionId** 登记 →
+syncer 首次快照落库消费盖章（取即清，仅主任务消费防 child 抢占）。复核 major-1 修正：
+初版按 workspaceKey 键控，会被同 workspace 的无关任务回源/其他会话首写抢先误消费且
+merge-preserve 下错值不可自愈——改 sessionId 键控（`ack.result` 的 createSession 变体
+自带 sessionId，旧 CLI 缺 result 时跳过登记＝维持 G1 前现状降级），弃稿残留条目无
+消费者。wire envelope 零改动（createSession payload schema 形状断言锚定不含
+projectContext；该 schema 非 strict，「不进 wire」由类型与构建路径保证）。无
+projectContext 时行为与补齐前完全一致。
 
 ## 不做（本批次范围外）
 

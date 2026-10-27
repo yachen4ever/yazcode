@@ -1676,10 +1676,11 @@ export function createZCodeTaskIndexSyncer(
     // 旧 child 标签页的显式 resume 仍会同步快照；只读详情不能重新写成主任务。
     if (snapshot.session.sessionKind === "subagent_child") return meta;
     // G1（docs/specs/multi-root-projects.md）：桌面 v4 草稿首发的项目归属盖章——
-    // 登记表按 workspaceKey 取即清（首写即消费，防旧值复用）；仅主任务消费，
+    // 登记表按 sessionId 取即清（复核 major-1 修正：workspaceKey 键控会被同
+    // workspace 的无关回源抢先误消费且错值不可自愈）；仅主任务消费，
     // 避免 child 快照抢走主任务的登记。
     const sessionProjectContext = sessionProjectContextRegistry?.consume(
-      resolveWorkspaceKey(snapshot.session.workspace),
+      snapshot.session.sessionId,
     );
     if (sessionProjectContext) {
       meta.projectId = sessionProjectContext.projectId;

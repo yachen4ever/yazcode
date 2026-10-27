@@ -5175,8 +5175,11 @@ export function createZCodeAgentService(
       // duplicate 只证明 commandId 曾处理过，不证明其目标仍是当前 session 配置。
       // 旧 B 命令在用户已切 C 后重放时，不能借 duplicate 把派生缓存再改回 B。
       // G1（docs/specs/multi-root-projects.md）：桌面 v4 草稿首发的项目归属——ACK
-      // accepted 后经 prepareSession 解析三件套，按 workspaceKey 登记给 syncer
-      // 首次快照落库时盖章；解析失败不阻塞会话创建（任务行缺项目字段属 G1 前现状）。
+      // accepted 后经 prepareSession 解析三件套，按 **sessionId** 登记给 syncer
+      // 首次快照落库时盖章（复核 major-1：按 workspaceKey 键控会被同 workspace 的
+      // 无关回源抢先误消费，且 merge-preserve 下错值不可自愈；sessionId 现成可用
+      // ——ack.result 的 createSession 变体自带，旧 CLI 缺 result 时跳过登记＝
+      // 维持 G1 前现状的失败降级路径）。
       if (
         params.envelope.type === "createSession" &&
         ack.status === "accepted" &&
@@ -5185,19 +5188,28 @@ export function createZCodeAgentService(
         options.resolveProjectSession
       ) {
         const projectId = params.projectContext.projectId.trim();
-        try {
-          const resolved = await options.resolveProjectSession(projectId);
-          options.sessionProjectContextRegistry.register(resolveWorkspaceKey(params), {
-            projectId,
-            rootPath: resolved.rootPath,
-            executionDirectories: resolved.directories,
-          });
-        } catch (error) {
-          logger.warn(
+        const ackSessionId =
+          ack.result?.type === "createSession" ? ack.result.sessionId : undefined;
+        if (!ackSessionId) {
+          logger.debug(
             undefined,
-            `[projects] projectContext 解析失败，任务行不盖章 projectId=${projectId}`,
-            error,
+            `[projects] ACK 无 createSession result（旧 CLI），projectContext 跳过登记`,
           );
+        } else {
+          try {
+            const resolved = await options.resolveProjectSession(projectId);
+            options.sessionProjectContextRegistry.register(ackSessionId, {
+              projectId,
+              rootPath: resolved.rootPath,
+              executionDirectories: resolved.directories,
+            });
+          } catch (error) {
+            logger.warn(
+              undefined,
+              `[projects] projectContext 解析失败，任务行不盖章 workspace=${resolveWorkspaceKey(params)} projectId=${projectId}`,
+              error,
+            );
+          }
         }
       }
       return ack;

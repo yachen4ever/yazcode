@@ -3,11 +3,14 @@
  *
  * 链路：UI 预热 createSession 随参携带 `projectContext.projectId` → 宿主经
  * `prepareSession` 解析三件套（projectId/rootPath/executionDirectories）后按
- * workspaceKey 登记 → syncer 首次快照落库时消费盖章（取即清，防旧值复用）。
+ * **sessionId** 登记 → syncer 首次快照落库时消费盖章（取即清，防旧值复用）。
+ *
+ * 键控用 sessionId 而非 workspaceKey（复核 major-1）：workspaceKey 会被同
+ * workspace 的无关任务回源/其他会话首写抢先消费，且 merge-preserve 下错值
+ * 不可自愈。弃稿残留条目无消费者（仅占少量内存，进程重启清零）。
  *
  * 纯内存、即用即清：不落盘、不引第二持久所有者（持久态仍只有任务行固化的
- * 三件套与 ProjectRepository）。同 cwd 双项目并发首发的交叠竞态为已知边界
- * （spec 验收场景注记）。
+ * 三件套与 ProjectRepository）。
  */
 export interface ResolvedSessionProjectContext {
   projectId: string;
