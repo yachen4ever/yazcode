@@ -86,6 +86,7 @@ export {
 } from "./setting/settingService.js";
 export { createCredentialService } from "./credential/credentialService.js";
 export { createBroadcastService } from "./broadcast/broadcastService.js";
+import { createSessionProjectContextRegistry } from "./zcode-agent/sessionProjectContext.js";
 export { createZCodeAgentService } from "./zcode-agent/zcodeAgentService.js";
 export { createZCodeTaskServiceAdapter } from "./zcode-agent/zcodeTaskServiceAdapter.js";
 export { createZCodeSessionService } from "./zcode-session/zcodeSessionService.js";
@@ -2092,7 +2093,19 @@ export function createLocalServices(options: {
   // resolveSessionDirectories 按任务行固化值重解析附加目录；同一实例继续供 task adapter
   // （prepareSession）与服务集合（RPC 面）共用。
   const projectService = createProjectService(new ProjectRepository());
+  // G1（docs/specs/multi-root-projects.md）：桌面 v4 草稿首发的项目归属登记表——
+  // 服务端在 createSession ACK 后登记，syncer 首次快照落库时消费盖章（纯内存即用即清）。
+  const sessionProjectContextRegistry = createSessionProjectContextRegistry();
   const zcodeAgentService = createZCodeAgentService({
+    // G1：项目归属解析复用同一 projectService（prepareSession，主目录缺失即拒绝）。
+    resolveProjectSession: async (projectId) => {
+      const prepared = await projectService.prepareSession({ projectId });
+      return {
+        rootPath: prepared.workspacePath,
+        directories: [...prepared.additionalDirectories],
+      };
+    },
+    sessionProjectContextRegistry,
     ...(agentAccountProviderConfigSource
       ? { accountProviderConfigSource: agentAccountProviderConfigSource }
       : {}),
@@ -2286,6 +2299,7 @@ export function createLocalServices(options: {
   const zcodeTaskIndexSyncer = createZCodeTaskIndexSyncer({
     agentService: zcodeAgentService,
     taskIndexRepo,
+    sessionProjectContextRegistry,
   });
   // The plugin can be toggled at runtime. Do not let a previously created resolver continue
   // health-checking/restarting Helper after disable, and create it lazily after enable.

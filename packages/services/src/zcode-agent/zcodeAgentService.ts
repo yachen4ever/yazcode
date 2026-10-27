@@ -121,6 +121,7 @@ import {
   mergeOffPeakMutationToolDenylist,
 } from "#src/zcode-agent/automationToolPolicy.js";
 import { ZCODE_AGENT_RUNTIME_UNAVAILABLE_CODE } from "./zcodeAgent.js";
+import type { SessionProjectContextRegistry } from "./sessionProjectContext.js";
 import type {
   ZCodeProtocolRequestId,
   ModelSelection,
@@ -880,6 +881,13 @@ interface CreateZCodeAgentServiceOptions extends Omit<
   accountRequestAuthService?: IAccountRequestAuthService;
   /** Desktop Host 请求 Main 登记 Agent 已授权的精确本地视频路径。 */
   authorizeLocalMediaPreviewPath?: (path: string) => Promise<string>;
+  /** G1：项目归属解析（node.ts 用 projectService.prepareSession 适配）。 */
+  resolveProjectSession?: (projectId: string) => Promise<{
+    rootPath: string;
+    directories: string[];
+  }>;
+  /** G1：桌面 v4 草稿首发的项目归属登记表（syncer 首次快照落库时消费盖章）。 */
+  sessionProjectContextRegistry?: SessionProjectContextRegistry;
   modelSelectionReadinessSource?: ModelSelectionReadinessSource;
   sessionRuntimePreferencesAuthority?: "local" | "external";
   resolveSessionRuntimePreferences?: (
@@ -5166,6 +5174,32 @@ export function createZCodeAgentService(
       // timeout/watchdog。放宽到审核领域 deadline 只会掩盖串行协议队列死锁。
       // duplicate 只证明 commandId 曾处理过，不证明其目标仍是当前 session 配置。
       // 旧 B 命令在用户已切 C 后重放时，不能借 duplicate 把派生缓存再改回 B。
+      // G1（docs/specs/multi-root-projects.md）：桌面 v4 草稿首发的项目归属——ACK
+      // accepted 后经 prepareSession 解析三件套，按 workspaceKey 登记给 syncer
+      // 首次快照落库时盖章；解析失败不阻塞会话创建（任务行缺项目字段属 G1 前现状）。
+      if (
+        params.envelope.type === "createSession" &&
+        ack.status === "accepted" &&
+        params.projectContext?.projectId?.trim() &&
+        options?.sessionProjectContextRegistry &&
+        options.resolveProjectSession
+      ) {
+        const projectId = params.projectContext.projectId.trim();
+        try {
+          const resolved = await options.resolveProjectSession(projectId);
+          options.sessionProjectContextRegistry.register(resolveWorkspaceKey(params), {
+            projectId,
+            rootPath: resolved.rootPath,
+            executionDirectories: resolved.directories,
+          });
+        } catch (error) {
+          logger.warn(
+            undefined,
+            `[projects] projectContext 解析失败，任务行不盖章 projectId=${projectId}`,
+            error,
+          );
+        }
+      }
       return ack;
     },
 

@@ -462,6 +462,12 @@ export interface ZCodeAgentConversationCommandParams extends ZCodeAgentWorkspace
   envelope: CommandEnvelope;
   /** 仅 host 内部用于 Browser Use runtime 边界，不进入 v4 wire envelope。 */
   clientMode?: ZCodeTaskClientMode;
+  /**
+   * 多目录项目（G1）：UI 在预热 createSession 时携带的项目归属，仅用于任务行
+   * 索引固化（经宿主 prepareSession 校验），不进入 v4 wire envelope；信任级别
+   * 低于 clientMode（projectId 只影响索引归属，与 createTask 的 UI 直传同级）。
+   */
+  projectContext?: { projectId: string };
 }
 
 export interface ZCodeAgentCommandsQueryParams extends ZCodeAgentWorkspaceTarget {

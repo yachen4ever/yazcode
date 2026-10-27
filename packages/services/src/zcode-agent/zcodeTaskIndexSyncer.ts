@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- task index 的 v4 帧摄入、snapshot upsert 和 workspace 广播必须共享同一份闭包状态。 */
 import { repairSubagentTaskIndex } from "#src/zcode-agent/repairSubagentTaskIndex.js";
+import type { SessionProjectContextRegistry } from "./sessionProjectContext.js";
 import {
   deriveZCodeTaskStatusFromSessionSnapshot,
   generateTraceId,
@@ -174,6 +175,8 @@ export interface ZCodeTaskIndexSyncer {
 interface CreateZCodeTaskIndexSyncerOptions {
   agentService: IZCodeAgentService;
   taskIndexRepo: TaskIndexRepo;
+  /** G1：桌面 v4 草稿首发的项目归属登记表（宿主在 createSession ACK 后登记，首写消费）。 */
+  sessionProjectContextRegistry?: SessionProjectContextRegistry;
 }
 
 /** phase 终态集合（sessions-index 的 conflated 最新态里判定迁移用）。 */
@@ -300,7 +303,7 @@ interface PendingTopicFrames<TFrame> {
 export function createZCodeTaskIndexSyncer(
   options: CreateZCodeTaskIndexSyncerOptions,
 ): ZCodeTaskIndexSyncer {
-  const { agentService, taskIndexRepo } = options;
+  const { agentService, taskIndexRepo, sessionProjectContextRegistry } = options;
   // task index 的事件摄入从旧协议 shadow 订阅（session/subscribe +
   // session/event + state.updated）整体迁到 v4 帧——sessions-index topic 提供
   // status(phase)/title/lastActivity 的 workspace 级 conflated 最新态，
@@ -1672,6 +1675,17 @@ export function createZCodeTaskIndexSyncer(
     const meta = buildMetaFromSnapshot(snapshot, options);
     // 旧 child 标签页的显式 resume 仍会同步快照；只读详情不能重新写成主任务。
     if (snapshot.session.sessionKind === "subagent_child") return meta;
+    // G1（docs/specs/multi-root-projects.md）：桌面 v4 草稿首发的项目归属盖章——
+    // 登记表按 workspaceKey 取即清（首写即消费，防旧值复用）；仅主任务消费，
+    // 避免 child 快照抢走主任务的登记。
+    const sessionProjectContext = sessionProjectContextRegistry?.consume(
+      resolveWorkspaceKey(snapshot.session.workspace),
+    );
+    if (sessionProjectContext) {
+      meta.projectId = sessionProjectContext.projectId;
+      meta.rootPath = sessionProjectContext.rootPath;
+      meta.executionDirectories = [...sessionProjectContext.executionDirectories];
+    }
     // 同时把 snapshot.messages 里可见的聊天正文索引下去，
     // 让 TaskSearchDialog 正文搜索能命中；旧 sqlite 行下次到这里时自然回填。
     const searchableText = buildSearchableTextFromSnapshot(snapshot);

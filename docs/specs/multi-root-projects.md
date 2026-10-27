@@ -218,7 +218,7 @@ SSH / Source Server 项目**硬约束单 root**：保存、root 初始化、任�
 - 验收：同 cwd 双项目草稿互不串；附加 root 文件可被 @ 命中且标注来源；附加 root
   目录被删后 @ 面板仍可用（cwd 命中不受影响）。
 
-### G1 协议缺口登记（桌面 v4 草稿路径的项目归属，P3 不实施）
+### G1 协议通道（桌面 v4 草稿路径的项目归属，2026-10-28 已补齐）
 
 桌面 v4 草稿路径不经 `createTask`：预热走 v4 `createSession` 命令，任务行由
 syncer 首次快照同步落库（`buildMetaFromSnapshot` 无项目字段），v4
@@ -226,12 +226,21 @@ syncer 首次快照同步落库（`buildMetaFromSnapshot` 无项目字段），v
 在创建边界固化 projectId/rootPath/executionDirectories**；replayable facade、
 automation、off-peak 走 `createTask` 的路径不受影响（P1/P2 已接线）。
 
-修复设计（留待独立小期，非本批）：仿 `clientMode` 先例
+修复设计（原为独立小期，现已实施）：仿 `clientMode` 先例
 （`ZCodeAgentConversationCommandParams` 的 host 内部字段，不进 v4 wire envelope），
 在 conversation command 参数上加 host 内部 `projectContext`；Host 在 createSession
 ACK 后经 `prepareSession` 解析三件套，由 syncer 首写盖章（merge-preserve 已兜底保全）。
 UI 侧 P3 已按此预留：composer/侧栏的项目上下文解析、草稿键、roots 消费均已就位，
 补通道时只需在预热派发处多传一个字段。
+
+**已补齐（2026-10-28）**：`ZCodeAgentConversationCommandParams.projectContext`
+（host 内部参数，UI 预热派发随参携带 projectId）→ 宿主 ACK accepted 后经
+`prepareSession` 解析三件套 → `sessionProjectContextRegistry` 按 workspaceKey 登记 →
+syncer 首次快照落库消费盖章（取即清，仅主任务消费防 child 抢占）。wire envelope
+零改动（createSession payload schema 形状断言锚定不含 projectContext；该 schema 非
+strict，「不进 wire」由类型与构建路径保证）。无 projectContext 时行为与补齐前
+完全一致。已知边界：同 cwd 双项目并发首发的登记交叠为罕见竞态（登记按
+workspaceKey、取即清，单会话场景精确）。
 
 ## 不做（本批次范围外）
 

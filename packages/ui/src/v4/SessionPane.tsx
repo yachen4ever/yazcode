@@ -1325,7 +1325,12 @@ export function SessionPane({
       }
       let ack: CommandAck;
       try {
-        ack = await sendCommand(envelope);
+        // G1：预热 createSession 携带项目归属（host 内部消费，不进 wire envelope）。
+        const g1ProjectContext =
+          type === "createSession" && draftProjectContext.project
+            ? { projectId: draftProjectContext.project.projectId }
+            : undefined;
+        ack = await sendCommand(envelope, g1ProjectContext);
       } catch (error) {
         if (lease?.store) {
           lease.store.settleCommand(envelope.commandId);
@@ -1384,6 +1389,7 @@ export function SessionPane({
     },
     [
       captureAcceptedModelSelection,
+      draftProjectContext.project,
       lease,
       provider,
       sendCommand,
