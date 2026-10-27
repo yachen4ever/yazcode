@@ -32,7 +32,7 @@ ZCodium 是去智谱化的社区 fork，但剥离不彻底：模型设置仍保�
 
 ## UI 层
 
-- `constants.ts`：清空 model provider family specs（`resolveModelProviderFamilySpecByProviderId`
+- `packages/shared/src/model-provider-family.ts`：清空 model provider family specs（`resolveModelProviderFamilySpecByProviderId:97`
   恒返回 null），family 分支（连接方式 / 套餐卡 / entitlements）在数据与 spec 双重缺失下
   不可达；相关组件代码本轮保留为 dormant，后续单独清理。
 - 首启：Root.tsx 不再渲染 WelcomeScreen，`shouldEnableProviderAvailabilityLoginEntryGuard`

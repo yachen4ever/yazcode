@@ -40,7 +40,7 @@
 
 ## 门禁接入点
 
-- `verify:pre-push`：`lint → architecture:check → check:skill-residue → db:schema:check → build:cli → typecheck:cli → test`。
+- `verify:pre-push`：`lint → typecheck → architecture:check → check:skill-residue → db:schema:check → build:cli → typecheck:cli → test`。
 - CI `tests.yml` 与本地同口径，push/PR 都跑 `pnpm run db:schema:check`。
 - 契约内核的单测（`scripts/test/sqlite-schema-contract.test.mjs`）经既有 `test:scripts`
   glob 进入根 `pnpm test`，不重复挂在 `db:schema:check` 里。

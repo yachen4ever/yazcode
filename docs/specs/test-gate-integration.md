@@ -72,7 +72,7 @@ devDependency 既不会把 `tsx` 装进该包目录，也不会把它放进嵌�
 3. **测试脚本写法有护栏**。`packages/shared/test/testScriptContract.test.ts` 断言：
    任何包的 `test` 脚本不得裸调 `tsx` 二进制；用了 tsx 加载器的必须以
    `node --import tsx` 开头；glob 必须带引号。改回旧写法会让该用例变红。
-3. **CLI 子包测试需要先构建其依赖包的 dist**。`@zcode/core` / `@zcode/adapters` 与 CLI
+4. **CLI 子包测试需要先构建其依赖包的 dist**。`@zcode/core` / `@zcode/adapters` 与 CLI
    顶层测试 import 兄弟包的**发布入口**（`@zcode/contracts` 等），其 `exports` 指向
    `dist/`，不构建则报 `ERR_MODULE_NOT_FOUND`。
    - 测试够用的最小构建集（约 16s）：`shared-types → contracts → dynamic-workflow →

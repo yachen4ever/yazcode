@@ -114,10 +114,14 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `docs/upstream-port-tasks-20261018.md` | 上游变更引入评估（基准 main@9cd5e0e4）：已存档的「无需引入」清单与 T1/T2 立项项 |
 | `docs/upstream-port-tasks-20261022.md` | 上游变更引入评估（基准 3.16.2 / ZCodium 1.16.2）：架构治理自测、sqlite schema 只增契约两个建议立项项 |
 | `docs/upstream-port-tasks-20261025.md` | 上游变更引入评估（ZCodium 1.16.3 / #76 / v1.17.0）：仅 #66 浏览器迟到上报一项引入候选，v1.17.0 不引入 |
+| `docs/upstream-port-tasks-20261026.md` | 上游变更引入评估（ZCodium v1.16.2→v1.17.1）：无必引项；DMG 契约测试候选与 y430p 独立复核回填 |
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
 | `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
-| `docs/specs/iab-userscripts.md` | IAB 内置用户脚本 P1：分区级 preload、GM 子集与 fail-closed 信任门 |
+| `docs/specs/iab-userscripts.md` | IAB 内置用户脚本：分区级 preload、GM 子集、fail-closed 信任门与 agent 工具面/确认流/设置卡（P1+P2） |
+| `docs/specs/multi-root-projects.md` | 多目录项目四期：数据层/服务层/协议三通道与 CLI 白名单/UI 期（含 G1 缺口登记） |
+| `docs/reports/release-26.2.1-acceptance.md` | 26.2.1 实机验收记录（gen-ui 七项） |
+| `docs/reports/vision-fallback-report.md` | 视觉桥接交付报告（改动清单/决策/验收自测） |
 | `docs/specs/browser-cookies-tool.md` | Browser cookies 工具（get/set，跨后端 session 注入） |
 | `.agents/specs/bots-astrbot-bridge.md` | 机器人 AstrBot 桥接协议 v2 |
 
@@ -127,7 +131,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 | 门禁 | 位置 | 拦什么 |
 | --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `typecheck`（根包）+ `architecture:check --changed` + `check:skill-residue` + `db:schema:check` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test` |
+| `verify:pre-push` | `package.json` | `lint` + `typecheck`（根包）+ `architecture:check --changed` + `check:skill-residue` + `db:schema:check` + `build:cli` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test` |
 | `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
 | `tests` | `.github/workflows/tests.yml` | push / PR 时跑根 `pnpm test`，与本地门禁同口径 |
 | `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |

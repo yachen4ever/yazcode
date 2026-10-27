@@ -146,9 +146,10 @@ app ready（main）
 
 ## 接口
 
-- **装配**：`packages/desktop/src/main/userscripts/userscriptIpc.ts` 导出
-  `installIabUserscripts({ logger })`（注册 preload + IPC channel），由 `main/index.ts` 的
-  `app.whenReady()` 调用（`registerIabDownloadAutoSave` 邻近）。
+- **装配**：`packages/desktop/src/main/userscripts/userscriptBootstrap.ts` 导出
+  `installIabUserscripts({ logger, settingService })`（注册 session preload 与 IPC
+  channels），由 `main/index.ts` 的 `app.whenReady()` 调用（`registerIabDownloadAutoSave`
+  邻近）。
 - **IPC**（channel 名与 wire 类型定义在 `userscriptIpcContract.ts`，main 与 preload 共用）：
   - `zcode:userscripts:match`（invoke）→ `UserScriptMatchResponse`
   - `zcode:userscripts:get` / `zcode:userscripts:set`（sendSync）→ `UserScriptStorageResult`

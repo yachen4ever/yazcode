@@ -33,7 +33,7 @@
 
 ## 与既有门禁的关系
 
-- `pnpm verify:pre-push`（Lint + 架构检查 + 技能残留 + CLI 类型检查）覆盖**提交前**
+- `pnpm verify:pre-push`（Lint + 根包 typecheck + 架构检查 + 技能残留 + db schema 契约 + build:cli + CLI 类型检查 + 全量测试）覆盖**提交前**
   的代码门禁，不覆盖实机验收。
 - `pnpm typecheck:cli` 需在 CLI 依赖包构建之后执行（`build:zcode` → `typecheck:cli`），
   与 release.yml 的 job 顺序一致；冷检出直接跑会因缺 `dist` 报模块找不到。

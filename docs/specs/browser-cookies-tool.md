@@ -65,8 +65,8 @@ partition）裸启动不继承任何登录态，OA 登录必须用户本人操�
 
 - 命令类型：`packages/shared/src/browser-use/commands.ts`（browserCommandSchema 分支）+
   `command-metadata.ts`（method 枚举）。
-- 执行：`packages/desktop/src/main/browserView/browserCommandPageHandlers.ts`（handleCookies）+
-  `browserCommandExecutor.ts`（分发）+ `browserGuestManager.ts`（isSideEffecting 含 cookies set）。
+- 执行：`packages/desktop/src/main/browserView/browserCommandCookiesHandler.ts`（handleCookies，
+  经 `browserCommandExecutor.ts:104` 分发）+ `browserGuestManager.ts`（isSideEffecting 含 cookies set）。
 - 工具面：`apps/zcode-cli/packages/browser-use-plugin/scripts/browser-client.mjs`
   （BrowserCookiesAPI，挂 `browser.cookies`）。
 - 文档：`apps/zcode-cli/packages/browser-use-plugin/docs/browser-cookies.md`。
