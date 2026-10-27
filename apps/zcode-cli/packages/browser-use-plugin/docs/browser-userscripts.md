@@ -6,7 +6,7 @@ Observe and manage the built-in browser's userscripts (`~/.yazcode/userscripts/*
 
 - `await browser.userscripts.list()` → `BrowserUserscriptStatusItem[]`: `{ scriptId, name, version?, runAt, grants, match, status, sha256, detail? }`. `status` ∈ `serving | enabled_pending_anchor | hash_mismatch | disabled | pending_approval | parse_failed | grant_rejected`. No script code and no file paths are returned.
 - `await browser.userscripts.reload()` → same list after an immediate rescan (idempotent; there is no cache). Useful right after the user edits script files.
-- `await browser.userscripts.setEnabled(scriptId, enabled)` → `{ scriptId, changed, status }` with the post-action status of that script.
+- `await browser.userscripts.setEnabled(scriptId, enabled)` → `{ scriptId, changed, status }` where `status` is the **full status object** of that script after the action — same shape as `list()` items (`{ scriptId, name, version?, runAt, grants, match, status, sha256, detail? }` with `status ∈ serving | enabled_pending_anchor | hash_mismatch | disabled | pending_approval | parse_failed | grant_rejected`), not a bare string. Read `status.status` for the state enum and `status.sha256` for the anchored hash (present once the script has been scanned).
 
 ## Confirmation-flow red line (must-read)
 
