@@ -35,7 +35,12 @@ async function makeService(manifest: Record<string, { enabled: boolean; sha256?:
     },
     logger: { info: () => {}, warn: () => {} },
   });
-  return { service, storageRootDir, cleanup: () => rm(root, { recursive: true, force: true }) };
+  return {
+    service,
+    storageRootDir,
+    scriptsDir,
+    cleanup: () => rm(root, { recursive: true, force: true }),
+  };
 }
 
 describe("userscriptService.match", () => {
@@ -226,5 +231,133 @@ describe("userscriptService.get/set 守卫与存储", () => {
     await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "json", value: { nested: [1, 2] } }, mainFrameContext);
     const raw = JSON.parse(await readFile(join(ctx.storageRootDir, "svc.json"), "utf8")) as Record<string, unknown>;
     assert.deepEqual(raw.json, { nested: [1, 2] });
+  });
+});
+
+/**
+ * P3 注入时刻（docs/specs/iab-userscripts.md P3 验收场景 1-3）：
+ * match 对实际回包的脚本逐条记录，listStatus/statusOverview 合并；未命中缺席；
+ * 两次 match 覆盖取较新；新建实例清零；删除脚本后内存表裁剪。
+ */
+describe("userscriptService.lastInjectedAt", () => {
+  async function makeInjectionService() {
+    const ctx = await makeService({
+      svc: { enabled: true },
+      sub: { enabled: true },
+    });
+    // 首扫锚定（P1 语义），否则状态停留在 enabled_pending_anchor。
+    await ctx.service.reload();
+    return ctx;
+  }
+
+  it("match 后 listStatus/statusOverview 带出 lastInjectedAt；未命中脚本字段缺席", async () => {
+    const ctx = await makeInjectionService();
+    try {
+      const before = Date.now();
+      await ctx.service.match({ url: "https://svc.test/page" }, mainFrameContext);
+      const after = Date.now();
+
+      const statuses = await ctx.service.listStatus();
+      const svc = statuses.find((item) => item.scriptId === "svc");
+      assert.ok(svc?.lastInjectedAt !== undefined);
+      assert.ok(svc.lastInjectedAt >= before && svc.lastInjectedAt <= after);
+      // sub 的 @match 是 /sub*，本 URL 未命中 → 字段缺席（不是 null/0）。
+      const sub = statuses.find((item) => item.scriptId === "sub");
+      assert.equal(sub !== undefined && "lastInjectedAt" in sub, false);
+
+      const overview = await ctx.service.statusOverview();
+      assert.equal(
+        overview.find((item) => item.scriptId === "svc")?.lastInjectedAt,
+        svc.lastInjectedAt,
+      );
+      assert.equal(
+        overview.some((item) => item.scriptId === "sub" && "lastInjectedAt" in item),
+        false,
+      );
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("两次 match 取较新值（覆盖而非累加）", async () => {
+    const ctx = await makeInjectionService();
+    try {
+      await ctx.service.match({ url: "https://svc.test/page" }, mainFrameContext);
+      const first = (await ctx.service.listStatus()).find(
+        (item) => item.scriptId === "svc",
+      )?.lastInjectedAt;
+      // 保证时钟前进（同毫秒内两次调用无法区分，sleep 覆盖 Date.now 精度）。
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      await ctx.service.match({ url: "https://svc.test/page" }, mainFrameContext);
+      const second = (await ctx.service.listStatus()).find(
+        (item) => item.scriptId === "svc",
+      )?.lastInjectedAt;
+      assert.ok(first !== undefined && second !== undefined);
+      assert.ok(second >= first);
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("新建 service 实例（模拟进程重启）后 lastInjectedAt 全部缺席", async () => {
+    const ctx = await makeInjectionService();
+    try {
+      await ctx.service.match({ url: "https://svc.test/page" }, mainFrameContext);
+      assert.ok((await ctx.service.listStatus()).some((item) => "lastInjectedAt" in item));
+
+      // 同目录、同 manifest 新建实例：内存表随进程清零。
+      const restarted = createUserscriptService({
+        scriptsDir: ctx.scriptsDir,
+        storageRootDir: ctx.storageRootDir,
+        manifestPort: {
+          getManifest: async () => ({ svc: { enabled: true, sha256: "" } }),
+          saveManifest: async () => {},
+        },
+        logger: { info: () => {}, warn: () => {} },
+      });
+      const statuses = await restarted.listStatus();
+      assert.ok(statuses.every((item) => !("lastInjectedAt" in item)));
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("删除脚本后 inspect 路径裁剪内存表条目", async () => {
+    const ctx = await makeInjectionService();
+    try {
+      await ctx.service.match({ url: "https://svc.test/sub-page" }, mainFrameContext);
+      const injected = (await ctx.service.listStatus()).filter((item) =>
+        ["svc", "sub"].includes(item.scriptId),
+      );
+      assert.deepEqual(
+        injected.map((item) => "lastInjectedAt" in item),
+        [true, true],
+      );
+
+      // 删除后一次 inspect：扫描集合不含 svc，内存表条目被裁剪。
+      await rm(join(ctx.scriptsDir, "svc.user.js"));
+      assert.equal(
+        (await ctx.service.listStatus()).some((item) => item.scriptId === "svc"),
+        false,
+      );
+
+      // 同 scriptId 重新落盘：若内存表未裁剪，旧注入时刻会「复活」。
+      await writeFile(join(ctx.scriptsDir, "svc.user.js"), scriptWithGrant("https://svc.test/*"));
+      const revived = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.ok(revived);
+      assert.equal("lastInjectedAt" in revived, false);
+
+      await rm(join(ctx.scriptsDir, "sub.user.js"));
+      await rm(join(ctx.scriptsDir, "svc.user.js"));
+      const remaining = await ctx.service.listStatus();
+      // 剩余只有静态拒载行；内存表已空，任何行都不带注入时刻。
+      assert.deepEqual(
+        remaining.filter((item) => ["svc", "sub"].includes(item.scriptId)),
+        [],
+      );
+      assert.ok(remaining.every((item) => !("lastInjectedAt" in item)));
+    } finally {
+      await ctx.cleanup();
+    }
   });
 });

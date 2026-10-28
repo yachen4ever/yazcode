@@ -19,6 +19,25 @@ export type IabUserscriptBadgeKind =
   | "storage_corrupt"
   | "disabled";
 
+/** 徽标语义色（DESIGN.md 语义 token）：只在投影层映射，组件只查表。 */
+export type IabUserscriptBadgeTone = "success" | "warning" | "destructive" | "neutral";
+
+const BADGE_TONES: Record<IabUserscriptBadgeKind, IabUserscriptBadgeTone> = {
+  serving: "success",
+  pending_approval: "warning",
+  hash_mismatch: "destructive",
+  parse_failed: "destructive",
+  grant_rejected: "destructive",
+  storage_corrupt: "destructive",
+  // 灰色只用于「无活动状态」：enabled 是待扫描的已批准态，disabled 是明确的停用。
+  enabled: "neutral",
+  disabled: "neutral",
+};
+
+export function badgeTone(kind: IabUserscriptBadgeKind): IabUserscriptBadgeTone {
+  return BADGE_TONES[kind];
+}
+
 export interface IabUserscriptViewRow {
   scriptId: string;
   name: string;
@@ -35,6 +54,14 @@ export interface IabUserscriptViewRow {
   badges: IabUserscriptBadgeKind[];
   /** 待批准行显示「批准」主按钮。 */
   showApprove: boolean;
+  /** 内容变更行显示「重新批准」按钮（与批准同一 patch 语义，见 P3 规则 4）。 */
+  showReapprove: boolean;
+  /** 由 @match 声明派生的域名列表（去 scheme/path、去重保序）；降级模式为空。 */
+  matchDomains: string[];
+  /** 拒载/失活原因原文；parse_failed 行是用户自查的唯一线索。 */
+  detail: string | null;
+  /** 最近一次实际注入时刻（epoch ms）；无记录为 null（「尚未注入」）。 */
+  lastInjectedAt: number | null;
 }
 
 export interface IabUserscriptManifestLikeEntry {
@@ -47,6 +74,50 @@ export interface IabUserscriptManifestLikeEntry {
 export function toShaShort(sha256: string | undefined): string | null {
   if (typeof sha256 !== "string" || sha256.length < 8) return null;
   return sha256.slice(0, 8).toLowerCase();
+}
+
+/**
+ * `@match` 声明 → 域名列表（去 scheme 与 path、去重保序）。
+ * `<all_urls>` 原样保留；无法解析的条目原样保留——展示层不做 pattern 语义猜测，
+ * 解析失败的 pattern 由状态徽标与 detail 表达，而不是在这里被吞掉。
+ * 回包 pattern 编译期已拒绝带端口 host，因此无需（也不应）处理端口。
+ */
+export function toMatchDomains(match: string[]): string[] {
+  const domains: string[] = [];
+  const seen = new Set<string>();
+  for (const pattern of match) {
+    if (typeof pattern !== "string") continue;
+    const trimmed = pattern.trim();
+    if (!trimmed) continue;
+    const domain = deriveMatchDomain(trimmed);
+    if (seen.has(domain)) continue;
+    seen.add(domain);
+    domains.push(domain);
+  }
+  return domains;
+}
+
+function deriveMatchDomain(pattern: string): string {
+  if (pattern === "<all_urls>") return pattern;
+  const match = /^(?:https?|\*):\/\/([^/]+)/i.exec(pattern);
+  // 没有可识别的 scheme://host 形状：原样保留，不猜。
+  return match?.[1] ?? pattern;
+}
+
+/**
+ * 卡片分区（P3 规则 3）：待批准行单独置顶，其余进 others。
+ * 这是同一份状态列表的呈现派生，不是排序，也不引入第二份状态。
+ */
+export function partitionIabUserscriptRows(rows: IabUserscriptViewRow[]): {
+  pending: IabUserscriptViewRow[];
+  others: IabUserscriptViewRow[];
+} {
+  const pending: IabUserscriptViewRow[] = [];
+  const others: IabUserscriptViewRow[] = [];
+  for (const row of rows) {
+    (row.badges.includes("pending_approval") ? pending : others).push(row);
+  }
+  return { pending, others };
 }
 
 /**
@@ -81,11 +152,15 @@ export function buildIabUserscriptRows(input: {
         switchDisabled: rejected,
         badges,
         showApprove: item.status === "pending_approval",
+        showReapprove: item.status === "hash_mismatch",
+        matchDomains: toMatchDomains(item.match),
+        detail: toDetailOrNull(item.detail),
+        lastInjectedAt: typeof item.lastInjectedAt === "number" ? item.lastInjectedAt : null,
       };
     });
   }
 
-  // 降级模式：manifest 派生行。不猜测 name / hash-mismatch / 拒载原因。
+  // 降级模式：manifest 派生行。不猜测 name / hash-mismatch / 拒载原因 / 注入时刻。
   return Object.entries(manifest).map(([scriptId, entry]) => {
     const pending = entry.pendingApproval === true;
     const enabled = entry.enabled === true;
@@ -98,6 +173,10 @@ export function buildIabUserscriptRows(input: {
       switchDisabled: false,
       badges: [enabled ? "enabled" : pending ? "pending_approval" : "disabled"],
       showApprove: pending,
+      showReapprove: false,
+      matchDomains: [],
+      detail: null,
+      lastInjectedAt: null,
     };
   });
 }
@@ -105,6 +184,11 @@ export function buildIabUserscriptRows(input: {
 /** 空/非字符串 sha 归一为 null（读取失败的 "" 与缺省同义：无哈希可钉）。 */
 function toSha256OrNull(sha256: string | undefined): string | null {
   return typeof sha256 === "string" && sha256.length > 0 ? sha256 : null;
+}
+
+/** 空白 detail 与缺省同义：不渲染空行。 */
+function toDetailOrNull(detail: string | undefined): string | null {
+  return typeof detail === "string" && detail.trim().length > 0 ? detail : null;
 }
 
 /**

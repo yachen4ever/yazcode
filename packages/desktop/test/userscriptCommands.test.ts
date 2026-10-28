@@ -301,6 +301,32 @@ describe("browserCommandUserscriptsHandler", () => {
     assert.ok(listResult?.ok);
     assert.equal((listResult?.value as { scripts: unknown[] }).scripts.length, 1);
 
+    // P3：回包原样透传 lastInjectedAt（handler 不做字段白名单裁剪）。
+    const injectedPort = {
+      ...port,
+      listStatus: async () => [
+        {
+          scriptId: "portal",
+          name: "portal",
+          runAt: "document-start" as const,
+          grants: [],
+          match: ["https://oa.test/*"],
+          status: "serving" as const,
+          sha256: "a".repeat(64),
+          lastInjectedAt: 1_700_000_000_000,
+        },
+      ],
+    };
+    const injectedResult = await maybeHandleUserscriptCommand(
+      { method: "userscript_list" },
+      injectedPort,
+    );
+    assert.ok(injectedResult?.ok);
+    const injectedScripts = (
+      injectedResult.value as { scripts: Array<Record<string, unknown>> }
+    ).scripts;
+    assert.equal(injectedScripts[0]?.lastInjectedAt, 1_700_000_000_000);
+
     const setResult = await maybeHandleUserscriptCommand(
       { method: "userscript_set_enabled", scriptId: "missing", enabled: true },
       port,

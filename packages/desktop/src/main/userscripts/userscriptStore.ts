@@ -65,6 +65,13 @@ export interface UserScriptStatusItem {
   /** 当前文件内容 sha256（hex）。 */
   sha256: string;
   detail?: string;
+  /**
+   * 最近一次实际注入（match 回包）的 epoch 毫秒。
+   * 运行时事实：归属 main userscriptService 内存表，不在 store 与 manifest 中；
+   * 进程重启清零，且无记录时字段缺席（不写 null/0，避免伪造「1970 年注入」）。
+   * 记录点是回包而非执行完成：document-end/idle 脚本该值早于实际执行。
+   */
+  lastInjectedAt?: number;
 }
 
 export interface UserscriptStoreOptions {

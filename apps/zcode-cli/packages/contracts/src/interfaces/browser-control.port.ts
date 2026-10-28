@@ -439,6 +439,12 @@ export interface BrowserUserscriptStatusItem {
   /** 当前文件内容 sha256（hex）。 */
   sha256: string;
   detail?: string;
+  /**
+   * 最近一次实际注入（match 回包）的 epoch 毫秒；与
+   * packages/shared 的 IabUserscriptStatusItem.lastInjectedAt 同源镜像。
+   * 纯内存运行时事实，main 进程重启清零；字段缺席表示「尚未注入」。
+   */
+  lastInjectedAt?: number;
 }
 
 /** userscript_set_enabled 的返回：操作后的该脚本状态；changed=false 为幂等 no-op。 */

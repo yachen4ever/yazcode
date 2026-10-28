@@ -65,13 +65,42 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     logger: options.logger,
   });
 
+  /**
+   * 最近注入时刻（P3）：scriptId → epoch ms。唯一写者是 match 的实际回包路径。
+   * 为什么纯内存：注入时刻是「本进程服务过」的运行时观测事实，不属于脚本文件事实
+   * （store 不持有）也不是用户决策（manifest 不持有）；落盘会引入第二个所有者与
+   * 时钟漂移问题，因此进程重启即清零。
+   * 语义边界：记录点是**回包**而非脚本执行完成——document-end/document-idle 脚本
+   * 的回包先于实际执行，该值表示「最近一次开始服务」。
+   */
+  const lastInjectedAt = new Map<string, number>();
+
+  /**
+   * 合并注入时刻，并按当前扫描集合裁剪内存表：已删除脚本不留残留条目，
+   * 否则内存表会随删除/改名无限增长（同一 scriptId 重新落盘会「复活」旧时刻）。
+   */
+  function withLastInjected(states: UserScriptStatusItem[]): UserScriptStatusItem[] {
+    const scanned = new Set(states.map((item) => item.scriptId));
+    for (const scriptId of lastInjectedAt.keys()) {
+      if (!scanned.has(scriptId)) lastInjectedAt.delete(scriptId);
+    }
+    return states.map(mergeLastInjected);
+  }
+
+  /** 单条合并（不裁剪）：命令回包与状态列表返回同一形状，调用方无需区分来源。 */
+  function mergeLastInjected(item: UserScriptStatusItem): UserScriptStatusItem {
+    const injectedAt = lastInjectedAt.get(item.scriptId);
+    // 无记录时字段缺席（不写 null/0），避免 UI 呈现伪造的注入时间。
+    return injectedAt === undefined ? item : { ...item, lastInjectedAt: injectedAt };
+  }
+
   return {
     /**
      * userscript_list：只读状态投影（不做锚定写）。agent 观察面，
      * 回包不含脚本代码与文件路径。
      */
     async listStatus(): Promise<UserScriptStatusItem[]> {
-      return await store.inspect();
+      return withLastInjected(await store.inspect());
     },
 
     /**
@@ -81,7 +110,7 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     async statusOverview(): Promise<
       Array<UserScriptStatusItem & { storageHealth: "ok" | "corrupt" }>
     > {
-      const statuses = await store.inspect();
+      const statuses = withLastInjected(await store.inspect());
       return await Promise.all(
         statuses.map(async (item) => ({
           ...item,
@@ -98,7 +127,7 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
      */
     async reload(): Promise<UserScriptStatusItem[]> {
       await store.scan();
-      return await store.inspect();
+      return withLastInjected(await store.inspect());
     },
 
     /**
@@ -123,7 +152,7 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
       }
       if (enabled && (target.status === "serving" || target.status === "enabled_pending_anchor")) {
         // 已批准态：agent 的启用请求已满足，不写 manifest（幂等）。
-        return { ok: true, changed: false, status: target };
+        return { ok: true, changed: false, status: mergeLastInjected(target) };
       }
 
       const manifest = await manifestPort.getManifest();
@@ -138,7 +167,8 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
       );
 
       const next = (await store.inspect()).find((item) => item.scriptId === scriptId);
-      return { ok: true, changed: true, status: next ?? target };
+      // 回包与列表条目同形：同一类型在 agent 侧只有一种形状（不新增第二种投影）。
+      return { ok: true, changed: true, status: mergeLastInjected(next ?? target) };
     },
     /**
      * match：非 http(s)、非法入参或非 IAB 分区请求返回空集（no-op），
@@ -150,8 +180,12 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
       if (!url) return { scripts: [] };
       const { serveable } = await store.scan();
       const scripts: UserScriptMatchItem[] = [];
+      // 只记真正回包给该 frame 的脚本（服务集条目不等于命中）：
+      // 同一脚本多 frame 注入时后写覆盖，值语义 = 最近一次实际注入。
+      const injectedAt = Date.now();
       for (const def of serveable) {
         if (!urlMatchesAnyPattern(url, def.compiledPatterns)) continue;
+        lastInjectedAt.set(def.scriptId, injectedAt);
         scripts.push({
           scriptId: def.scriptId,
           name: def.name,

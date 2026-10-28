@@ -409,6 +409,12 @@ export interface IabUserscriptStatusItem {
   detail?: string;
   /** GM 存储文件健康探测（有存储文件时）：corrupt 表示 storage_corrupt。 */
   storageHealth?: "ok" | "corrupt";
+  /**
+   * 最近一次实际注入（match 回包）的 epoch 毫秒。
+   * 纯内存运行时事实：进程重启后清零，字段缺席表示「本进程尚未注入」，
+   * UI 显示「尚未注入」占位而不是 1970 年时间。
+   */
+  lastInjectedAt?: number;
 }
 
 export interface IabUserscriptStatusResponse {
