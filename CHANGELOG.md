@@ -5,6 +5,21 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.0 (2026-10-28)
+
+- **IAB 用户脚本 P3：管理界面**（`docs/specs/iab-userscripts.md` P3 节，workwin 实战反馈
+  驱动）：设置卡列表化（名称/版本/五色状态徽标/@match 域名/每行开关），待批准独立置顶栏，
+  hash_mismatch 显眼 + 「重新批准」，parse_failed 露出 `detail` 失败原因，中文状态标签；
+  运行时新增 `lastInjectedAt` 字段（match 实际服务时记录，纯内存重启清零），类型镜像链
+  同步；`setEnabled` 回包与列表条目统一形状（合并口径单点化）。
+- **G1 协议通道补齐**（`docs/specs/multi-root-projects.md`）：桌面 v4 草稿首发的项目归属
+  固化——`projectContext` host 内部参数（仿 clientMode，不进 wire envelope），宿主 ACK
+  accepted 后经 `prepareSession` 解析三件套，`sessionProjectContextRegistry` 按 sessionId
+  登记，syncer 首次快照落库消费盖章。同日 y430p 复核 major-1 修正：键控由 workspaceKey 改
+  sessionId（避免同 workspace 无关回源抢先误消费且错值不可自愈）。wire envelope 零改动
+  （payload schema 形状断言锚定）。
+- 附：`browser.userscripts.setEnabled` 文档返回形状按 26.4.0 实机实况对齐。
+
 ## 26.4.0 (2026-10-26)
 
 - **IAB 用户脚本 P2：agent 工具面 + 确认流 + 设置卡**（`docs/specs/iab-userscripts.md` P2 节）：
