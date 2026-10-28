@@ -243,7 +243,11 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
      「立即重导出事实」而非「失效缓存」，天然幂等；保留它是因为 agent 在用户改完脚本文件后
      需要一个明确的刷新动作语义（与未来若引入缓存时的命令面兼容）。
    - `userscript_set_enabled { scriptId, enabled }`：agent 侧启用请求**不直接启用**（见
-     确认流），禁用请求直接生效（降低权限不引入新执行内容）。返回操作后的该脚本状态。
+     确认流），禁用请求直接生效（降低权限不引入新执行内容）。返回操作后的该脚本状态项——
+     与 `userscript_list` 条目同构的嵌套对象 `{ scriptId, changed, status: <状态项> }`，
+     状态字符串取 `status.status`（词汇见「状态词汇」），不是裸字符串（契约勘误
+     2026-10-28，随 workwin 实机交接确认；实现见 `userscriptService.setAgentEnabled`
+     与 `browserCommandUserscriptsHandler` 回包）。
 
 2. **确认流红线（承重语义）**：agent 不得造成「未经用户确认的新内容被执行」。P1 的
    approve-once-per-content = manifest `enabled + sha256` 锚定。P2 采用**方案 (a)：分来源
@@ -349,3 +353,124 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
 - 不做 guest IPC 面扩张（仍是恰好 3 个 channel）；preload 的 `console.warn` 经 IPC
   转发 main 日志（m2-3）涉及第 4 个 channel 的契约修订，留待后续。
 - 不做 fs.watch / 缓存（reload 命令的存在不改变「每次请求全量重扫」的 P1 架构）。
+
+## P3：管理界面（实战反馈驱动）
+
+需求来源：workwin 侧 agent 实机使用 P1/P2 后交回的交接说明（第七节「userscripts 管理界面」）。
+数据面在 P2 已完整，P3 **只做呈现升级 + 一个新运行时事实**，不改信任门、不扩命令面、
+不动 guest IPC。
+
+### 行为规则
+
+1. **列表化设置卡**（升级 `IabUserscriptsSettingsCard`，不重建）：每行固定呈现
+   名称 + 版本（有则显示）+ 状态徽标 + `@match` 域名列表 + 最后注入时间 + 启停开关。
+   - `@match` 域名由声明 pattern 派生展示（去 scheme 与 path，去重，保序）；`<all_urls>`
+     原样显示，`*.example.com` 保留通配前缀。纯函数在投影层实现，不做 URL 解析以外
+     的猜测（回包本就不含端口，pattern 编译期已拒绝带端口 host）。
+   - 静态拒载行（`parse_failed` / `grant_rejected`）的 `match` 为空，域名区以
+     `detail` 代替展示——这是用户自查「为什么进不了待批准流程」的唯一线索。
+
+2. **状态语义可视化**（颜色即语义，`DESIGN.md` 语义色 token）：
+   `serving` 绿（success）｜`pending_approval` 黄（warning）｜`hash_mismatch` 红
+   （destructive）｜`parse_failed` / `grant_rejected` / `storage_corrupt` 红
+   （destructive）｜`enabled` / `disabled` 灰（surface）。不为「好看」借用语义色：
+   灰色只用于「无活动状态」的两种。
+
+3. **待批准置顶栏**：`pending_approval` 行**不混在普通列表里**，单独成组置顶渲染
+   （分区标题 + 每行「批准」主按钮 + 驳回开关）。置顶是呈现层分区，不是排序：
+   底层仍是同一份状态列表，不引入第二份状态。分区由投影层纯函数给出
+   （`pending` / `others`），保证可测。
+
+4. **`hash_mismatch` 重新批准**：该行徽标红色且带「重新批准」按钮，与待批准按钮同
+   一条用户批准路径（patch `{ enabled: true, sha256: <所见 hash> }`，M1 语义不变）。
+   这是 P2 设置卡未覆盖的动作（P2 只有待批准行有批准按钮），P3 补上。
+
+5. **中文状态标签**（三语同步 zh-CN / en-US / fa）：
+   服务中 / 待批准 / 哈希失配 / 解析失败 / 已禁用（P2 已有文案改为该词汇：
+   serving 生效中→服务中、hashMismatch 内容已变更→哈希失配、parseFailed 格式错误→
+   解析失败、disabled 已停用→已禁用）；`enabled` / `grant_rejected` / `storage_corrupt`
+   保留既有文案。
+
+6. **`lastInjectedAt`（运行时新增字段）**：
+   - **所有者**：main `userscriptService` 的内存表 `Map<scriptId, epochMs>`——注入时刻
+     是「本进程实际服务过」的运行时事实，不属于脚本文件事实（store 不持有），
+     也不属于用户决策（manifest 不持有），因此不能落盘成第二份状态。
+   - **写路径唯一**：`match` 命令对**实际返回给该 frame 的服务集条**逐条记录当前时间
+     （`Date.now()`）；不是 match 命中的近似值，也不是「上次扫描」时间。同一脚本多
+     frame 注入时后写覆盖（值语义 = 最近一次实际注入）。
+   - **读路径**：`listStatus()` / `statusOverview()` / `reload()` / `setAgentEnabled()`
+     回包在状态项上合并 `lastInjectedAt`（无记录则字段缺席，不写 `null`/0，避免
+     「1970 年注入」这类假事实）。合并口径统一，agent 侧同一类型不会出现两种形状；
+     内存表裁剪只发生在 `inspect` 系列出口（`listStatus` / `statusOverview` / `reload`）。
+   - **生命周期**：纯内存，**进程重启即清零**（应用重启后所有行回到「尚未注入」直到
+     下次导航）。这是刻意取舍：注入时刻是进程内观测事实，落盘要引入时钟/时钟漂移
+     与第二个所有者。设置卡对缺席值显示「尚未注入」占位，不显示时间。
+   - **类型镜像链**：`packages/shared` `IabUserscriptStatusItem.lastInjectedAt?: number`
+     → `apps/zcode-cli/packages/contracts` `BrowserUserscriptStatusItem.lastInjectedAt?: number`
+     （与现有 status 词汇镜像同一模式）。`userscript_list` / `userscript_reload` 回包
+     同时带上该字段（agent 也能看到「最近注入」这一事实）。
+   - **内存表有界**：`inspect` / `statusOverview` 时按当前扫描出的 scriptId 集合裁剪，
+     已删除脚本不留残留条目。
+
+7. **每行开关（P2 确认流语义不变）**：开 = 用户批准（patch 钉住所见 sha256），
+   关 = 禁用/驳回（patch `{ enabled: false }`，立即降级）。**设置卡不走 browser
+   命令面**：agent 的 `userscript_set_enabled` 由 main 按「命令面即 agent 来源」识别，
+   设置卡若复用它会让「用户点开」被当成 agent 请求而永远停在 pending_approval。
+   因此开关的语义等价于 `setEnabled` 的用户侧版本，实现仍是 SettingService patch
+   唯一写路径（P2 规则 3 不变）。
+
+8. **不做脚本编辑器**：`@match` 带端口会 `parse_failed` 是实战踩坑，卡片对
+   `parse_failed` 行露出 `detail`（如 `invalid @match pattern: http://127.0.0.1:8642/*`）
+   供用户自查即可，不提供在线编辑或格式修正。
+
+### 状态所有者（P3 增量）
+
+| 状态 | 所有者 | 说明 |
+| --- | --- | --- |
+| 注入时刻（`lastInjectedAt`） | main `userscriptService` 内存表 | 唯一写者是 `match` 命令成功回包路径；唯一读出口是 `listStatus` / `statusOverview`。重启清零，不落盘（见行为规则 6）。 |
+| 卡片分区（待批准 / 其余） | `iabUserscriptsCardPresentation.ts` 纯投影 | 由同一份状态列表派生，不缓存、不持有第二份状态。 |
+
+事件顺序（注入时刻写入）：
+
+```
+guest frame 导航 → runtime invoke(match)
+  → main 重扫 → 计算服务集 → **对每个实际返回的 script 记 now**
+  → 回包 → runtime 逐脚本注入（runAt 等待后执行）
+设置卡打开 / 刷新 → getIabUserscriptStatus → service.statusOverview()
+  → store.inspect()（文件+manifest 事实）+ 内存表合并 → 回包（含 lastInjectedAt）
+```
+
+注意：记录点是**回包**而非脚本执行完成——`document-end` / `document-idle` 脚本的
+回包先于实际执行，因此该值是「最近一次开始服务」的时刻，不是「执行完成」时刻
+（语义边界写入类型注释）。
+
+### 验收场景（P3）
+
+1. **`lastInjectedAt` 写读链**：`match` 命中脚本后 `listStatus()` / `statusOverview()`
+   带出该脚本的 `lastInjectedAt`（≈ match 时刻）；未命中/未服务的脚本该字段缺席；
+   两次 match 后取较新值（覆盖而非累加）。
+2. **重启清零**：新建 service 实例（模拟重启）后所有脚本 `lastInjectedAt` 缺席，
+   状态卡显示「尚未注入」占位。
+3. **内存表裁剪**：脚本文件删除后再 `inspect`，内存表不再保留该 scriptId 的条目。
+4. **投影分区**：`buildIabUserscriptRows` 之后的分区函数把 `pending_approval` 单独
+   归入 `pending`，其余进 `others`；两边都不丢行、不重复。
+5. **徽标语义**：serving→success、pending_approval→warning、hash_mismatch /
+   parse_failed / grant_rejected / storage_corrupt→destructive、enabled / disabled→surface。
+6. **`@match` 域名派生**：`https://oa.test/*` → `oa.test`；`*://*.example.com/path*` →
+   `*.example.com`；`<all_urls>` 原样；多条去重保序；`parse_failed` 行走 `detail`。
+7. **重新批准入口**：`hash_mismatch` 行渲染「重新批准」按钮，点击后 patch
+   `{ enabled: true, sha256: <当前文件 hash> }`（复用 `nextManifestEntry("approve")`），
+   状态回到 serving（下次扫描）。
+8. **三语齐备**：新增/改写的状态与分区文案在 zh-CN / en-US / fa 三份 locale 同时存在，
+   key 集合一致。
+9. **类型镜像一致**：`shared.IabUserscriptStatusItem` 与
+   `contracts.BrowserUserscriptStatusItem` 均含可选 `lastInjectedAt: number`，且
+   `browser-client` 回包透传（agent 侧不校验该字段非空）。
+
+### P3 明确不做
+
+- 脚本编辑器 / 在线创建 / 格式自动修正（脚本仍是用户或 agent 落盘的文件）。
+- 注入**计数**（每 frame 计数会放大数字并误导用户；只给最近注入时刻）。
+- 把 `lastInjectedAt` 落盘或跨进程共享（重启清零是明确的取舍，见行为规则 6）。
+- 扩展命令面 / guest IPC / 新增 IPC channel（仍是 3 个 guest channel +
+  既有 `zcode:iab-userscripts-status`）。
