@@ -20,6 +20,39 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   （payload schema 形状断言锚定）。
 - 附：`browser.userscripts.setEnabled` 文档返回形状按 26.4.0 实机实况对齐。
 
+### 验收结论（2026-10-29，workwin 实机验收，通过）
+
+- **发布判定**：A 全 PASS + B 核心 PASS + C 无 FAIL（C3 PARTIAL）→ v26.5.0 发布；
+  draft 构建 run `40749705379` 全 job 绿。
+- **三端哈希链**：CI `sha256.txt` = 源端（m5air）= workwin 目标端，`yazcode-26.5.0-win-x64.exe`
+  = `07461fe52f238f414aea984e12ad212b36f26c21d09fef0d2997c654202b9c63`（154,228,951 字节）；
+  静默升级后 DisplayVersion 26.5.0 / ProductVersion 26.5.0.0。
+- **升级保留 PASS**：26.4.0 → 26.5.0 原地升级后 `embeddedBrowserUserscripts` manifest
+  原样保留（`hide-ai-copilot` v1.1.0 serving 态 `{enabled:true, sha256:0a538a70…}` 逐字节
+  一致），脚本文件、GM 存储与 OV hooks 0.5.23 全部保留。
+- **A 基线回归（全 PASS）**：OV 接入插件 0.5.23 + MCP `tools/list` 24 工具握手（serverInfo
+  openviking 1.30.0）；桌面 surface 60 技能含 visualize、CLI 直跑 60 技能无 visualize 且无
+  可视化目录行注入；gen-ui 六类安全边界实机复现——正例渲染含高桥/滚动条/mark，`..\` 穿越、
+  根外绝对路径、非 html、大写文件名均错误页零泄漏（根外为「未通过安全校验，已拒绝读取」
+  变体），非法 host →「Invalid Gen UI URL.」。
+- **B IAB P3 管理界面（核心 PASS）**：设置卡列表化（名称/版本/五色状态徽标/@match 域名/
+  最后注入/每行开关），parse_failed 行露出 `detail`；待批准置顶分区——agent 命令面
+  `setEnabled(true)` 仍仅落 `{enabled:false, pendingApproval:true}`（红线保持），用户卡片
+  「批准」→ manifest 钉住所见 sha `6f770f4c…` → 真实门户导航双脚本注入生效
+  （`data-hide-ai-copilot="applied"` + probe 标记）；已批准态 `setEnabled(true)` 幂等
+  no-op（工具回包 `changed:false`、manifest 逐字节不变）；脚本内容变更 → 「哈希失配」红
+  徽标 + 停服（重新导航 probe 零注入）+「重新批准」→ 回 serving 且新内容注入；
+  `lastInjectedAt` 注入后以 epoch-ms 出现（`1793217043933`），二次导航覆盖更新、进程重启
+  清零（「尚未注入」占位）。注记：任务书记录的 pending_approval 遗留态在部署前已被用户
+  批准为 serving，待批准呈现与批准路径改由 `accept265-probe` 探针脚本全生命周期实测。
+- **C 多目录 P3 UI + G1（核心 PASS，C3 PARTIAL）**：项目编辑器新建多 roots 项目全链路
+  PASS（原生选目录经计划任务 UIA/Win32 驱动，`projects`/`project_roots` 落库 position 与
+  is_primary 正确，侧栏项目名标注 + roots 徽标「2」）；**G1 桌面首发项目归属盖章实测
+  PASS**——项目上下文新建任务后 tasks-index sqlite 行含 `project_id` / `root_path` /
+  `execution_directories` 三件套（执行目录为附加 root JSON）；同 cwd 双项目草稿隔离未
+  执行（共享主目录时侧栏按 workspaceKey=primary root 合并，UI 无独立切项目入口，与
+  26.4.0 同为已知边界），无 FAIL 项。
+
 ## 26.4.0 (2026-10-26)
 
 - **IAB 用户脚本 P2：agent 工具面 + 确认流 + 设置卡**（`docs/specs/iab-userscripts.md` P2 节）：
