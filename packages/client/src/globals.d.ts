@@ -262,6 +262,19 @@ declare global {
       ): Promise<ChromeBrowserDataImportResult>;
       /** 清理内置浏览器缓存或全部站点数据。 */
       clearEmbeddedBrowserData?(mode: "cache" | "all"): Promise<EmbeddedBrowserDataClearResult>;
+      /** P4 自助管理：读取脚本文件当前内容（编辑前回读）；写盘/删除/URL 拉取均经 main 校验，写盘不写 manifest（落盘 ≠ 批准）。 */
+      readIabUserscript?(
+        payload: import("@zcode/shared").IabUserscriptReadRequest,
+      ): Promise<import("@zcode/shared").IabUserscriptReadResult>;
+      writeIabUserscript?(
+        payload: import("@zcode/shared").IabUserscriptWriteRequest,
+      ): Promise<import("@zcode/shared").IabUserscriptWriteResult>;
+      deleteIabUserscript?(
+        payload: import("@zcode/shared").IabUserscriptDeleteRequest,
+      ): Promise<import("@zcode/shared").IabUserscriptDeleteResult>;
+      fetchIabUserscriptSource?(
+        payload: import("@zcode/shared").IabUserscriptFetchSourceRequest,
+      ): Promise<import("@zcode/shared").IabUserscriptFetchSourceResult>;
       /** 注册新版本已下载完毕的回调，返回 disposer */
       onUpdateReady(callback: (version: string) => void): () => void;
       /** 注册"手动检查更新"结果的回调，返回 disposer */

@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Switch } from "@/components/ui/switch.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
@@ -10,9 +11,10 @@ import {
 } from "@/settings/iabUserscriptsCardPresentation.js";
 
 /**
- * 单行呈现（P3）：只依赖投影层与 SettingsPageParts，不持有状态。
+ * 单行呈现（P3 建立、P4 加行展开）：只依赖投影层与 SettingsPageParts，不持有状态。
  * 颜色即语义：success/warning/destructive 只用于对应的状态，neutral 只用于
  * 「无活动状态」的 enabled/disabled（DESIGN.md 语义色约束，投影层给出映射）。
+ * 行体可点开展开详情/编辑器（P4：桌面宿主下由卡片传入展开态；降级模式传 false）。
  */
 
 const BADGE_MESSAGE_IDS: Record<IabUserscriptBadgeKind, string> = {
@@ -39,6 +41,9 @@ export interface IabUserscriptsSettingsRowProps {
   onApprove: () => void;
   onReapprove: () => void;
   onToggle: (checked: boolean) => void;
+  /** P4 行展开：undefined = 不可展开（无宿主降级）；给出时行体可点击。 */
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export function IabUserscriptsSettingsRow({
@@ -47,6 +52,8 @@ export function IabUserscriptsSettingsRow({
   onApprove,
   onReapprove,
   onToggle,
+  expanded,
+  onToggleExpand,
 }: IabUserscriptsSettingsRowProps) {
   const { intl, locale } = useZCodeIntl();
   const ariaLabel = intl.formatMessage(
@@ -62,41 +69,31 @@ export function IabUserscriptsSettingsRow({
           { time: new Date(row.lastInjectedAt).toLocaleString(locale) },
         );
 
+  const expandable = onToggleExpand !== undefined;
+  const Chevron = expanded ? ChevronDown : ChevronRight;
+
   return (
     <SettingsRow
       label={
-        <span className="flex min-w-0 flex-col gap-1.5">
-          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="min-w-0 truncate font-medium">{row.name}</span>
-            {row.version ? (
-              <span className="shrink-0 font-mono text-ui-xs text-foreground-subtle">
-                v{row.version}
-              </span>
-            ) : null}
-            <span className="flex flex-wrap items-center gap-1.5">
-              {row.badges.map((kind) => (
-                <span
-                  key={kind}
-                  className={`rounded-md px-2 py-0.5 text-ui-xs font-medium ${BADGE_TONE_CLASS[badgeTone(kind)]}`}
-                >
-                  {intl.formatMessage({ id: BADGE_MESSAGE_IDS[kind] })}
-                </span>
-              ))}
+        expandable ? (
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1.5 text-start"
+            onClick={onToggleExpand}
+            aria-expanded={expanded}
+          >
+            <span className="flex items-start gap-1">
+              <Chevron className="mt-0.5 size-4 shrink-0 text-foreground-subtlest" aria-hidden="true" />
+              <RowTitle row={row} />
             </span>
+            <RowMeta row={row} lastInjectedLabel={lastInjectedLabel} />
+          </button>
+        ) : (
+          <span className="flex min-w-0 flex-col gap-1.5">
+            <RowTitle row={row} />
+            <RowMeta row={row} lastInjectedLabel={lastInjectedLabel} />
           </span>
-          {/* @match 域名：允许换行，多条 pattern 是并列关系而非一条长串。 */}
-          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-ui-xs text-foreground-subtle">
-            <span className="truncate">{row.scriptId}</span>
-            {row.matchDomains.length > 0
-              ? row.matchDomains.map((domain) => (
-                  <span key={domain} className="break-all">
-                    {domain}
-                  </span>
-                ))
-              : null}
-          </span>
-          <span className="text-ui-xs text-foreground-subtlest">{lastInjectedLabel}</span>
-        </span>
+        )
       }
       detail={
         row.detail ? (
@@ -126,5 +123,46 @@ export function IabUserscriptsSettingsRow({
         </span>
       }
     />
+  );
+}
+
+function RowTitle({ row }: { row: IabUserscriptViewRow }) {
+  const { intl } = useZCodeIntl();
+  return (
+    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+      <span className="min-w-0 truncate font-medium">{row.name}</span>
+      {row.version ? (
+        <span className="shrink-0 font-mono text-ui-xs text-foreground-subtle">v{row.version}</span>
+      ) : null}
+      <span className="flex flex-wrap items-center gap-1.5">
+        {row.badges.map((kind) => (
+          <span
+            key={kind}
+            className={`rounded-md px-2 py-0.5 text-ui-xs font-medium ${BADGE_TONE_CLASS[badgeTone(kind)]}`}
+          >
+            {intl.formatMessage({ id: BADGE_MESSAGE_IDS[kind] })}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+function RowMeta({ row, lastInjectedLabel }: { row: IabUserscriptViewRow; lastInjectedLabel: string }) {
+  return (
+    <>
+      {/* @match 域名：允许换行，多条 pattern 是并列关系而非一条长串。 */}
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-ui-xs text-foreground-subtle">
+        <span className="truncate">{row.scriptId}</span>
+        {row.matchDomains.length > 0
+          ? row.matchDomains.map((domain) => (
+              <span key={domain} className="break-all">
+                {domain}
+              </span>
+            ))
+          : null}
+      </span>
+      <span className="text-ui-xs text-foreground-subtlest">{lastInjectedLabel}</span>
+    </>
   );
 }

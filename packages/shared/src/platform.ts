@@ -407,7 +407,11 @@ export interface IabUserscriptStatusItem {
   sha256: string;
   /** 拒载/失活原因（parse_failed / grant_rejected / hash_mismatch）。 */
   detail?: string;
-  /** GM 存储文件健康探测（有存储文件时）：corrupt 表示 storage_corrupt。 */
+  /**
+   * GM 存储文件健康探测：仅在存在存储文件时给出（corrupt 表示 storage_corrupt，
+   * 缺席 = 无存储文件）。P4 删除流据此决定是否弹「同时删除存储数据」的第二个
+   * 确认框，「无存储」与「存储健康」必须可区分。
+   */
   storageHealth?: "ok" | "corrupt";
   /**
    * 最近一次实际注入（match 回包）的 epoch 毫秒。
@@ -420,6 +424,89 @@ export interface IabUserscriptStatusItem {
 export interface IabUserscriptStatusResponse {
   scripts: IabUserscriptStatusItem[];
 }
+
+/**
+ * P4 自助管理的宿主文件能力（renderer → main）。这些不是 guest IPC 面：
+ * guest 仍恰好 3 个 channel；写文件/装 URL/删脚本只能由用户在界面触发
+ * （agent 工具面刻意不扩，见 docs/specs/iab-userscripts.md P4 行为规则 6）。
+ *
+ * 上限放 shared：main 用它做写盘/拉取守卫，UI 用它展示同样的文案，
+ * 避免两侧各写一份数字而漂移。
+ */
+export const USER_SCRIPT_MAX_SOURCE_BYTES = 2 * 1024 * 1024;
+export const USER_SCRIPT_URL_MAX_BYTES = 20 * 1024 * 1024;
+export const USER_SCRIPT_URL_FETCH_TIMEOUT_MS = 20_000;
+export const USER_SCRIPT_URL_MAX_REDIRECTS = 5;
+
+export interface IabUserscriptReadRequest {
+  scriptId: string;
+}
+
+export type IabUserscriptReadResult =
+  | { ok: true; content: string; sha256: string }
+  | { ok: false; error: "invalid_script_id" | "unknown_script" | "read_failed" };
+
+export interface IabUserscriptWriteRequest {
+  scriptId: string;
+  content: string;
+  /** 目标已存在时必须显式为 true（重名覆盖是显式动作，见 P4 红线 5）。 */
+  overwrite: boolean;
+}
+
+export type IabUserscriptWriteResult =
+  | { ok: true; changed: boolean; scriptId: string; sha256: string }
+  | {
+      ok: false;
+      error: "invalid_script_id" | "invalid_content" | "too_large" | "exists" | "write_failed";
+    };
+
+export interface IabUserscriptDeleteRequest {
+  scriptId: string;
+  /** false = 只删脚本文件、保留 GM 存储（用户取消第二个确认框）。 */
+  deleteStorage: boolean;
+}
+
+export type IabUserscriptDeleteResult =
+  | { ok: true; deletedFile: boolean; deletedStorage: boolean }
+  | { ok: false; error: "invalid_script_id" | "unknown_script" | "delete_failed" };
+
+export interface IabUserscriptFetchSourceRequest {
+  url: string;
+}
+
+/**
+ * URL 安装的静态预览：main 复用 buildUserScriptDef 的同一套解析得出，
+ * 保证「预览所见 = 安装后扫描所得」。
+ * parseError 非空 = 静态拒载（parse_failed / grant_rejected 的统一信号）：
+ * 这两种状态永远不会执行，UI 在预览段阻断安装（P4 红线 3）。
+ */
+export interface IabUserscriptSourcePreview {
+  name: string;
+  version?: string;
+  runAt: string;
+  grants: string[];
+  match: string[];
+  parseError?: string;
+}
+
+export interface IabUserscriptSource {
+  /** 重定向后的最终地址（用户核对安装来源以它为准）。 */
+  url: string;
+  content: string;
+}
+
+export type IabUserscriptFetchSourceResult =
+  | { ok: true; source: IabUserscriptSource; preview: IabUserscriptSourcePreview }
+  | {
+      ok: false;
+      error:
+        | "invalid_url"
+        | "not_https"
+        | "too_large"
+        | "timeout"
+        | "remote_address_not_allowed"
+        | "download_failed";
+    };
 
 export interface WindowControlsOverlayMetrics {
   leftPaddingPx?: number;
@@ -905,6 +992,21 @@ export interface IPlatformService {
    * manifest 派生展示。契约见 docs/specs/iab-userscripts.md P2。
    */
   getIabUserscriptStatus?(): Promise<IabUserscriptStatusResponse>;
+
+  /**
+   * P4 自助管理（新建/导入/URL 安装/编辑/删除）的宿主文件通道，均为可选方法：
+   * desktop preload 实现，普通 Web 无本地文件能力不实现（UI 据此隐藏工具行）。
+   * 这些通道刻意不进 agent 工具面（apps/zcode-cli contracts 不镜像）：
+   * 写文件/装 URL/删脚本只能由用户在界面触发，不让 agent 造成未确认内容被写入
+   * （docs/specs/iab-userscripts.md P4 行为规则 6）。main 侧写盘永不写 manifest
+   * （落盘 ≠ 批准，红线 1/2），manifest patch 仍走 SettingService。
+   */
+  readIabUserscript?(request: IabUserscriptReadRequest): Promise<IabUserscriptReadResult>;
+  writeIabUserscript?(request: IabUserscriptWriteRequest): Promise<IabUserscriptWriteResult>;
+  deleteIabUserscript?(request: IabUserscriptDeleteRequest): Promise<IabUserscriptDeleteResult>;
+  fetchIabUserscriptSource?(
+    request: IabUserscriptFetchSourceRequest,
+  ): Promise<IabUserscriptFetchSourceResult>;
 
   /** 注册新版本已下载完毕的回调，参数为新版本号，返回 disposer */
   onUpdateReady(callback: (version: string) => void): () => void;

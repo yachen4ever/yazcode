@@ -16,6 +16,8 @@ import {
   type UserscriptRequestContext,
   type UserscriptService,
 } from "./userscriptService.js";
+import { createUserscriptFileService } from "./userscriptFileService.js";
+import { createUserscriptStorage } from "./userscriptStorage.js";
 import type { UserscriptManifestPort } from "./userscriptStore.js";
 
 /**
@@ -83,7 +85,8 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
   }
   installed = true;
 
-  const runtimePreloadPath = options.paths?.runtimePreloadPath ?? resolveUserscriptRuntimePreloadPath();
+  const runtimePreloadPath =
+    options.paths?.runtimePreloadPath ?? resolveUserscriptRuntimePreloadPath();
   // Electron 的 Session 按 persist 分区单例：持住实例既用于注册 preload，
   // 也用于 IPC sender 的分区归属判定（Session 类型没有可读的 partition 属性）。
   const iabSession = session.fromPartition(EMBEDDED_BROWSER_PARTITION);
@@ -96,14 +99,22 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
 
   // 服务层日志走 createServiceLogger（scope: userscripts）；store/storage 只需 info/warn 端口。
   const serviceLogger = createServiceLogger("userscripts");
+  const bootstrapLogger = {
+    info: (...args: unknown[]) => serviceLogger.info(undefined, ...args),
+    warn: (...args: unknown[]) => serviceLogger.warn(undefined, ...args),
+  };
+  // storage 全局单例：guest 写入（service）与 P4 删除通道（fileService）必须共享
+  // 同一份 per-scriptId 锁表，否则跨实例并发会绕过互斥。
+  const storage = createUserscriptStorage({
+    rootDir: options.paths?.storageRootDir ?? resolveUserscriptStorageDir(),
+    logger: bootstrapLogger,
+  });
   const service = createUserscriptService({
     scriptsDir: options.paths?.scriptsDir ?? resolveUserscriptsDir(),
     storageRootDir: options.paths?.storageRootDir ?? resolveUserscriptStorageDir(),
     manifestPort: createSettingServiceManifestPort(options.settingService),
-    logger: {
-      info: (...args: unknown[]) => serviceLogger.info(undefined, ...args),
-      warn: (...args: unknown[]) => serviceLogger.warn(undefined, ...args),
-    },
+    storage,
+    logger: bootstrapLogger,
   });
   installedService = service;
 
@@ -144,7 +155,33 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
 
   // P2 设置卡状态查询（renderer → main）：与 guest IPC 面（恰好 3 个 channel）分离，
   // 走 PlatformChannels 的宿主 invoke 面。只读投影，不做锚定写（契约见 spec P2 行为规则 3）。
-  ipcMain.handle(PlatformChannels.IabUserscriptsStatus, async (): Promise<IabUserscriptStatusResponse> => {
-    return { scripts: await service.statusOverview() };
+  ipcMain.handle(
+    PlatformChannels.IabUserscriptsStatus,
+    async (): Promise<IabUserscriptStatusResponse> => {
+      return { scripts: await service.statusOverview() };
+    },
+  );
+
+  // P4 自助管理（renderer 宿主面）：read / write / delete / fetchSource。
+  // 与 guest 面（恰好 3 个 channel，一个不碰）和 agent 命令面（P2 三命令，刻意不扩）
+  // 三线分离；调用方是 renderer 宿主窗口，无需 IAB 分区校验。写盘通道不写 manifest：
+  // 落盘 ≠ 批准，manifest patch 是 UI 经 SettingService 的职责（P4 行为规则 1）。
+  const fileService = createUserscriptFileService({
+    scriptsDir: options.paths?.scriptsDir ?? resolveUserscriptsDir(),
+    storageRootDir: options.paths?.storageRootDir ?? resolveUserscriptStorageDir(),
+    storage,
+    logger: bootstrapLogger,
   });
+  ipcMain.handle(PlatformChannels.IabUserscriptsRead, (_event, payload: unknown) =>
+    fileService.readScript(payload),
+  );
+  ipcMain.handle(PlatformChannels.IabUserscriptsWrite, (_event, payload: unknown) =>
+    fileService.writeScript(payload),
+  );
+  ipcMain.handle(PlatformChannels.IabUserscriptsDelete, (_event, payload: unknown) =>
+    fileService.deleteScript(payload),
+  );
+  ipcMain.handle(PlatformChannels.IabUserscriptsFetchSource, (_event, payload: unknown) =>
+    fileService.fetchSource(payload),
+  );
 }

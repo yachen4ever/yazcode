@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { isValidUserScriptId } from "./userscriptRules.js";
 import type { UserScriptStorageResult } from "./userscriptIpcContract.js";
 
 /**
@@ -36,22 +37,14 @@ class StorageCorruptError extends Error {
 
 type StoredPayload = Record<string, unknown>;
 
-function isSafeScriptId(scriptId: string): boolean {
-  // 按路径段判定（复核 m2-6）：拒绝路径分隔符与 "." / ".." 段即可挡住路径穿越，
-  // 取代旧的「子串含 ..」规则——后者会误拒 my..script 这类合法文件名。
-  if (scriptId.length === 0) return false;
-  if (scriptId.includes("/") || scriptId.includes("\\")) return false;
-  // 无分隔符时整串就是唯一路径段，只需拒 dot 段。
-  return scriptId !== "." && scriptId !== "..";
-}
-
 export function createUserscriptStorage(options: UserscriptStorageOptions) {
   const { rootDir, logger } = options;
   const locks = new Map<string, Promise<unknown>>();
 
   function storageFilePath(scriptId: string): string {
-    // scriptId 来自目录文件名 stem（无路径分隔符），这里再挡一层以防未来调用面变化。
-    if (!isSafeScriptId(scriptId)) {
+    // scriptId 校验共用 userscriptRules 的唯一实现（P4 行为规则 3，不复制规则）；
+    // 扫描来源的 id 来自文件名 stem 天然合法，这里再挡一层以防未来调用面变化。
+    if (!isValidUserScriptId(scriptId)) {
       throw new Error(`invalid scriptId for storage: ${scriptId}`);
     }
     return join(rootDir, `${scriptId}.json`);
@@ -190,6 +183,26 @@ export function createUserscriptStorage(options: UserscriptStorageOptions) {
       } catch {
         return false;
       }
+    },
+
+    /**
+     * 删除整个存储文件（P4 删除通道专用）：与 GM get/set 共用同一把 scriptId 锁，
+     * 避免与并发存储读写交错。存在才删（返回 true）；不存在返回 false（幂等，
+     * 「确认删存储」与「无存储」对调用方都算已完成）。调用方需先过 scriptId 校验；
+     * 删除失败（权限等）原样上抛，由删除通道映射为显式失败码，不静默吞掉——
+     * 用户已明确确认「删除数据」，静默残留等于丢承诺。
+     */
+    async deleteStorageFile(scriptId: string): Promise<boolean> {
+      return await withLock(scriptId, async () => {
+        const file = storageFilePath(scriptId);
+        try {
+          await stat(file);
+        } catch {
+          return false;
+        }
+        await rm(file, { force: true });
+        return true;
+      });
     },
 
     /**

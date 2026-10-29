@@ -20,6 +20,10 @@ type DesktopBrowserPlatformBridge = Pick<
   | "importChromeBrowserData"
   | "clearEmbeddedBrowserData"
   | "getIabUserscriptStatus"
+  | "readIabUserscript"
+  | "writeIabUserscript"
+  | "deleteIabUserscript"
+  | "fetchIabUserscriptSource"
   | "getPathForFile"
   | "saveFile"
   | "printPageToPdf"
@@ -78,5 +82,19 @@ export const desktopBrowserPlatformBridge = {
   // 条件定义（能力检测）：旧 preload 下保持 undefined，设置卡降级为 manifest 派生展示。
   getIabUserscriptStatus: window.zcode.getIabUserscriptStatus
     ? () => window.zcode.getIabUserscriptStatus!()
+    : undefined,
+  // P4 自助管理（新建/导入/URL 安装/编辑/删除）：同为条件定义——UI 靠方法存在性
+  // 做能力检测，旧 preload / 无宿主环境下保持 undefined，工具行不渲染（P4 验收 12）。
+  readIabUserscript: window.zcode.readIabUserscript
+    ? (payload) => window.zcode.readIabUserscript!(payload)
+    : undefined,
+  writeIabUserscript: window.zcode.writeIabUserscript
+    ? (payload) => window.zcode.writeIabUserscript!(payload)
+    : undefined,
+  deleteIabUserscript: window.zcode.deleteIabUserscript
+    ? (payload) => window.zcode.deleteIabUserscript!(payload)
+    : undefined,
+  fetchIabUserscriptSource: window.zcode.fetchIabUserscriptSource
+    ? (payload) => window.zcode.fetchIabUserscriptSource!(payload)
     : undefined,
 } satisfies DesktopBrowserPlatformBridge;

@@ -193,6 +193,14 @@ export const PlatformChannels = {
   LoadMcpFromUserDirectory: "zcode:load-mcp-from-user-directory",
   /** Renderer → Main：IAB 用户脚本状态查询（只读扫描投影，P2 设置卡） */
   IabUserscriptsStatus: "zcode:iab-userscripts-status",
+  /** Renderer → Main：读取脚本文件当前内容（P4 编辑前读取） */
+  IabUserscriptsRead: "zcode:iab-userscripts-read",
+  /** Renderer → Main：写盘（新建/导入/编辑保存；落盘 ≠ 批准） */
+  IabUserscriptsWrite: "zcode:iab-userscripts-write",
+  /** Renderer → Main：删除脚本文件（可选一并删除 GM 存储） */
+  IabUserscriptsDelete: "zcode:iab-userscripts-delete",
+  /** Renderer → Main：从 URL 拉取脚本源码并返回静态预览（不落盘） */
+  IabUserscriptsFetchSource: "zcode:iab-userscripts-fetch-source",
   /** Renderer → Main：保存 CLI MCP 配置到用户目录 */
   SaveMcpToUserDirectory: "zcode:save-mcp-to-user-directory",
   /** Renderer 日志转发到 main 进程统一存储 */

@@ -261,3 +261,37 @@ export function isValidStorageKey(key: unknown): key is string {
     typeof key === "string" && key.length > 0 && key.length <= USER_SCRIPT_STORAGE_KEY_MAX_LENGTH
   );
 }
+
+/**
+ * 脚本 ID 长度上限（P4 红线 4）：scriptId 直接拼进文件名与存储文件名，
+ * 上限防异常长名制造超长路径。与 spec 验收场景 5 的「超长 id」拒绝对应。
+ */
+export const USER_SCRIPT_ID_MAX_LENGTH = 64;
+
+/**
+ * 脚本 ID 合法性（P4 红线 4，路径边界的第一道门）：
+ * 无路径分隔符、非 `.`/`..` 段、无 Windows 非法字符（`< > : " | ? *`，其中 `:` 还会
+ * 撞盘符与 NTFS ADS 语法）、无控制字符、不以 `.` 开头（隐藏文件/相对路径形态）、
+ * 不以空格或点结尾（Windows 会静默吞掉尾随空格与点）、长度 ≤64。
+ * 唯一实现：userscriptStorage（GM 存储文件名）与 userscriptFiles（写盘通道）共用，
+ * 不复制规则（P4 行为规则 3）。store 扫描出的 scriptId 来自磁盘文件名 stem，
+ * 天然满足本规则；校验是防未来调用面变化的纵深防御。
+ */
+export function isValidUserScriptId(scriptId: string): boolean {
+  if (typeof scriptId !== "string") return false;
+  if (scriptId.length === 0 || scriptId.length > USER_SCRIPT_ID_MAX_LENGTH) return false;
+  // 无分隔符时整串就是唯一路径段；`/`、`\` 与 dot 段一并拒绝即挡住路径穿越（m2-6 规则的超集）。
+  if (scriptId.includes("/") || scriptId.includes("\\")) return false;
+  if (scriptId === "." || scriptId === "..") return false;
+  for (const ch of '<>:"|?*') {
+    if (scriptId.includes(ch)) return false;
+  }
+  for (const ch of scriptId) {
+    const code = ch.codePointAt(0) ?? 0;
+    // 控制字符（含 DEL）：跨平台文件名安全。不用控制字符正则，避免 no-control-regex 一类静态检查噪音。
+    if (code <= 0x1f || code === 0x7f) return false;
+  }
+  if (scriptId.startsWith(".")) return false;
+  if (scriptId.endsWith(" ") || scriptId.endsWith(".")) return false;
+  return true;
+}

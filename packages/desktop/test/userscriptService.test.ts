@@ -5,6 +5,9 @@ import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { parseStorageGetRequest, parseStorageSetRequest } from "../src/main/userscripts/userscriptIpcContract.js";
 import { createUserscriptService, type UserscriptRequestContext } from "../src/main/userscripts/userscriptService.js";
+import { createUserscriptFiles } from "../src/main/userscripts/userscriptFiles.js";
+import { createUserscriptStorage } from "../src/main/userscripts/userscriptStorage.js";
+import type { UserscriptManifestPort } from "../src/main/userscripts/userscriptStore.js";
 
 const mainFrameContext: UserscriptRequestContext = { isMainFrame: true, isAllowedSender: true };
 const subFrameContext: UserscriptRequestContext = { isMainFrame: false, isAllowedSender: true };
@@ -356,6 +359,179 @@ describe("userscriptService.lastInjectedAt", () => {
         [],
       );
       assert.ok(remaining.every((item) => !("lastInjectedAt" in item)));
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+});
+
+/**
+ * P4 落盘 ≠ 批准（docs/specs/iab-userscripts.md P4 验收场景 1/3）：
+ * 写盘通道（userscriptFiles）与状态投影（service.listStatus）共享同一目录与
+ * manifest 端口——写盘后 main 一概不 patch manifest：
+ * - 新建：无条目 → 状态 disabled（服务集不含），UI patch pendingApproval 后才进待批准；
+ * - 编辑已批准脚本：manifest 不变（仍 enabled + 旧 sha），扫描自然落 hash_mismatch。
+ */
+describe("userscriptService P4 落盘 ≠ 批准", () => {
+  async function makeWritableService(manifest: Record<string, { enabled: boolean; sha256?: string }>) {
+    const root = await mkdtemp(join(tmpdir(), "yazcode-userscript-p4-"));
+    const scriptsDir = join(root, "userscripts");
+    const storageRootDir = join(root, "storage");
+    await mkdir(scriptsDir, { recursive: true });
+    const saved: Array<Record<string, { enabled: boolean; sha256?: string }>> = [];
+    let current = manifest;
+    const manifestPort: UserscriptManifestPort = {
+      async getManifest() {
+        return current;
+      },
+      async saveManifest(next) {
+        saved.push(next);
+        current = next;
+      },
+    };
+    const service = createUserscriptService({
+      scriptsDir,
+      storageRootDir,
+      manifestPort,
+      logger: { info: () => {}, warn: () => {} },
+    });
+    const storage = createUserscriptStorage({ rootDir: storageRootDir, logger: { warn: () => {} } });
+    const files = createUserscriptFiles({
+      scriptsDir,
+      storage,
+      logger: { info: () => {}, warn: () => {} },
+    });
+    return {
+      service,
+      files,
+      manifestPort,
+      saved,
+      scriptsDir,
+      storage,
+      cleanup: () => rm(root, { recursive: true, force: true }),
+    };
+  }
+
+  it("新建写盘后 main 不 patch manifest：状态 disabled（服务集不含）；UI patch 后 pending_approval", async () => {
+    const ctx = await makeWritableService({});
+    try {
+      const content = scriptWithGrant("https://fresh.test/*", "GM_addStyle");
+      const write = await ctx.files.writeScript("fresh", content, false);
+      assert.equal(write.ok, true);
+      // 写盘通道自身不产生任何 manifest 写。
+      assert.deepEqual(ctx.saved, []);
+
+      // 发现 ≠ 启用：新文件无条目 → disabled；match 服务集不含该脚本。
+      const statusAfterWrite = (await ctx.service.listStatus()).find(
+        (item) => item.scriptId === "fresh",
+      );
+      assert.equal(statusAfterWrite?.status, "disabled");
+      const matchResponse = await ctx.service.match(
+        { url: "https://fresh.test/page" },
+        mainFrameContext,
+      );
+      assert.deepEqual(matchResponse.scripts, []);
+
+      // 模拟 UI patch（SettingService 唯一写路径）→ pending_approval，仍不服务。
+      const currentManifest = await ctx.manifestPort.getManifest();
+      await ctx.manifestPort.saveManifest({
+        ...currentManifest,
+        fresh: { enabled: false, pendingApproval: true },
+      });
+      const statusAfterPatch = (await ctx.service.listStatus()).find(
+        (item) => item.scriptId === "fresh",
+      );
+      assert.equal(statusAfterPatch?.status, "pending_approval");
+      assert.deepEqual(await ctx.service.match({ url: "https://fresh.test/page" }, mainFrameContext), {
+        scripts: [],
+      });
+
+      // 用户批准（钉住所见 sha）→ 下次扫描 serving。
+      const seen = statusAfterPatch?.sha256 ?? "";
+      await ctx.manifestPort.saveManifest({
+        ...(await ctx.manifestPort.getManifest()),
+        fresh: { enabled: true, sha256: seen },
+      });
+      const statusAfterApprove = (await ctx.service.listStatus()).find(
+        (item) => item.scriptId === "fresh",
+      );
+      assert.equal(statusAfterApprove?.status, "serving");
+      const served = await ctx.service.match({ url: "https://fresh.test/page" }, mainFrameContext);
+      assert.deepEqual(
+        served.scripts.map((item) => item.scriptId),
+        ["fresh"],
+      );
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("编辑已批准脚本：manifest 未变（enabled + 旧 sha），状态 hash_mismatch 且不服务", async () => {
+    const ctx = await makeWritableService({});
+    try {
+      const original = scriptWithGrant("https://edit.test/*", "GM_addStyle");
+      await ctx.files.writeScript("edited", original, false);
+      // 锚定批准（旧内容 hash）。
+      const first = (await ctx.service.listStatus()).find((item) => item.scriptId === "edited");
+      const anchoredSha = first?.sha256 ?? "";
+      await ctx.manifestPort.saveManifest({ edited: { enabled: true, sha256: anchoredSha } });
+      assert.equal(
+        (await ctx.service.listStatus()).find((item) => item.scriptId === "edited")?.status,
+        "serving",
+      );
+
+      // 编辑保存（overwrite:true）：断言 manifest 无新写入（保存动作永不写 sha）。
+      const savesBefore = ctx.saved.length;
+      const editedContent = scriptWithGrant("https://edit.test/*", "GM_addStyle");
+      const write = await ctx.files.writeScript(
+        "edited",
+        `${editedContent}\n// touched\n`,
+        true,
+      );
+      assert.equal(write.ok, true);
+      assert.equal(ctx.saved.length, savesBefore, "写盘通道不得写 manifest");
+
+      const status = (await ctx.service.listStatus()).find((item) => item.scriptId === "edited");
+      assert.equal(status?.status, "hash_mismatch");
+      // manifest 条目仍是 enabled + 旧 sha。
+      const entry = (await ctx.manifestPort.getManifest()).edited;
+      assert.deepEqual(entry, { enabled: true, sha256: anchoredSha });
+      // 不服务（未确认内容不被执行）。
+      assert.deepEqual(await ctx.service.match({ url: "https://edit.test/page" }, mainFrameContext), {
+        scripts: [],
+      });
+
+      // 重新批准（钉住新内容 sha）→ serving。
+      await ctx.manifestPort.saveManifest({
+        edited: { enabled: true, sha256: status?.sha256 ?? "" },
+      });
+      assert.equal(
+        (await ctx.service.listStatus()).find((item) => item.scriptId === "edited")?.status,
+        "serving",
+      );
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("statusOverview 的 storageHealth 仅在存在存储文件时给出（P4 删除流判定依据）", async () => {
+    const ctx = await makeWritableService({ svc: { enabled: true, sha256: "" } });
+    try {
+      // 脚本文件在盘上才有状态行（inspect 以目录扫描为准）。
+      const write = await ctx.files.writeScript("svc", scriptWithGrant("https://svc.test/*"), false);
+      assert.equal(write.ok, true);
+      // 无存储文件：storageHealth 缺席（不是伪造的 ok）。
+      const withoutStorage = await ctx.service.statusOverview();
+      const svcRow = withoutStorage.find((item) => item.scriptId === "svc");
+      assert.ok(svcRow);
+      assert.equal("storageHealth" in svcRow, false);
+
+      // 写入 GM 存储 → 出现且为 ok。
+      await ctx.storage.setValue("svc", "k", "v");
+      const withStorage = await ctx.service.statusOverview();
+      const svcWithStorage = withStorage.find((item) => item.scriptId === "svc");
+      assert.ok(svcWithStorage);
+      assert.equal(svcWithStorage.storageHealth, "ok");
     } finally {
       await ctx.cleanup();
     }

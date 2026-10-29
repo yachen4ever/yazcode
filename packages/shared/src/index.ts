@@ -132,6 +132,11 @@ export {
   DesktopCommandIds,
   buildLocalMediaPreviewUrl,
   createOpenInEditorRemoteTarget,
+  // P4 自助管理的上限常量：main 用它做写盘/拉取守卫，UI 用它展示同样的文案。
+  USER_SCRIPT_MAX_SOURCE_BYTES,
+  USER_SCRIPT_URL_MAX_BYTES,
+  USER_SCRIPT_URL_FETCH_TIMEOUT_MS,
+  USER_SCRIPT_URL_MAX_REDIRECTS,
 } from "./platform.js";
 export type { LaunchMarks } from "./launchMarks.js";
 export { LAUNCH_MARKS_QUERY_KEY, parseLaunchMarks, serializeLaunchMarks } from "./launchMarks.js";
@@ -175,6 +180,17 @@ export type {
   EmbeddedBrowserOpenUrlRequest,
   IabUserscriptStatusItem,
   IabUserscriptStatusResponse,
+  // P4 自助管理（renderer 宿主面，agent contracts 刻意不镜像）。
+  IabUserscriptReadRequest,
+  IabUserscriptReadResult,
+  IabUserscriptWriteRequest,
+  IabUserscriptWriteResult,
+  IabUserscriptDeleteRequest,
+  IabUserscriptDeleteResult,
+  IabUserscriptFetchSourceRequest,
+  IabUserscriptFetchSourceResult,
+  IabUserscriptSourcePreview,
+  IabUserscriptSource,
   IPlatformService,
   OpenInEditorRemoteTarget,
   OpenInEditorOptions,

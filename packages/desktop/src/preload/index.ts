@@ -647,6 +647,24 @@ contextBridge.exposeInMainWorld("zcode", {
   /** IAB 用户脚本状态查询（P2 设置卡）：main 的只读扫描投影。 */
   getIabUserscriptStatus: (): Promise<import("@zcode/shared").IabUserscriptStatusResponse> =>
     ipcRenderer.invoke(PlatformChannels.IabUserscriptsStatus),
+  // P4 自助管理的宿主文件通道（新建/导入/URL 安装/编辑/删除）：
+  // 全部经 main 校验（scriptId/大小/SSRF）；写盘通道不写 manifest（落盘 ≠ 批准）。
+  readIabUserscript: (
+    payload: import("@zcode/shared").IabUserscriptReadRequest,
+  ): Promise<import("@zcode/shared").IabUserscriptReadResult> =>
+    ipcRenderer.invoke(PlatformChannels.IabUserscriptsRead, payload),
+  writeIabUserscript: (
+    payload: import("@zcode/shared").IabUserscriptWriteRequest,
+  ): Promise<import("@zcode/shared").IabUserscriptWriteResult> =>
+    ipcRenderer.invoke(PlatformChannels.IabUserscriptsWrite, payload),
+  deleteIabUserscript: (
+    payload: import("@zcode/shared").IabUserscriptDeleteRequest,
+  ): Promise<import("@zcode/shared").IabUserscriptDeleteResult> =>
+    ipcRenderer.invoke(PlatformChannels.IabUserscriptsDelete, payload),
+  fetchIabUserscriptSource: (
+    payload: import("@zcode/shared").IabUserscriptFetchSourceRequest,
+  ): Promise<import("@zcode/shared").IabUserscriptFetchSourceResult> =>
+    ipcRenderer.invoke(PlatformChannels.IabUserscriptsFetchSource, payload),
   /** 读取开发态 stdio tap proxy 开关状态 */
   getZCodeStdioTapDevState: (): Promise<ZCodeStdioTapDevState> =>
     ipcRenderer.invoke(PlatformChannels.GetZCodeStdioTapDevState),

@@ -13,7 +13,10 @@ import {
   type UserscriptManifestPort,
   type UserScriptStatusItem,
 } from "./userscriptStore.js";
-import { createUserscriptStorage } from "./userscriptStorage.js";
+import {
+  createUserscriptStorage,
+  type UserscriptStorage,
+} from "./userscriptStorage.js";
 
 /**
  * 用户脚本服务层（无 electron 运行时依赖，测试可直跑）：
@@ -33,6 +36,12 @@ export interface CreateUserscriptServiceOptions {
   storageRootDir: string;
   manifestPort: UserscriptManifestPort;
   logger: UserscriptServiceLogger;
+  /**
+   * 测试/装配注入：复用调用方已建的 storage 实例。GM 存储的 per-scriptId 锁表
+   * 在实例内部，P4 删除通道（userscriptFileService）与 guest 写入必须共享同一把锁，
+   * 否则跨实例并发会绕过互斥（rename 与 rm 竞争可复活已删文件）。
+   */
+  storage?: UserscriptStorage;
 }
 
 export interface UserscriptRequestContext {
@@ -60,10 +69,13 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     manifestPort,
     logger: options.logger,
   });
-  const storage = createUserscriptStorage({
-    rootDir: options.storageRootDir,
-    logger: options.logger,
-  });
+  // storage 优先复用注入实例（bootstrap 单例）：锁表必须跨通道共享，见 options 注释。
+  const storage =
+    options.storage ??
+    createUserscriptStorage({
+      rootDir: options.storageRootDir,
+      logger: options.logger,
+    });
 
   /**
    * 最近注入时刻（P3）：scriptId → epoch ms。唯一写者是 match 的实际回包路径。
@@ -104,19 +116,22 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     },
 
     /**
-     * 设置卡状态查询（P2）：inspect 状态 + GM 存储健康探测（仅有存储文件的脚本）。
+     * 设置卡状态查询（P2）：inspect 状态 + GM 存储健康探测。
      * 与 agent 观察面分离——存储健康是用户运维信息，不进 agent 命令回包。
+     * storageHealth 仅在存在存储文件时给出（类型注释「有存储文件的脚本」的本义）：
+     * 缺席 = 无存储文件。P4 删除流据此决定是否弹「同时删除存储数据」的第二个
+     * 确认框，因此「无存储」与「存储健康」必须可区分，不能再一律回 ok。
      */
     async statusOverview(): Promise<
-      Array<UserScriptStatusItem & { storageHealth: "ok" | "corrupt" }>
+      Array<UserScriptStatusItem & { storageHealth?: "ok" | "corrupt" }>
     > {
       const statuses = withLastInjected(await store.inspect());
       return await Promise.all(
         statuses.map(async (item) => ({
           ...item,
-          storageHealth: (await storage.hasStorageFile(item.scriptId))
-            ? await storage.probeHealth(item.scriptId)
-            : ("ok" as const),
+          ...(await storage.hasStorageFile(item.scriptId))
+            ? { storageHealth: await storage.probeHealth(item.scriptId) }
+            : {},
         })),
       );
     },

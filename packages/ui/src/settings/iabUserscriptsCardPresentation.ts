@@ -62,6 +62,12 @@ export interface IabUserscriptViewRow {
   detail: string | null;
   /** 最近一次实际注入时刻（epoch ms）；无记录为 null（「尚未注入」）。 */
   lastInjectedAt: number | null;
+  /**
+   * 是否存在 GM 存储文件（P4 删除流的第二个确认框据此出现）。
+   * 数据来源 statusOverview 的 storageHealth 字段（缺席 = 无存储文件）；
+   * 降级模式（无平台查询）恒 false——降级下工具行本就不渲染。
+   */
+  hasStorageFile: boolean;
 }
 
 export interface IabUserscriptManifestLikeEntry {
@@ -156,6 +162,7 @@ export function buildIabUserscriptRows(input: {
         matchDomains: toMatchDomains(item.match),
         detail: toDetailOrNull(item.detail),
         lastInjectedAt: typeof item.lastInjectedAt === "number" ? item.lastInjectedAt : null,
+        hasStorageFile: item.storageHealth !== undefined,
       };
     });
   }
@@ -177,6 +184,7 @@ export function buildIabUserscriptRows(input: {
       matchDomains: [],
       detail: null,
       lastInjectedAt: null,
+      hasStorageFile: false,
     };
   });
 }
@@ -213,4 +221,87 @@ export function nextManifestEntry(
     return { enabled: false };
   }
   return entry.pendingApproval === true ? { enabled: false } : null;
+}
+
+/**
+ * 写盘成功后的下一条 manifest 条目（P4 红线 1/2 的保存语义，纯函数可测）：
+ * - 已锚定条目（enabled ∧ sha256 在册，即 serving / hash_mismatch 行）→ 返回 null
+ *   （不写 manifest）：内容变更由扫描自然落 hash_mismatch 停服，走 P3「重新批准」；
+ * - 其余一律 → `{ enabled: false, pendingApproval: true }`（落盘 ≠ 批准）。
+ * 写盘通道永不产生 `{enabled:true}` 组合（红线 2：保存动作永不写 sha256）。
+ * 注意：enabled_pending_anchor（批准但未锚定，无 sha 可失配）编辑保存后也落
+ * pendingApproval——不 patch 会让下次扫描把新内容锚定并直接服务，恰好违反红线 1。
+ */
+export function nextManifestEntryAfterSave(
+  entry: IabUserscriptManifestLikeEntry | undefined,
+): IabUserscriptManifestLikeEntry | null {
+  if (
+    entry &&
+    entry.enabled === true &&
+    typeof entry.sha256 === "string" &&
+    entry.sha256.length > 0
+  ) {
+    return null;
+  }
+  return { enabled: false, pendingApproval: true };
+}
+
+export interface IabUserscriptTemplateHints {
+  /** @name 行的初始脚本名。 */
+  name: string;
+  /** 实战要点一：@match host 用裸域名（不带端口）。 */
+  matchHint: string;
+  /** 实战要点二：脚本按 frame 注入。 */
+  frameHint: string;
+}
+
+/**
+ * 新建脚本的初始模板（P4 行为规则 5）：结构行固定，name 与两条实战要点由调用方
+ * 传入本地化文案。@match 示例刻意用裸 host（`https://example.com/*`）——
+ * 带端口的 pattern 会在编译期解析失败（compileMatchPattern 拒绝带端口 host），
+ * 这是 P3 实战踩坑的第一来源。
+ */
+export function buildNewScriptTemplate(hints: IabUserscriptTemplateHints): string {
+  return [
+    "// ==UserScript==",
+    `// @name ${hints.name}`,
+    "// @match https://example.com/*",
+    "// @grant none",
+    "// ==/UserScript==",
+    "",
+    `// ${hints.matchHint}`,
+    `// ${hints.frameHint}`,
+    "",
+    "void 0;",
+    "",
+  ].join("\n");
+}
+
+/**
+ * 导入文件名 → scriptId stem：仅接受 `.user.js` 后缀（与 store 扫描器的
+ * `endsWith(".user.js")` 同口径——写成其它后缀的文件扫描器会忽略，成为静默陷阱）。
+ * 无法派生（无后缀/仅后缀）返回 null，调用方提示用户改 ID。
+ */
+export function deriveScriptIdFromFilename(filename: string): string | null {
+  if (typeof filename !== "string") return null;
+  const trimmed = filename.trim();
+  const suffix = ".user.js";
+  if (!trimmed.toLowerCase().endsWith(suffix)) return null;
+  const stem = trimmed.slice(0, -suffix.length);
+  return stem.length > 0 ? stem : null;
+}
+
+/**
+ * 「另存」候选：向 base 追加 -2、-3、… 直到不与已占用集合冲突。
+ * 仅做占用去重；合法性（字符/长度）仍由 main 写盘通道权威校验。
+ * 上限 100 防御异常输入；base 为空时返回 null（调用方要求用户手输）。
+ */
+export function suggestAlternateScriptId(base: string, takenIds: readonly string[]): string | null {
+  if (!base) return null;
+  const taken = new Set(takenIds);
+  for (let n = 2; n < 100; n += 1) {
+    const candidate = `${base}-${n}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return null;
 }

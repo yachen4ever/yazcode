@@ -4,8 +4,12 @@ import type { IabUserscriptStatusItem } from "@zcode/shared";
 import {
   badgeTone,
   buildIabUserscriptRows,
+  buildNewScriptTemplate,
+  deriveScriptIdFromFilename,
   nextManifestEntry,
+  nextManifestEntryAfterSave,
   partitionIabUserscriptRows,
+  suggestAlternateScriptId,
   toMatchDomains,
   toShaShort,
 } from "../src/settings/iabUserscriptsCardPresentation.js";
@@ -295,5 +299,122 @@ describe("nextManifestEntry（动作 → 下一条目）", () => {
     });
     assert.equal(nextManifestEntry({ enabled: false }, "disable"), null);
     assert.deepEqual(nextManifestEntry(undefined, "disable"), { enabled: false });
+  });
+});
+
+/**
+ * P4 自助管理纯函数（docs/specs/iab-userscripts.md P4）：
+ * 新建模板（两个实战要点）、文件名 stem 派生、另存候选、
+ * 保存语义（红线 1/2：已锚定不写、其余落 pendingApproval、永不写 sha）。
+ */
+describe("nextManifestEntryAfterSave（P4 保存语义）", () => {
+  it("已锚定条目（enabled ∧ sha256）→ null：不写 manifest，扫描自然落 hash_mismatch", () => {
+    assert.equal(nextManifestEntryAfterSave({ enabled: true, sha256: "a".repeat(64) }), null);
+  });
+
+  it("其余全部落 {enabled:false, pendingApproval:true}（含 pending_approval/disabled/无条目）", () => {
+    assert.deepEqual(nextManifestEntryAfterSave(undefined), {
+      enabled: false,
+      pendingApproval: true,
+    });
+    assert.deepEqual(nextManifestEntryAfterSave({ enabled: false }), {
+      enabled: false,
+      pendingApproval: true,
+    });
+    assert.deepEqual(nextManifestEntryAfterSave({ enabled: false, pendingApproval: true }), {
+      enabled: false,
+      pendingApproval: true,
+    });
+  });
+
+  it("enabled 无 sha（enabled_pending_anchor 窄窗口）也落 pendingApproval：不 patch 会被扫描锚定新内容并直接服务，违反红线 1", () => {
+    assert.deepEqual(nextManifestEntryAfterSave({ enabled: true }), {
+      enabled: false,
+      pendingApproval: true,
+    });
+  });
+
+  it("任何保存路径都不产生 {enabled:true} 组合（红线 2：保存永不写 sha256）", () => {
+    const entries = [
+      nextManifestEntryAfterSave(undefined),
+      nextManifestEntryAfterSave({ enabled: false }),
+      nextManifestEntryAfterSave({ enabled: true }),
+      nextManifestEntryAfterSave({ enabled: true, sha256: "a".repeat(64) }),
+    ];
+    for (const entry of entries) {
+      if (entry === null) continue; // 已锚定条目不写 manifest（红线 1 第二分支）
+      assert.equal(entry.enabled, false);
+      assert.equal(entry.sha256, undefined);
+    }
+  });
+});
+
+describe("buildNewScriptTemplate（P4 模板）", () => {
+  const hints = {
+    name: "新脚本",
+    matchHint: "MATCH-HINT 裸 host 不带端口",
+    frameHint: "FRAME-HINT 按 frame 注入",
+  };
+
+  it("结构完整：元数据块起止、@match 裸 host 示例、@grant none", () => {
+    const template = buildNewScriptTemplate(hints);
+    assert.match(template, /^\/\/ ==UserScript==/m);
+    assert.match(template, /\/\/ ==\/UserScript==/m);
+    // 裸 host 示例：host 不带端口（带端口的 pattern 编译期拒绝，实战踩坑第一来源）。
+    assert.match(template, /@match https:\/\/example\.com\/\*/);
+    assert.doesNotMatch(template, /@match https?:\/\/[^/\s]*:\d+/);
+    assert.match(template, /@grant none/);
+    assert.match(template, /@name 新脚本/);
+  });
+
+  it("两个实战要点作为注释写入模板（i18n 文案由调用方传入）", () => {
+    const template = buildNewScriptTemplate(hints);
+    assert.match(template, /\/\/ MATCH-HINT 裸 host 不带端口/);
+    assert.match(template, /\/\/ FRAME-HINT 按 frame 注入/);
+  });
+});
+
+describe("deriveScriptIdFromFilename（P4 导入）", () => {
+  it("取 .user.js 的 stem；大小写不敏感识别后缀", () => {
+    assert.equal(deriveScriptIdFromFilename("portal.user.js"), "portal");
+    assert.equal(deriveScriptIdFromFilename("Portal.USER.JS"), "Portal");
+    assert.equal(deriveScriptIdFromFilename("my.tool.v2.user.js"), "my.tool.v2");
+  });
+
+  it("无后缀 / 仅后缀 / 空串返回 null（调用方提示改 ID）", () => {
+    assert.equal(deriveScriptIdFromFilename("script.js"), null);
+    assert.equal(deriveScriptIdFromFilename(".user.js"), null);
+    assert.equal(deriveScriptIdFromFilename(""), null);
+  });
+});
+
+describe("suggestAlternateScriptId（P4 另存）", () => {
+  it("追加 -2 起，跳过已占用；base 为空返回 null", () => {
+    assert.equal(suggestAlternateScriptId("portal", ["portal"]), "portal-2");
+    assert.equal(suggestAlternateScriptId("portal", ["portal", "portal-2"]), "portal-3");
+    assert.equal(suggestAlternateScriptId("portal", []), "portal-2");
+    assert.equal(suggestAlternateScriptId("", ["portal"]), null);
+  });
+});
+
+describe("P4 行字段 hasStorageFile（删除流第二个确认框依据）", () => {
+  it("live 模式：storageHealth 给出（有存储文件）→ true；缺席（无存储）→ false", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({ scriptId: "with", storageHealth: "ok" }),
+        statusItem({ scriptId: "without" }),
+      ],
+      manifest: {},
+    });
+    assert.equal(rows.find((row) => row.scriptId === "with")?.hasStorageFile, true);
+    assert.equal(rows.find((row) => row.scriptId === "without")?.hasStorageFile, false);
+  });
+
+  it("降级模式恒 false（工具行本就不渲染，不猜测存储事实）", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: null,
+      manifest: { one: { enabled: true, sha256: "a1b2c3d4e5f6" } },
+    });
+    assert.equal(rows[0]?.hasStorageFile, false);
   });
 });
