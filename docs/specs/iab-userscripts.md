@@ -474,3 +474,175 @@ guest frame 导航 → runtime invoke(match)
 - 把 `lastInjectedAt` 落盘或跨进程共享（重启清零是明确的取舍，见行为规则 6）。
 - 扩展命令面 / guest IPC / 新增 IPC channel（仍是 3 个 guest channel +
   既有 `zcode:iab-userscripts-status`）。
+
+## P4：自助管理（新建 / 导入 / 从 URL 安装 / 编辑 / 删除）
+
+P3 把管理界面做成了「只读列表 + 批准」。P4 补上**写能力**：用户不再只能手工把文件放进
+`~/.yazcode/userscripts`。产品形态（用户已拍板）是**设置卡内展开**——行点开展开详情与
+编辑器，工具行给三个入口，不新增导航页。
+
+P4 只扩「用户如何把脚本放进来」，**不动执行信任门**：approve-once-per-content、grant
+fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
+
+### 承重红线（逐条对应验收场景）
+
+1. **落盘 ≠ 批准**。任何写盘路径（新建 / 导入 / URL 安装 / 编辑保存）都**不得**让内容
+   进入服务集。写入后脚本只能落在两个状态之一：
+   - `pending_approval`（新建、或覆盖一个此前未启用的脚本）：UI 在写盘成功后 patch
+     manifest 为 `{ enabled: false, pendingApproval: true }`；
+   - `hash_mismatch`（覆盖一个已批准脚本）：**不 patch manifest**，旧 `enabled + sha256`
+     原样保留，扫描自然得到 hash 不一致而停服，走 P3 的「重新批准」入口。
+   唯一放行路径仍是设置卡的批准按钮（`nextManifestEntry("approve", 所见 sha)`）。
+2. **保存动作永不写 sha256**。任何写盘路径都不得写 `{enabled:true, sha256:…}` 组合——
+   那是批准语义，只有批准按钮能产生。
+3. **从 URL 安装三段确认，任一步都不得落盘**：
+   - 段 1 **拉取**：main 发 HTTP（https-only、20 MB 上限、20 s 超时、`redirect: "manual"`
+     且 ≤5 跳、每跳重新校验协议与地址；SSRF 防护与 `desktopSaveFile` 同一套 BlockList +
+     DNS 钉扎连接），返回 `{ source, preview }`，**不写文件**；
+   - 段 2 **预览**：渲染解析出的 `name / version / runAt / grants / match` + 源码预览，
+     用户在此看到将要安装什么；
+   - 段 3 **安装**：用户点「安装」才调用写盘通道，落 `pending_approval`。
+   - 静态校验不通过的源码（`parse_failed` / `grant_rejected`）**在段 2 阻断安装**并显示
+     `detail`：这两种状态永远不会执行，安装只会留一条永久惰性的噪音行；repair 走编辑器。
+4. **路径边界**：脚本只能写 `~/.yazcode/userscripts/<scriptId>.user.js`。scriptId 由
+   UI 给出，main 在写盘前校验（无路径分隔符、非 `.`/`..`、无 Windows 非法字符、不以
+   `.` 开头或空格/点结尾、长度 ≤64）；拼接后仍以「解析出的绝对路径必须落在脚本目录内」
+   二次确认。单文件上限 2 MB。
+5. **重名必须显式覆盖**：写盘通道带 `overwrite` 布尔。目标已存在且 `overwrite !== true`
+   时返回 `exists` 失败，UI 弹「覆盖 / 另存」；覆盖前把旧内容存一份
+   `<scriptId>.user.js.bak`（单代，覆盖即换；`.bak` 不以 `.user.js` 结尾，扫描器天然忽略）。
+6. **删除双确认**：删除 = 删文件 + 清 manifest 条目 + 删 GM 存储。用户侧顺序是
+   **先降权再销毁**：确认框 → patch manifest 移除该条目（该步失败即中止，不留「文件没了
+   但 manifest 还写着 enabled」的中间态）→ 调删除通道。存在 GM 存储文件时**第二个
+   确认框**独立出现，文案明示「该脚本的存储数据将一并删除」，取消 = 只删脚本文件、保留
+   存储（`deleteStorage: false`）。
+
+### 行为规则
+
+1. **写路径分工（不新增第二状态所有者）**：
+   | 事实 | 所有者 | 写者 |
+   | --- | --- | --- |
+   | 脚本文件内容 | 文件系统 | main 的写盘通道（本 P4 新增） |
+   | GM 存储 | 文件系统（per-scriptId JSON） | main 的删除通道（仅 deletion） |
+   | manifest（enabled/sha256/pendingApproval） | `AppSettings`（SettingService） | **仍是 UI 的 SettingService patch**；main 只在 agent 命令面经 port 写 |
+
+   顺序固定为「先写文件、后 patch manifest」（新建/编辑），「先 patch、后删文件」（删除）：
+   任一中间态都是 fail-closed（无条目 = 不服务；条目 enabled 但文件不在 = 无状态行）。
+
+2. **新增 IPC 面（renderer → main 的宿主通道，不是 guest 面）**：guest 的 3 个 channel
+   仍是恰好 3 个，P4 一个都不碰。新增的是 `PlatformChannels` 上的宿主 invoke：
+   - `IabUserscriptsRead { scriptId }` → `{ ok, content }`（编辑前读当前文件）
+   - `IabUserscriptsWrite { scriptId, content, overwrite }` →
+     `{ ok, changed, scriptId, sha256 }` / 失败码 `invalid_script_id | invalid_content |
+     too_large | exists | write_failed`
+   - `IabUserscriptsDelete { scriptId, deleteStorage }` →
+     `{ ok, deletedFile, deletedStorage }` / 失败码 `invalid_script_id | unknown_script | delete_failed`
+   - `IabUserscriptsFetchSource { url }` → `{ ok, source, preview }` /
+     失败码 `invalid_url | not_https | too_large | timeout | remote_address_not_allowed |
+     download_failed`
+   契约类型放 `packages/shared/src/platform.ts`（与 `IabUserscriptStatusItem` 同处），
+   `apps/zcode-cli/packages/contracts` **不镜像**——这四个是桌面本地文件能力，agent
+   工具面拿不到（见规则 6）。
+   - `preview` 形状：`{ name, version?, runAt, grants, match, parseError? }`，
+     由 main 复用 `buildUserScriptDef` 的同一套解析得出，保证「预览所见 = 安装后扫描所得」。
+
+3. **写盘通道的实现边界**：`packages/desktop/src/main/userscripts/userscriptFiles.ts`
+   （electron-free，测试可直跑）提供 `readScript / writeScript / deleteScript`，
+   注入 `scriptsDir` 与 storage 端口；scriptId 校验函数与 storage 共用同一份
+   （从 `userscriptStorage.ts` 提到 `userscriptRules.ts` 的 `isValidUserScriptId`，
+   两处引用同一实现，不复制规则）。
+
+4. **URL 拉取的实现边界**：`userscriptUrlInstall.ts`（electron-free）导出
+   `fetchUserscriptSource(url, deps)`，`deps` 注入 `fetchImpl` / `lookup` 以便测试。
+   SSRF 守卫从 `desktopSaveFile.ts` 提取为 `remoteFetchGuard.ts`
+   （`blockedRemoteAddresses` + `resolvePublicAddresses` + 钉扎 lookup），
+   `desktopSaveFile` 改为引用它，**行为不变**（仍 http+https、5 跳）；P4 传
+   `allowedProtocols: ["https:"]`、`maxRedirects: 5`、`maxBytes: 20MB`、`timeoutMs: 20000`。
+
+5. **UI 结构**（文件都 ≤400 行，超出即拆）：
+   - 工具行：`新建` / `导入` / `从 URL 安装` 三个按钮，只有 `statusAvailable`（桌面宿主）
+     时渲染；无宿主环境保持 P3 的只读降级。
+   - 行展开：点行体展开详情面板——元数据（scriptId/name/version/runAt/grants/@match/
+     sha256 短码/最后注入）、`detail` 原文、`Textarea` 编辑器（mono 字体）、
+     操作按钮（保存 / 重新批准 / 删除）。**编辑器用 `Textarea` 兜底**：本仓无
+     CodeMirror/Monaco，`@pierre/diffs` 的 CodeViewer 是只读渲染器，接编辑需要引入
+     新依赖（P4 明确不加），记为后续增强。
+   - 导入：`<input type="file" accept=".user.js">` 由渲染进程 `file.text()` 读内容
+     （不扩 main 的任意路径读面），scriptId 取文件名 stem，随后与「新建」共用同一
+     编辑/保存流程。
+   - URL 安装：三段式对话框（输入 URL → 拉取并展示元数据 + 源码预览 → 安装）。
+   - 三语文案（zh-CN / en-US / fa）齐备。
+   - 新建模板注释里写明合法 `@match` 示例（裸 host，不带端口）与「脚本按 frame 注入」
+     两个实战要点。
+
+6. **agent 面刻意不扩**：P4 不新增 BrowserCommand，agent 仍只有 P2 的
+   `userscript_list / reload / set_enabled`（观察 + 请求批准）。写文件、装 URL、删脚本
+   只能由用户在界面操作——这与「agent 不得造成未确认内容被执行」同源：也不让 agent
+   造成未确认内容被写入。
+
+### 状态所有者（P4 增量）
+
+| 状态 | 所有者 | 说明 |
+| --- | --- | --- |
+| 脚本文件内容 | 文件系统；写者 = main 写盘通道 | 只写 `<scriptsDir>/<scriptId>.user.js`；覆盖留单代 `.bak` |
+| 覆盖前的旧内容 | 文件系统 `<scriptId>.user.js.bak` | 单代、非 `.user.js` 后缀、不参与扫描；用户可手工回收 |
+| URL 拉取的临时内容 | **不落盘** | 段 1 只在内存里返回；安装时才写文件 |
+
+事件顺序（新建 / URL 安装）：
+
+```
+用户填写或粘贴 → [URL 时] main 拉取 + 解析预览（不落盘）→ 用户确认安装
+  → main 写 <scriptId>.user.js（超过 2MB / 非法 id / 未确认覆盖 → 拒绝）
+  → UI patch manifest { enabled:false, pendingApproval:true }
+  → refreshStatus → 行出现在「待批准」分区
+  → 用户点「批准」→ patch { enabled:true, sha256:<所见> } → 下次 match 起服务
+```
+
+事件顺序（编辑已批准脚本）：
+
+```
+展开行读到当前内容 → 用户改动 → 保存
+  → main 写文件（留 .bak）→ **不 patch manifest**
+  → refreshStatus → 状态 hash_mismatch → 用户点「重新批准」才恢复服务
+```
+
+### 验收场景（P4）
+
+1. **新建全生命周期**：新建 → 写盘成功 → manifest `{enabled:false, pendingApproval:true}`
+   → 状态 `pending_approval` 且在待批准分区 → 批准 → 下次扫描 `serving` → match 注入。
+   写盘后到批准前，match 服务集**不含**该脚本。
+2. **保存永不写 sha**：新建/导入/编辑三条路径产生的 manifest 条目都不含
+   `{enabled:true, sha256}` 组合（测试断言 manifest 快照）。
+3. **编辑已批准脚本 → hash_mismatch**：对 `serving` 脚本保存新内容 → manifest 不变
+   （仍 enabled + 旧 sha）→ 状态 `hash_mismatch`、不服务 → 重新批准后 `serving`。
+4. **导入重名**：目标文件已存在且 `overwrite:false` → `exists` 失败、文件未被改动；
+   `overwrite:true` → 内容替换且生成 `.bak`，`.bak` 不出现在状态列表里。
+5. **scriptId 校验**：`../evil`、`a/b`、`a\\b`、`.`、`..`、`.hidden`、`name.`、
+   `con:`、超长 id、空串全部拒绝（`invalid_script_id`），且不产生任何文件。
+6. **大小上限**：>2 MB 内容拒绝（`too_large`），不写文件、不留半写文件。
+7. **URL 安装三段确认**：段 1 返回 source+preview 且磁盘无新文件；段 2 展示
+   name/version/grants/match；段 3 写盘后状态 `pending_approval`。任一段中断（用户取消）
+   都不产生文件。
+8. **URL 安全边界**：`http://` 拒绝（`not_https`）；`http://127.0.0.1/…` 与
+   `https://10.0.0.1/…` 拒绝（`remote_address_not_allowed`）；超过 20 MB 拒绝
+   （`too_large`，含 chunked 无 content-length 的边读边计数）；重定向到非公网/非 https
+   地址拒绝；超时返回 `timeout`。
+9. **URL 预览与安装一致**：preview 的 `grants`/`match` 与安装后 `list()` 的对应字段一致；
+   声明白名单外 grant 的源码在段 2 被阻断（不进入段 3）。
+10. **删除双确认**：删脚本 → manifest 条目消失 + 文件消失；有 GM 存储时出现第二个
+    确认框，确认 → 存储文件消失；取消 → 存储文件仍在且状态行已消失（`deleteStorage:false`）。
+11. **删除顺序**：manifest 移除失败时中止、文件保留（测试用抛错的 manifest patch 模拟）。
+12. **无宿主降级**：`getIabUserscriptStatus` 缺席（Web）时三个工具按钮不渲染，卡片行为
+    与 P3 一致。
+13. **guest 面不变**：`USERSCRIPT_IPC_CHANNELS` 仍恰好 3 个；新增的都是
+    `PlatformChannels` 宿主通道。
+14. **三语齐备**：新增文案在 zh-CN / en-US / fa 三份 locale 同时存在，key 集合一致。
+
+### P4 明确不做
+
+- 脚本市场 / 在线仓库检索（Violentmonkey 的脚本源检索）。
+- 语法高亮编辑器 / 引入 CodeMirror、Monaco 等新依赖（`Textarea` + mono 兜底，
+  记为后续增强）。
+- `GM_xmlhttpRequest`、子 frame 存储（维持 P1 边界）。
+- agent 的写/删命令（写文件只走用户界面，见行为规则 6）。
+- saved-workflow/G1 相关文件、`browserGuestManager.ts`、`third-party/`、根 `package.json`。
