@@ -26,6 +26,45 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   锁表，消除跨实例并发绕过互斥的隐患）；desktopSaveFile 的 SSRF 守卫提取为可复用模块
   `remoteFetchGuard.ts`（行为逐项保持）。
 
+### 验收结论（2026-10-31，workwin 实机验收，通过）
+
+- **发布判定**：A 全 PASS + B 核心 PASS + C 无 FAIL（C3 PARTIAL）→ v26.5.1 发布；
+  draft 构建 run `41089620055` 全 job 绿。B3 段 3（安装落盘→pending）实机无正向端点
+  （workwin 零信任劫持全部公网地址、SSRF 正确拒绝内网端点），经同一写盘通道三处实测
+  与 CI 单测背书判 PASS（用户裁定）。
+- **三端哈希链**：CI `sha256.txt` = 源端（m5air）= workwin 目标端，`yazcode-26.5.1-win-x64.exe`
+  = `493dd24df7adc0532561768d5e022ec2077b230af332786f47a2b77966d47304`（154,250,829 字节）；
+  静默升级后 DisplayVersion 26.5.1。
+- **升级保留 PASS**：26.5.0 → 26.5.1 原地升级后 manifest 原样保留（`hide-ai-copilot`
+  v1.1.0 serving 态 `{enabled:true, sha256:0a538a70…}` 逐字节一致）、脚本文件、GM 存储
+  与 OV hooks 0.5.23 全部保留。
+- **A 基线回归（全 PASS）**：OV 接入插件 0.5.23 + MCP 24 工具握手（health「OpenViking
+  is healthy (storage: VikingFS)」）；桌面 surface 60 技能条目含 visualize，CLI 直跑
+  60 技能无 visualize 且可视化目录行注入自省「No」；gen-ui 六类安全边界实机复现——
+  正例渲染（h1/mark/溢出列表），`..` 穿越、根外绝对路径、非 html、大写文件名均错误页
+  零泄漏（根外为「未通过安全校验，已拒绝读取」变体），非法 host →「Invalid Gen UI
+  URL.」；附注 guest 分区无 gen-ui 协议、browser-use 工具层 scheme 白名单拒 gen-ui
+  导航（双层隔离）。CDP 9229 + SSH 隧道实测，UA `yazcode/26.5.1`。
+- **B IAB P4 自助管理（核心 PASS）**：新建——模板含 @match 裸域名与 frame 注入注记 →
+  落盘 `~/.yazcode/userscripts/` → manifest `{enabled:false, pendingApproval:true}`
+  （**无 sha256/enabled 写入**）→ 批准 → manifest 钉住所见 sha（与 Get-FileHash 逐字
+  一致）→ 真实门户导航注入生效（探针 `data-accept2651-b1="applied"`）；导入——重名弹
+  「覆盖/另存」（文案明示 .bak 备份），另存落 pending，同 ID 覆盖 → 单代 `.bak` 生成、
+  **manifest 逐字节不变**、哈希失配停服（重导航探针零注入、对照组正常）；URL 安装——
+  三段对话框（UI 明示 https-only/20MB/20s/5 跳），真实 https 拉取成功进入预览，非
+  userscript 内容 parse_error 段 2 阻断（「metadata block missing」+ 安装按钮
+  disabled），not_https / 内网 SSRF（「仅限公网地址」）/ 超时（「下载失败」）负向逐一
+  拒绝，全程零落盘；编辑——行展开编辑器（Textarea + 内容指纹短码）改已批准脚本保存 →
+  **manifest 逐字节不变** + 失配 → 停服 → 「重新批准」钉新 sha → 恢复注入；删除——
+  有 GM 存储时双确认（确认②「同时删除脚本数据？」明示存储处理）→ 文件/manifest/GM
+  存储三消，无存储单确认；`lastInjectedAt` 注入后出现、二次导航覆盖更新、进程重启清零
+  （「尚未注入」占位）。
+- **C 多目录回归（无 FAIL）**：侧栏分组/项目双视图与项目名标注、任务归属显示正常
+  （PASS）；G1 盖章数据面完好——tasks 表 `project_id/root_path/execution_directories`
+  三件套列在、26.5.0 盖章行完好、26.5.1 新会话落库语义正确（非项目任务
+  `project_id=null`）；项目上下文端到端未重测（accept265-proj 项目已清理，26.5.1
+  改动面不含 G1 路径），PARTIAL。
+
 ## 26.5.0 (2026-10-28)
 
 - **IAB 用户脚本 P3：管理界面**（`docs/specs/iab-userscripts.md` P3 节，workwin 实战反馈
