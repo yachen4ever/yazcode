@@ -7,9 +7,24 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 功能面变更的批次」，**自发功能不 bump y**。26.2.0（gen-ui 为自研先行）与 26.4.0、26.5.0
 （自发功能与内部能力，按口径应属 26.3.z）不符合该定义，属历史遗留——tag 与发布产物保持
 原号不追溯；自本勘误起严格回归：下一个引入上游变更的批次为 **26.6.0**，其余一律 z 位
-递增。
+递增（本版 26.5.1 即勘误后首个 z 位版本）。
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
+
+## 26.5.1 (2026-10-30)
+
+- **IAB 用户脚本 P4：自助管理**（`docs/specs/iab-userscripts.md` P4 节，设置卡内展开）：
+  新建（带 `==UserScript==` 模板与 @match 合法格式注记——主机名不带端口）/ 导入
+  .user.js（重名询问覆盖或另存）/ 从 URL 安装（三段确认：拉取 → 元数据+源码预览 →
+  点安装才落盘；https-only、20MB 上限、SSRF 防护含 DNS 钉扎与逐跳重定向重验）；
+  行展开编辑器（Textarea 兜底）+ 保存/删除（双确认，GM 存储一并清理需二次确认）；
+  `isValidUserScriptId` 路径段校验收紧（`.` 开头拒载，fail-closed）。**确认流红线不变**：
+  写盘/导入/URL 安装动作本身永不写 manifest 的 enabled——内容变更一律落
+  pending/hash_mismatch，用户批准仍是唯一放行路径（编辑 `enabled_pending_anchor` 态
+  例外转 pendingApproval，防未锚定内容被直接锚定服务）。
+- **修复**：GM 存储锁表跨通道共享（P4 删除通道与 guest GM 写入共用同一 per-scriptId
+  锁表，消除跨实例并发绕过互斥的隐患）；desktopSaveFile 的 SSRF 守卫提取为可复用模块
+  `remoteFetchGuard.ts`（行为逐项保持）。
 
 ## 26.5.0 (2026-10-28)
 
