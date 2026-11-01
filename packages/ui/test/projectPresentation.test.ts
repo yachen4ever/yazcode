@@ -7,6 +7,7 @@ import {
   orderedRootsOf,
   primaryRootOf,
   projectDisplayName,
+  projectEditorEntryForTab,
   projectRootsBadgeCount,
   resolveProjectForWorkspacePath,
 } from "../src/lib/projectPresentation.js";
@@ -120,5 +121,19 @@ describe("projectDisplayName / leafNameOf / rootsBadgeCount", () => {
       ],
     });
     assert.equal(projectRootsBadgeCount(multi), 2);
+  });
+});
+
+// ── P4 远端编辑入口形态（docs/specs/multi-root-projects.md「远程边界（P4）」）──
+
+describe("projectEditorEntryForTab", () => {
+  it("有匹配项目一律 edit（远端项目同样提供编辑入口）", () => {
+    assert.equal(projectEditorEntryForTab(true, false), "edit");
+    assert.equal(projectEditorEntryForTab(true, true), "edit");
+  });
+
+  it("无匹配项目：远端给 create-remote，本地维持无入口（全局新建覆盖）", () => {
+    assert.equal(projectEditorEntryForTab(false, true), "create-remote");
+    assert.equal(projectEditorEntryForTab(false, false), null);
   });
 });

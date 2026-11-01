@@ -16,6 +16,7 @@ import {
   Ellipsis,
   Folder,
   FolderOpen,
+  FolderPlus,
   House,
   InfoIcon,
   ListTree,
@@ -150,6 +151,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
   onOpenFileTree,
   projectPresentation,
   onEditProject,
+  onCreateRemoteProject,
   itemRef,
   itemStyle,
   sortableBindings,
@@ -190,8 +192,12 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
     rootsBadgeCount: number | null;
     rootsTooltip: string | null;
   };
-  /** 「编辑项目」入口；仅本地 workspace 且有匹配项目时由上层传入（远端 P4 收口）。 */
+  /** 「编辑项目」入口；有匹配项目时由上层传入（远端项目同样提供，remote 模式由
+   *  编辑器按 project.hostId 派生——P4 收口，spec「远程边界（P4）」）。 */
   onEditProject?: () => void;
+  /** 「新建项目」入口：仅远端 workspace 且无匹配项目时由上层传入（root 种子 =
+   *  远端路径，hostId = 远端宿主环境键；本地无匹配回落全局「新建项目」）。 */
+  onCreateRemoteProject?: () => void;
   itemRef?: (node: HTMLLIElement | null) => void;
   itemStyle?: CSSProperties;
   sortableBindings?: SortableBindings;
@@ -963,6 +969,22 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
                             >
                               <Settings2Icon className="h-3.5 w-3.5" />
                               {intl.formatMessage({ id: "workspaceSidebar.editProject" })}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {onCreateRemoteProject ? (
+                            <DropdownMenuItem
+                              data-testid="workspace-create-remote-project"
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                              }}
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                onCreateRemoteProject();
+                              }}
+                            >
+                              <FolderPlus className="h-3.5 w-3.5" />
+                              {intl.formatMessage({ id: "workspaceSidebar.newProject" })}
                             </DropdownMenuItem>
                           ) : null}
                           <RemoteSyncMenuItems

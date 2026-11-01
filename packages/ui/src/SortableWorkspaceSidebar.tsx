@@ -34,6 +34,7 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
   onOpenFileTree,
   projectPresentation,
   onEditProject,
+  onCreateRemoteProject,
 }: {
   tab: WorkspaceTabState;
   isActiveWorkspace: boolean;
@@ -71,6 +72,8 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
     rootsTooltip: string | null;
   };
   onEditProject?: () => void;
+  /** 「新建项目」入口：仅远端 workspace 且无匹配项目时由上层传入（P4 收口）。 */
+  onCreateRemoteProject?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
@@ -136,6 +139,7 @@ export const SortableWorkspaceSidebarItem = memo(function SortableWorkspaceSideb
       onOpenFileTree={onOpenFileTree}
       projectPresentation={projectPresentation}
       onEditProject={onEditProject}
+      onCreateRemoteProject={onCreateRemoteProject}
       itemRef={setNodeRef}
       itemStyle={style}
       sortableBindings={sortableBindings}

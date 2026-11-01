@@ -57,6 +57,7 @@ import {
   TID_PROJECT_SECTION,
   TID_SIDEBAR,
   TID_WORKSPACE_LIST,
+  buildRemoteEnvironmentKey,
 } from "@zcode/shared";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";
 import { Button } from "@/components/ui/button.js";
@@ -95,6 +96,7 @@ import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
 import { ProjectEditorDialog } from "@/project-editor/ProjectEditorDialog.js";
 import {
   projectDisplayName,
+  projectEditorEntryForTab,
   projectRootsBadgeCount,
   resolveProjectForWorkspacePath,
 } from "@/lib/projectPresentation.js";
@@ -387,7 +389,12 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
   const [projectEditorTarget, setProjectEditorTarget] = useState<ProjectRecord | null | undefined>(
     undefined,
   );
-  const projectPresentationByTabId = useMemo(() => {
+  // P4：远端建项上下文（hostId = 远端宿主环境键 + root 种子 = 远端路径）；
+  // 仅「新建远端项目」时非空，编辑路径的 remote 模式由编辑器按 project.hostId 派生。
+  const [projectEditorRemoteContext, setProjectEditorRemoteContext] = useState<
+    { hostId: string; initialRoots: string[] } | undefined
+  >(undefined);
+  const { projectPresentationByTabId, remoteProjectCreateByTabId } = useMemo(() => {
     const presentation = new Map<
       string,
       {
@@ -397,26 +404,38 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
         onEditProject: (() => void) | undefined;
       }
     >();
+    // P4 收口：无匹配项目的远端 tab 行级「新建项目」（spec「远程边界（P4）」）；
+    // remoteTarget 缺失时无宿主身份，不注册入口。
+    const remoteCreate = new Map<string, () => void>();
     for (const tab of projectWorkspaceTabs) {
       const project = resolveProjectForWorkspacePath(projects, tab.workspacePath);
-      if (!project) continue;
-      // 远端 workspace 只标注不提供编辑入口（spec P3c：P4 与 remote-policy 一起收口）。
       const isRemoteTab = Boolean(
         tab.remoteSessionId || tab.remoteTarget || tab.workspaceIdentity,
       );
+      const entry = projectEditorEntryForTab(Boolean(project), isRemoteTab);
+      if (entry === "create-remote" && tab.remoteTarget) {
+        const remoteTarget = tab.remoteTarget;
+        const workspacePath = tab.workspacePath;
+        remoteCreate.set(tab.id, () => {
+          setProjectEditorRemoteContext({
+            hostId: buildRemoteEnvironmentKey(remoteTarget),
+            initialRoots: [workspacePath],
+          });
+        });
+      }
+      if (!project) continue;
       const roots = project.roots.map((root) => root.rootPath);
       presentation.set(tab.id, {
         displayName: projectDisplayName(project),
         rootsBadgeCount: projectRootsBadgeCount(project),
         rootsTooltip: roots.length > 1 ? roots.join("\n") : null,
-        onEditProject: isRemoteTab
-          ? undefined
-          : () => {
-              setProjectEditorTarget(project);
-            },
+        // 远端有匹配项目同样提供编辑入口（remote 模式由编辑器按 hostId 派生）。
+        onEditProject: () => {
+          setProjectEditorTarget(project);
+        },
       });
     }
-    return presentation;
+    return { projectPresentationByTabId: presentation, remoteProjectCreateByTabId: remoteCreate };
   }, [projectWorkspaceTabs, projects]);
   const workspacePaths = useMemo(
     () => projectWorkspaceTabs.map((tab) => tab.workspacePath),
@@ -1616,6 +1635,9 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                                               projectPresentationByTabId.get(tab.id)
                                                 ?.onEditProject
                                             }
+                                            onCreateRemoteProject={
+                                              remoteProjectCreateByTabId.get(tab.id)
+                                            }
                                           />
                                         );
                                       })}
@@ -1757,12 +1779,16 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
           ) : null}
         </div>
       </div>
-      {/* P3b 项目编辑器：undefined=关闭，null=新建，record=编辑；成功后经 projectStore 就地刷新行标注。 */}
+      {/* P3b/P4 项目编辑器：undefined=关闭，null=新建，record=编辑；远端建项随附
+          remote 上下文（hostId + root 种子），编辑远端项目的 remote 模式由对话框按
+          hostId 派生。成功后经 projectStore 就地刷新行标注。 */}
       {projectEditorTarget !== undefined ? (
         <ProjectEditorDialog
           project={projectEditorTarget}
+          remote={projectEditorRemoteContext}
           onClose={() => {
             setProjectEditorTarget(undefined);
+            setProjectEditorRemoteContext(undefined);
           }}
         />
       ) : null}

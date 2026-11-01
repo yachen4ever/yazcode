@@ -134,4 +134,32 @@ describe("projectEditorDisplayName / projectEditorErrorKey", () => {
     );
     assert.equal(projectEditorErrorKey(new Error("boom")), "projectEditor.error.saveFailed");
   });
+
+  // ── P4 远端单 root（docs/specs/multi-root-projects.md「远程边界（P4）」）──
+
+  it("hostId 仅在显式传入时进入载荷（新建远端携带，更新不带）", () => {
+    const form = createProjectEditorForm(null, ["/srv/remote/only"]);
+    const creating = buildProjectSaveInput(form, { hostId: "ssh:p4-host" });
+    assert.equal(creating?.hostId, "ssh:p4-host");
+    const updating = buildProjectSaveInput(renameProjectInForm(form, "Renamed"), {
+      projectId: "proj_remote",
+    });
+    assert.equal(updating?.hostId, undefined);
+    assert.equal(updating?.projectId, "proj_remote");
+  });
+
+  it("远端错误码映射 i18n 键", () => {
+    assert.equal(
+      projectEditorErrorKey(new Error("project.remote-single-root-required")),
+      "projectEditor.error.remoteSingleRootRequired",
+    );
+    assert.equal(
+      projectEditorErrorKey(new Error("project.remote-root-immutable")),
+      "projectEditor.error.remoteRootImmutable",
+    );
+    assert.equal(
+      projectEditorErrorKey(new Error("project.host-immutable")),
+      "projectEditor.error.hostImmutable",
+    );
+  });
 });

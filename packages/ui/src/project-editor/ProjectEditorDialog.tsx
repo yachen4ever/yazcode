@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Folder, FolderPlus, LoaderCircle, X } from "lucide-react";
-import type { ProjectRecord } from "@zcode/services";
+import { isRemoteProjectHostId, type ProjectRecord } from "@zcode/services";
 import { Button } from "@/components/ui/button.js";
 import {
   Dialog,
@@ -42,10 +42,15 @@ import {
  */
 export function ProjectEditorDialog({
   project,
+  remote,
   onClose,
 }: {
   /** null = 新建。 */
   project: ProjectRecord | null;
+  /** 远端上下文（spec「远程边界（P4）」）：新建由行级入口传入（hostId = 远端宿主
+   *  环境键、root 种子 = 远端路径）；编辑省略时按 project.hostId 派生。remote
+   *  模式下名称可改、roots 只读，服务端断言是最后防线。 */
+  remote?: { hostId: string; initialRoots?: readonly string[] };
   onClose: () => void;
 }) {
   const { intl } = useZCodeIntl();
@@ -54,7 +59,14 @@ export function ProjectEditorDialog({
   const confirm = useConfirmDialog();
   const upsertProject = useProjectStore((state) => state.upsert);
   const removeProject = useProjectStore((state) => state.remove);
-  const [form, setForm] = useState<ProjectEditorForm>(() => createProjectEditorForm(project));
+  // remote 模式：新建取传入上下文；编辑按项目 hostId 派生（本地项目恒 undefined）。
+  const remoteContext =
+    remote ??
+    (project && isRemoteProjectHostId(project.hostId) ? { hostId: project.hostId } : undefined);
+  const isRemoteMode = Boolean(remoteContext);
+  const [form, setForm] = useState<ProjectEditorForm>(() =>
+    createProjectEditorForm(project, remote?.initialRoots),
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const epochRef = useRef(0);
@@ -94,7 +106,11 @@ export function ProjectEditorDialog({
 
   const save = useCallback(async () => {
     const request = epochRef.current;
-    const input = buildProjectSaveInput(form, { projectId: project?.projectId });
+    const input = buildProjectSaveInput(form, {
+      projectId: project?.projectId,
+      // hostId 仅新建远端项目携带；更新一律不带（仓储以既有行为准，host 不可变）。
+      hostId: project ? undefined : remoteContext?.hostId,
+    });
     if (!input) return;
     setBusy(true);
     setError(null);
@@ -113,7 +129,7 @@ export function ProjectEditorDialog({
     } finally {
       if (current(request)) setBusy(false);
     }
-  }, [current, form, msg, onClose, project, projectService, upsertProject]);
+  }, [current, form, msg, onClose, project, projectService, remoteContext, upsertProject]);
 
   const remove = useCallback(async () => {
     if (!project) return;
@@ -199,7 +215,7 @@ export function ProjectEditorDialog({
                     >
                       {leafNameOf(root)}
                     </span>
-                    {root === form.primaryRoot ? (
+                    {root === form.primaryRoot || isRemoteMode ? (
                       <span
                         data-testid="project-editor-primary-badge"
                         className="inline-flex h-7 shrink-0 items-center rounded-md border border-border px-2 text-ui-base text-foreground-subtle"
@@ -219,51 +235,61 @@ export function ProjectEditorDialog({
                         {msg("projectEditor.setPrimary")}
                       </Button>
                     )}
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="text-foreground-subtle"
-                      aria-label={msg("projectEditor.removeFolder")}
-                      data-testid="project-editor-remove-folder"
-                      onClick={() => {
-                        setForm((currentForm) => removeRootFromForm(currentForm, root));
-                      }}
-                    >
-                      <X className="size-4" />
-                    </Button>
+                    {!isRemoteMode ? (
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        className="text-foreground-subtle"
+                        aria-label={msg("projectEditor.removeFolder")}
+                        data-testid="project-editor-remove-folder"
+                        onClick={() => {
+                          setForm((currentForm) => removeRootFromForm(currentForm, root));
+                        }}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    ) : null}
                   </div>
                 ))}
               </div>
             )}
-            <button
-              type="button"
-              data-testid="project-editor-browse"
-              className={`group flex w-full items-center gap-2 text-ui-base transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/30 ${
-                rootsEmpty
-                  ? "mt-2 min-h-32 flex-col justify-center rounded-xl border border-dashed border-border px-4 py-5 text-center hover:border-border-hover"
-                  : "min-h-12 rounded-b-xl px-3 py-2 text-left"
-              }`}
-              onClick={() => {
-                void browse();
-              }}
-            >
-              {rootsEmpty ? (
-                <>
-                  <span className="flex size-9 items-center justify-center rounded-full bg-surface text-foreground-subtle group-hover:text-foreground">
-                    <FolderPlus className="size-4" />
-                  </span>
-                  <span className="font-medium">{msg("projectEditor.browse")}</span>
-                  <span className="text-ui-sm text-foreground-subtle">
-                    {msg("projectEditor.browseHint")}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <FolderPlus className="size-4 shrink-0 text-foreground-subtle" />
-                  <span>{msg("projectEditor.addFolder")}</span>
-                </>
-              )}
-            </button>
+            {isRemoteMode ? (
+              // 远端项目固定单 root（remote-policy 约束）：只读展示，不提供增删/
+              // 设主目录/本地浏览——本地目录选择器也选不到远端路径。
+              <p className="mt-2 text-ui-sm text-foreground-subtle" data-testid="project-editor-remote-hint">
+                {msg("projectEditor.remoteSingleRootHint")}
+              </p>
+            ) : (
+              <button
+                type="button"
+                data-testid="project-editor-browse"
+                className={`group flex w-full items-center gap-2 text-ui-base transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/30 ${
+                  rootsEmpty
+                    ? "mt-2 min-h-32 flex-col justify-center rounded-xl border border-dashed border-border px-4 py-5 text-center hover:border-border-hover"
+                    : "min-h-12 rounded-b-xl px-3 py-2 text-left"
+                }`}
+                onClick={() => {
+                  void browse();
+                }}
+              >
+                {rootsEmpty ? (
+                  <>
+                    <span className="flex size-9 items-center justify-center rounded-full bg-surface text-foreground-subtle group-hover:text-foreground">
+                      <FolderPlus className="size-4" />
+                    </span>
+                    <span className="font-medium">{msg("projectEditor.browse")}</span>
+                    <span className="text-ui-sm text-foreground-subtle">
+                      {msg("projectEditor.browseHint")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FolderPlus className="size-4 shrink-0 text-foreground-subtle" />
+                    <span>{msg("projectEditor.addFolder")}</span>
+                  </>
+                )}
+              </button>
+            )}
           </fieldset>
           {error ? (
             <p role="alert" className="text-ui-sm text-destructive" data-testid="project-editor-error">

@@ -72,3 +72,19 @@ export function projectRootsBadgeCount(project: ProjectRecord): number | null {
   const count = project.roots.length;
   return count > 1 ? count : null;
 }
+
+/** workspace 行的项目编辑入口形态（P4 远端收口，spec「远程边界（P4）」）。 */
+export type ProjectEditorEntryKind = "edit" | "create-remote";
+
+/**
+ * 行级入口判定：有匹配项目 → 编辑（远端项目同样提供，remote 模式由编辑器按
+ * project.hostId 派生）；远端且无匹配项目 → 新建（root 种子 = 远端路径）；本地
+ * 无匹配 → null（全局「新建项目」已覆盖，行为不变）。同输入同输出。
+ */
+export function projectEditorEntryForTab(
+  hasMatchedProject: boolean,
+  isRemoteTab: boolean,
+): ProjectEditorEntryKind | null {
+  if (hasMatchedProject) return "edit";
+  return isRemoteTab ? "create-remote" : null;
+}

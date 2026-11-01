@@ -84,16 +84,18 @@ export function renameProjectInForm(
   return { ...form, name, nameEdited: true };
 }
 
-/** 保存载荷；roots 为空即不能保存（服务端同样拒绝，UI 先行禁用）。 */
+/** 保存载荷；roots 为空即不能保存（服务端同样拒绝，UI 先行禁用）。hostId 仅新建
+ *  远端项目时携带（更新一律不带——仓储以既有行为准，host 不可变，spec P4）。 */
 export function buildProjectSaveInput(
   form: ProjectEditorForm,
-  options?: { projectId?: string },
+  options?: { projectId?: string; hostId?: string },
 ): SaveProjectInput | null {
   const roots = [...new Set(form.roots.map((root) => root.trim()).filter(Boolean))];
   if (roots.length === 0) return null;
   const primary = form.primaryRoot.trim();
   return {
     ...(options?.projectId ? { projectId: options.projectId } : {}),
+    ...(options?.hostId ? { hostId: options.hostId } : {}),
     // 服务契约 name 必填：显式改名用新名，否则沿用展示名（主目录 leaf）。
     name: form.nameEdited && form.name.trim() ? form.name.trim() : projectEditorDisplayName(form),
     roots,
@@ -113,6 +115,10 @@ const PROJECT_ERROR_I18N_KEYS: ReadonlyMap<string, string> = new Map([
   ["project.primary-not-in-roots", "projectEditor.error.primaryNotInRoots"],
   ["project.primary-root-missing", "projectEditor.error.primaryRootMissing"],
   ["project.service-unavailable", "projectEditor.error.serviceUnavailable"],
+  // P4 远端单 root 策略错误码（docs/specs/multi-root-projects.md「远程边界（P4）」）。
+  ["project.remote-single-root-required", "projectEditor.error.remoteSingleRootRequired"],
+  ["project.remote-root-immutable", "projectEditor.error.remoteRootImmutable"],
+  ["project.host-immutable", "projectEditor.error.hostImmutable"],
 ]);
 
 /**
