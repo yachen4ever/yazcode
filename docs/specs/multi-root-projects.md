@@ -128,12 +128,85 @@ config/MCP/hooks/plugins/memory/permissions 装配的引用即测试失败（防
 冻结位进入 runtime，入参缺席时出口不得无中生有。动态断言需先构建 CLI 包
 （verify:pre-push 与 CI 的 test 阶段均先跑 `build:cli`）。
 
-## 远程边界（P4）
+## 远程边界（P4，2026-11-02 细化）
 
-SSH / Source Server 项目**硬约束单 root**：保存、root 初始化、任务迁移、reserve 四个
-入口全部强制 `roots.length === 1` 且远端 root 不可改（`project.remote-single-root-required`
-/ `project.remote-root-immutable`）；远端会话 `additionalDirectories` 一律为空。
-参考实现 `remote-policy.ts`（约 40 行零依赖）原样移植。
+SSH / Source Server 项目**硬约束单 root**：全部项目写入入口强制 `roots.length === 1`
+且远端 root 不可改（`project.remote-single-root-required` / `project.remote-root-immutable`）；
+远端会话 `additionalDirectories` 一律为空。
+
+### 移植与本仓映射
+
+- `remote-policy.ts` 原样移植自上游 ZCodium
+  `packages/services/src/project-storage/remote-policy.ts`（接线提交 `b0de1476`），本仓落位
+  `packages/services/src/session/remotePolicy.ts`：`assertRemoteProjectRoots` /
+  `assertRemoteTaskDirectories` 两个纯断言函数逐行保留，仅类型导入从上游
+  `VirtualProject`（contract.js）改指本仓 `ProjectRecord`（结构性兼容：只读
+  `roots[].rootPath`），零运行时依赖不变。本仓另增一个纯判定
+  `isRemoteProjectHostId(hostId)`（`undefined`/空/`"local"` 即本地，其余即远端），
+  供服务与 UI 复用同一口径。
+- **远端判定口径（本仓与上游的差异）**：上游以「仓储属主 `ownerHostId`」判定远端
+  （DB 本身在远端宿主侧）；本仓 tasks-index.sqlite 恒在桌面宿主，远端事实由**项目行
+  `host_id`** 承载。远端项目的 `hostId` 取 `buildRemoteEnvironmentKey(remoteTarget)`
+  （`packages/shared`，宿主级稳定键、不含路径），**禁止**用 workspaceIdentity
+  （含路径，宿主级状态不得混用 workspace 身份）。
+- 上游四入口 → 本仓映射（P1 未移植 `initializeProjectRoot`/`moveTask`，编辑器以整组
+  重写代替，二者无独立接线位）：
+
+  | 上游入口                     | 本仓接线位                                                                                              | 断言                          |
+  | ---------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------- |
+  | saveProject                  | `ProjectRepository.saveProject`                                                                         | `assertRemoteProjectRoots`    |
+  | initializeProjectRoot        | 无独立入口（编辑器整组重写代替）                                                                        | 由 saveProject 断言覆盖       |
+  | moveTask                     | 无（P1 未移植）                                                                                         | N/A                           |
+  | resolveDirectories / reserve | `resolveSessionDirectories` + `prepareSession`（新任务三件套唯一产物源，createTask 与 G1 盖章均消费它） | `assertRemoteTaskDirectories` |
+
+- **保存（saveProject）**：更新时 `hostId` 一律以既有行为准（显式传入不一致 →
+  `project.host-immutable`），upsert 的 ON CONFLICT 分支**不再改写 `host_id`**——
+  否则更新会把远端项目静默翻成 local、绕过全部断言，该不可变是本口径成立前提。
+  在此之上 `assertRemoteProjectRoots(hostId, roots, previous)`：远端新建 roots≠1 →
+  `project.remote-single-root-required`；远端更新改变唯一 root →
+  `project.remote-root-immutable`；元数据（name/defaultName/pinned）修改不受限。
+- **prepareSession**：项目已取，`assertRemoteTaskDirectories(project.hostId, project,
+primary, additionalDirectories)` 兜底（远端数据被外部篡改成多 root 即拒）；远端项目
+  **跳过本地文件系统存活性检查**（stat 打在桌面宿主上必然 miss；远端路径存活由远端
+  CLI 的 cwd 校验兜底），`additionalDirectories` 下发恒空。
+- **resolveSessionDirectories（与 P2 语义的边界）**：
+  - 固化值路径（P2 早返回）保持不动：固化值存在即返回、不取项目行——本地任务
+    「删项目后仍可恢复」的 P2 语义不回归。仅当固化附加目录**非空**时经
+    `findProject`（新增 null-tolerant 读取）取项目行：命中远端项目 →
+    `assertRemoteTaskDirectories` 抛 `project.remote-single-root-required`（上游同语义：
+    远端行固化非空即数据矛盾）；项目行缺失（已删）→ 维持 P2 行为原样返回。
+    远端任务行固化非空是构造上不可达态（P4 后远端保存即单 root、prepareSession 产物
+    恒空），此为防御位。
+  - 现算路径（项目已取）：`assertRemoteTaskDirectories(project.hostId, project,
+workspacePath, 现算值)`——远端 root 与 cwd 不一致 → `project.cwd-not-in-roots`。
+- **P2 通道零改动**：三通道 schema 与下发装配不动；remote 策略只作用于其上游产物源
+  （prepareSession）与恢复解析器（resolveSessionDirectories），远端任务下发值恒为
+  「无附加目录」。
+
+### 远端项目编辑入口（P3c 门槛收口）
+
+- P3c「远端 tab 只标注不提供编辑入口」撤除：`WorkspaceSidebar` 对远端 tab 提供行级
+  入口——有匹配项目 → 「编辑项目」；无匹配项目 → 「新建项目」（唯一 root 种子 =
+  该远端 tab 的 `workspacePath`，`hostId` = `buildRemoteEnvironmentKey(tab.remoteTarget)`）。
+  「项目」分区头部的全局「新建项目」保持仅本地（`selectDirectory` 只能浏览本地文件
+  系统，远端建项必须由行级入口种子）。入口形态抽纯函数落 `projectPresentation.ts`
+  （入参 tab 远端性 + 匹配项目 → 入口形态），`WorkspaceSidebar` 保持薄消费。
+- 编辑器（`ProjectEditorDialog`）新增可选 `remote: { hostId }` 上下文：remote 模式下
+  名称可改，roots 区只读展示（无添加/移除/设主目录/浏览），附单目录提示文案（三语）。
+  保存载荷：新建带 `hostId`，更新不带（仓储以既有行为准）。服务端断言是最后防线
+  （绕过 UI 也写不进第二个 root）。
+- `projectEditorErrorKey` 增补：`project.remote-single-root-required` /
+  `project.remote-root-immutable` / `project.host-immutable` → 三语文案。
+
+### 测试
+
+- services：新增 `remotePolicy.test.ts`（移植口径 + 判定函数）；既有
+  `projectRepository.test.ts` / `projectService.test.ts` 扩展——远端保存四态
+  （0/2 root 拒、root 不可变、元数据可改、host-immutable）；prepareSession 远端跳过
+  本地 stat + 附加目录恒空；resolveSessionDirectories 远端三态（固化空通过/固化非空抛/
+  现算 cwd 不在 root 抛）+ P2 回归锚（本地删项目 + 固化非空仍恢复、固化路径不取项目行）。
+- ui：`projectEditorModel.test.ts` 扩展（hostId 载荷、远端错误映射）；
+  `projectPresentation.test.ts` 扩展（远端入口形态纯函数）。
 
 ## UI 契约（P3）
 
@@ -248,7 +321,8 @@ projectContext 时行为与补齐前完全一致。
 
 - 手机 paired project bridge、`mobileTaskView` 协议（ZCodium 侧亦未完成授权入口）。
 - 随 v1.17.0 搭车的 Gen UI 交互式/插件后台事件、Source Server 管理 UI。
-- 远程多 root；远端项目编辑入口（P4 与 remote-policy 一起收口）。
+- 远程多 root（远端恒单 root，P4 已断言；远端项目编辑入口已随 P4 收口，
+  见「远程边界（P4）」节）。
 - `IPlatformService` 系统目录**多**选（P3 以单选 + 继续添加交付）。
 
 ## 分期
@@ -257,8 +331,8 @@ projectContext 时行为与补齐前完全一致。
 | --- | ----------------------------------------------------------------- | ------------------------------------------- |
 | P1  | 数据层 + Host 项目服务（CRUD、prepareSession、任务 reserve 固化） | 表 + 迁移 + 服务 + 单测（schema 门禁随行）  |
 | P2  | 协议字段 + CLI 白名单消费（三条通道 + 发现点 + env-info）         | 协议 schema + CLI 注入点 + 信任边界审计测试 |
-| P3  | UI（状态底座 → 编辑器 → 侧栏项目化 → 提及 + 草稿隔离）           | 组件 + 交互测试 + G1 缺口登记               |
-| P4  | 远程单 root 边界 + 自动化/闲时任务携带 projectId/hostId           | remote-policy + 调度归属                    |
+| P3  | UI（状态底座 → 编辑器 → 侧栏项目化 → 提及 + 草稿隔离）            | 组件 + 交互测试 + G1 缺口登记               |
+| P4  | 远程单 root 边界 + 远端项目编辑入口（收口）                       | remote-policy 移植 + 服务/UI 接线 + 测试    |
 
 P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3；P3 的 G1 通道补齐不阻塞 P4。
 
@@ -275,3 +349,9 @@ P1 未验收不启动 P2；P2 的信任边界审计未过不启动 P3；P3 的 G
 5. 远程项目保存双 root 被拒；远程会话附加目录为空。
 6. sqlite schema 门禁：新增表/列经 `db:schema:update` 显式入基线，无删改。
 7. 同 cwd 双项目：草稿、文件提及来源标注、任务归属各自独立。
+8. 远端 tab 行级入口：无匹配项目 → 新建项目（root 种子 = 远端路径、hostId = 环境键），
+   保存后侧栏行标注即时出现；有匹配项目 → 编辑项目（名称可改、roots 只读）。
+9. 远端项目改名成功；绕过 UI 直写双 root 或改唯一 root 被 `saveProject` 拒绝
+   （`project.remote-single-root-required` / `project.remote-root-immutable`）。
+10. 远端会话恢复：附加目录恒为空（固化空 / 无固化两态均如此）；本地任务 P2 语义
+    不变（删项目 + 固化非空仍可恢复）。
