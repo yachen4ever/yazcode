@@ -83,4 +83,60 @@ describe("ProjectRepository", () => {
     assert.equal(adopted.length, 1);
     assert.equal(adopted[0]?.roots[0]?.isPrimary, true);
   });
+
+  // ── 远程单 root（docs/specs/multi-root-projects.md「远程边界（P4）」）──
+
+  it("远端新建双 root 被拒；单 root 新建成功且 hostId 落行", () => {
+    assert.throws(
+      () => repo.saveProject({ name: "r2", hostId: "ssh:h", roots: ["/r/a", "/r/b"] }),
+      /project.remote-single-root-required/,
+    );
+    const saved = repo.saveProject({ name: "r1", hostId: "ssh:h", roots: ["/r/a"] });
+    assert.equal(saved.hostId, "ssh:h");
+    assert.equal(saved.roots.length, 1);
+  });
+
+  it("远端更新改唯一 root 被拒（remote-root-immutable）；元数据可改", () => {
+    const saved = repo.saveProject({ name: "r-meta", hostId: "ssh:h", roots: ["/r/meta"] });
+    assert.throws(
+      () =>
+        repo.saveProject({ projectId: saved.projectId, name: "r-meta", roots: ["/r/other"] }),
+      /project.remote-root-immutable/,
+    );
+    const renamed = repo.saveProject({
+      projectId: saved.projectId,
+      name: "renamed",
+      pinned: true,
+      roots: ["/r/meta"],
+    });
+    assert.equal(renamed.name, "renamed");
+    assert.equal(renamed.pinned, true);
+    assert.deepEqual(
+      renamed.roots.map((root) => root.rootPath),
+      ["/r/meta"],
+    );
+  });
+
+  it("更新不带 hostId 以既有行为准；显式传不同 hostId 即拒（host-immutable）", () => {
+    const saved = repo.saveProject({ name: "r-host", hostId: "ssh:h", roots: ["/r/host"] });
+    // 不传 hostId 的更新（UI 编辑器路径）不得把远端项目翻成 local。
+    const renamed = repo.saveProject({ projectId: saved.projectId, name: "r-host-2", roots: ["/r/host"] });
+    assert.equal(renamed.hostId, "ssh:h");
+    assert.throws(
+      () =>
+        repo.saveProject({
+          projectId: saved.projectId,
+          name: "r-host-3",
+          hostId: "local",
+          roots: ["/r/host"],
+        }),
+      /project.host-immutable/,
+    );
+  });
+
+  it("findProject 查无返回 null（不抛），命中返回记录", () => {
+    const saved = repo.saveProject({ name: "r-find", roots: ["/r/find"] });
+    assert.equal(repo.findProject(saved.projectId)?.projectId, saved.projectId);
+    assert.equal(repo.findProject("proj_missing"), null);
+  });
 });

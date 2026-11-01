@@ -143,4 +143,68 @@ describe("IProjectService", () => {
       ]);
     }
   });
+
+  // ── 远程单 root（docs/specs/multi-root-projects.md「远程边界（P4）」）──
+
+  it("prepareSession：远端项目跳过本地 stat 且附加目录恒空", async () => {
+    // /srv/remote-only/p4 在本机不存在；远端路径存活由远端 CLI cwd 校验兜底。
+    const saved = await service.saveProject({
+      name: "remote-solo",
+      hostId: "ssh:p4-host",
+      roots: ["/srv/remote-only/p4"],
+    });
+    const prepared = await service.prepareSession({ projectId: saved.projectId });
+    assert.equal(prepared.workspacePath, "/srv/remote-only/p4");
+    assert.deepEqual(prepared.additionalDirectories, []);
+  });
+
+  it("resolveSessionDirectories：远端固化空数组通过；固化非空拒绝；现算 cwd 漂移拒绝", async () => {
+    const saved = await service.saveProject({
+      name: "remote-resolve",
+      hostId: "ssh:p4-host",
+      roots: ["/srv/remote-only/resolve"],
+    });
+    const emptySolidified = await service.resolveSessionDirectories({
+      projectId: saved.projectId,
+      taskWorkspacePath: "/srv/remote-only/resolve",
+      taskExecutionDirectories: "[]",
+    });
+    assert.equal(emptySolidified.fromTaskRecord, true);
+    assert.deepEqual(emptySolidified.additionalDirectories, []);
+
+    await assert.rejects(
+      () =>
+        service.resolveSessionDirectories({
+          projectId: saved.projectId,
+          taskWorkspacePath: "/srv/remote-only/resolve",
+          taskExecutionDirectories: JSON.stringify(["/srv/remote-only/extra"]),
+        }),
+      /project.remote-single-root-required/,
+    );
+    // cwd 漂移时漂移的根以「附加目录」形态先触发 single-root（上游断言同序）；
+    // cwd-not-in-roots 语义由 remotePolicy 单测直接锚定。
+    await assert.rejects(
+      () =>
+        service.resolveSessionDirectories({
+          projectId: saved.projectId,
+          taskWorkspacePath: "/srv/remote-only/other",
+        }),
+      /project.remote-single-root-required/,
+    );
+    const fresh = await service.resolveSessionDirectories({ projectId: saved.projectId });
+    assert.equal(fresh.fromTaskRecord, false);
+    assert.deepEqual(fresh.additionalDirectories, []);
+  });
+
+  it("P2 回归锚：本地项目删除后固化非空仍恢复（固化路径不被 not-found 打断）", async () => {
+    const saved = await service.saveProject({ name: "p2-anchor", roots: [primaryRoot] });
+    await service.deleteProject(saved.projectId);
+    const resolved = await service.resolveSessionDirectories({
+      projectId: saved.projectId,
+      taskWorkspacePath: primaryRoot,
+      taskExecutionDirectories: JSON.stringify([join(workspace, "legacy")]),
+    });
+    assert.equal(resolved.fromTaskRecord, true);
+    assert.deepEqual(resolved.additionalDirectories, [join(workspace, "legacy")]);
+  });
 });

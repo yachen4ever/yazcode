@@ -226,6 +226,13 @@ export type {
   ResolveSessionDirectoriesInput,
 } from "./project/project.js";
 export type { ProjectRecord, ProjectRoot, SaveProjectInput } from "./session/projectRepository.js";
+// remote-policy 纯函数零 node:* 依赖（projectRepository 仅类型导入，编译后无 import），
+// 可安全值导出进根 barrel；browserSafeBarrel 守卫静态验证该约束（P4 远端口径单点）。
+export {
+  assertRemoteProjectRoots,
+  assertRemoteTaskDirectories,
+  isRemoteProjectHostId,
+} from "./session/remotePolicy.js";
 // createProjectService / ProjectRepository / createOpenVikingService 是值导出且其模块顶层
 // 依赖 node:fs、node:crypto 等，不能进根 barrel：renderer 对 @zcode/services 的值导入会把
 // 整条相对导入链拉进浏览器模块图，node:* 被外置化后 renderer 模块图整体死亡（P1b-1 曾

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { basename, dirname } from "node:path";
+import { assertRemoteProjectRoots } from "./remotePolicy.js";
 import { createNodeRequire } from "../nodeRequire.js";
 // 与既有 Repo 一致：避免构建器把 node:sqlite 改写成不存在的 npm sqlite 包。
 const { DatabaseSync } = createNodeRequire()("node:sqlite") as typeof import("node:sqlite");
@@ -39,6 +40,7 @@ export interface SaveProjectInput {
 const PRIMARY_ROOT_MISSING = "project.primary-root-missing";
 const ROOTS_EMPTY = "project.roots-empty";
 const PRIMARY_NOT_IN_ROOTS = "project.primary-not-in-roots";
+const PROJECT_HOST_IMMUTABLE = "project.host-immutable";
 
 export class ProjectRepository {
   private db: DatabaseSyncInstance | null = null;
@@ -109,18 +111,27 @@ export class ProjectRepository {
     if (primary === undefined || !roots.includes(primary)) throw new Error(PRIMARY_NOT_IN_ROOTS);
     const db = this.getDatabase();
     const projectId = input.projectId?.trim() || `proj_${randomUUID()}`;
-    const hostId = input.hostId?.trim() || "local";
     const now = Date.now();
     db.exec("BEGIN IMMEDIATE");
     try {
       const existing = db
-        .prepare("SELECT created_at FROM projects WHERE project_id=?")
-        .get(projectId) as { created_at: number } | undefined;
+        .prepare("SELECT created_at, host_id FROM projects WHERE project_id=?")
+        .get(projectId) as { created_at: number; host_id: string } | undefined;
+      // host 不可变（P4「远程边界」口径成立前提）：更新一律以既有行为准，显式传入
+      // 不一致即拒——否则更新会把远端项目静默翻成 local，绕过全部远端断言
+      // （上游同型：project.host-immutable）。
+      if (existing && input.hostId?.trim() && input.hostId.trim() !== existing.host_id) {
+        throw new Error(PROJECT_HOST_IMMUTABLE);
+      }
+      const hostId = existing?.host_id ?? (input.hostId?.trim() || "local");
+      // 远端项目硬约束单 root 且 root 不可变；元数据（name/defaultName/pinned）
+      // 修改不受限（docs/specs/multi-root-projects.md「远程边界（P4）」）。
+      assertRemoteProjectRoots(hostId, roots, existing ? this.getProject(projectId) : undefined);
       db.prepare(
         `INSERT INTO projects (project_id, host_id, name, default_name, pinned, created_at, updated_at)
          VALUES(?,?,?,?,?,?,?)
          ON CONFLICT(project_id) DO UPDATE SET
-           host_id=excluded.host_id, name=excluded.name, default_name=excluded.default_name,
+           name=excluded.name, default_name=excluded.default_name,
            pinned=excluded.pinned, updated_at=excluded.updated_at`,
       ).run(
         projectId,
@@ -174,6 +185,16 @@ export class ProjectRepository {
       pinned: row.pinned === 1,
       roots: this.readRoots(projectId),
     };
+  }
+
+  /** 查无返回 null（不抛）：供固化路径的远端防御位使用，保持「删项目后固化值
+   *  仍可恢复」的 P2 语义不被 not-found 打断（spec「远程边界（P4）」）。 */
+  findProject(projectId: string): ProjectRecord | null {
+    const row = this.getDatabase()
+      .prepare("SELECT project_id FROM projects WHERE project_id=?")
+      .get(projectId);
+    if (!row) return null;
+    return this.getProject(projectId);
   }
 
   listProjects(): ProjectRecord[] {
