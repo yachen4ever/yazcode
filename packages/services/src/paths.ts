@@ -1,7 +1,7 @@
 /* path 规则集中维护：旧 task 快照与 provider 配置路径仍在这里收口。 */
 import { lstatSync } from "node:fs";
 import { readExternalEnvVar } from "@zcode/shared";
-import { cpSync, existsSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { cp } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { basename, join, win32 } from "node:path";
@@ -106,7 +106,18 @@ export function migrateLegacyZCodeDataRoot(): void {
     const stagingRoot = join(baseDir, `${ZCODE_DATA_ROOT_DIR_NAME}.migrating-${process.pid}`);
     try {
       rmSync(stagingRoot, { recursive: true, force: true });
-      cpSync(legacyRoot, stagingRoot, { recursive: true });
+      cpSync(legacyRoot, stagingRoot, {
+        recursive: true,
+        // S1 修复（docs/specs/zcodium-data-root.md 行为规则 3 复制排除项）：旧根可能是
+        // 官方 ZCode 宿主的数据，其 v2/tasks-index.sqlite 携带上游迁移账本——整库复制
+        // 会让本仓迁移 runner 采纳外来账本（宿主 0004_project_execution_scopes 与本仓
+        // 0004_projects 同号不同物，0001-0003 同源校验和被跳过），CREATE TABLE 撞表即
+        // 阻断首装启动（mint 双盲测试实证）。任务行历史属宿主产品不属 yazcode：排除
+        // 全部 sqlite 库及 -wal/-shm 伴生（全树递归），yazcode 以全新任务库起步；
+        // 宿主 .zcode 原样保留为档案，不做外来账本采纳/合并。
+        filter: (source) =>
+          statSync(source).isDirectory() || !/\.sqlite(?:-wal|-shm)?$/i.test(basename(source)),
+      });
       try {
         renameSync(stagingRoot, nextRoot);
       } catch {

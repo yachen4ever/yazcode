@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { homedir } from "node:os";
@@ -16,7 +24,7 @@ function makeBase() {
   return mkdtempSync(join(tmpdir(), "yazcode-migrate-"));
 }
 
-test("旧根存在时整体复制到 .yazcode，旧根保留并写入标记", async () => {
+test("旧根存在时复制到 .yazcode（S1 起 sqlite 除外），旧根保留并写入标记", async () => {
   const { setDataBaseDir, migrateLegacyZCodeDataRoot, getZCodeDataRootDir } = await loadPaths();
   const base = makeBase();
   try {
@@ -30,10 +38,54 @@ test("旧根存在时整体复制到 .yazcode，旧根保留并写入标记", as
     const nextRoot = getZCodeDataRootDir();
     assert.equal(nextRoot, join(base, ".yazcode"));
     assert.equal(readFileSync(join(nextRoot, "v2", "setting.json"), "utf8"), '{"marker":"legacy"}');
-    assert.equal(readFileSync(join(nextRoot, "cli", "db", "db.sqlite"), "utf8"), "db-bytes");
+    // S1（docs/specs/zcodium-data-root.md 行为规则 3 复制排除项）：sqlite 库不再
+    // 跨产品复制——宿主库携带上游迁移账本，采纳外来账本会撞表阻断首装启动。
+    assert.equal(existsSync(join(nextRoot, "cli", "db", "db.sqlite")), false);
     // 复制而非移动：官方 ZCode 客户端可能仍依赖旧根。
     assert.equal(existsSync(join(legacy, "v2", "setting.json")), true);
     assert.equal(existsSync(join(legacy, ".migrated-to-yazcode")), true);
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("S1：宿主迁移账本库及 -wal/-shm 伴生全树排除，宿主数据不被触碰", async () => {
+  const { setDataBaseDir, migrateLegacyZCodeDataRoot, getZCodeDataRootDir } = await loadPaths();
+  const base = makeBase();
+  try {
+    const legacy = join(base, ".zcode");
+    // 伪造宿主迁移账本（宿主 0004 与本仓 0004_projects 同号不同物，正是撞表根因）。
+    const hostLedger = [
+      "0001_adopt",
+      "0002",
+      "0003",
+      "0004_project_execution_scopes",
+      "0006_task_group_admissions",
+    ].join("\n");
+    mkdirSync(join(legacy, "v2"), { recursive: true });
+    mkdirSync(join(legacy, "skills", "nested"), { recursive: true });
+    writeFileSync(
+      join(legacy, "v2", "tasks-index.sqlite"),
+      `tasks_schema_migration\n${hostLedger}\n`,
+    );
+    writeFileSync(join(legacy, "v2", "tasks-index.sqlite-wal"), "wal-bytes");
+    writeFileSync(join(legacy, "v2", "tasks-index.sqlite-shm"), "shm-bytes");
+    writeFileSync(join(legacy, "skills", "nested", "another.sqlite"), "nested-db");
+    writeFileSync(join(legacy, "skills", "nested", "keep.md"), "keep");
+    setDataBaseDir(base);
+    migrateLegacyZCodeDataRoot();
+    const nextRoot = getZCodeDataRootDir();
+    // sqlite 全树排除：顶层任务库 + WAL/SHM 伴生 + 嵌套库一律缺席。
+    assert.equal(existsSync(join(nextRoot, "v2", "tasks-index.sqlite")), false);
+    assert.equal(existsSync(join(nextRoot, "v2", "tasks-index.sqlite-wal")), false);
+    assert.equal(existsSync(join(nextRoot, "v2", "tasks-index.sqlite-shm")), false);
+    assert.equal(existsSync(join(nextRoot, "skills", "nested", "another.sqlite")), false);
+    // 其余文件照常复制；staging 临时目录清理干净。
+    assert.equal(readFileSync(join(nextRoot, "skills", "nested", "keep.md"), "utf8"), "keep");
+    assert.deepEqual(readdirSync(base).sort(), [".yazcode", ".zcode"]);
+    // 宿主原库不被触碰：账本行原样保留在 .zcode。
+    const untouched = readFileSync(join(legacy, "v2", "tasks-index.sqlite"), "utf8");
+    assert.ok(untouched.includes("0004_project_execution_scopes"));
   } finally {
     rmSync(base, { recursive: true, force: true });
   }

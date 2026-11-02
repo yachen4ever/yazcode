@@ -11,6 +11,19 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.2 (未发布)
+
+- **修复（S1 阻断级）**：ZCode 宿主机上 yazcode 首装启动失败——legacy 数据根迁移
+  （`~/.zcode` → `~/.yazcode`）整目录复制把宿主 `v2/tasks-index.sqlite`（含上游迁移
+  账本，其 `0004_project_execution_scopes` 与本仓 `0004_projects` 同号不同物）一并
+  带入；迁移 runner 采纳外来账本（0001-0003 同源校验和被跳过）后执行本仓
+  `0004_projects`，CREATE TABLE 撞上宿主已建的 projects 表阻断启动（mint 双盲测试
+  实证）。现迁移复制**排除全部 `*.sqlite` / `*.sqlite-wal` / `*.sqlite-shm`**
+  （全树递归，`docs/specs/zcodium-data-root.md` 行为规则 3 排除项）：yazcode 在此类
+  机器以全新任务库起步；宿主 `~/.zcode` 原样保留，任务历史不迁移（上游 schema 与本仓
+  不兼容，本就无法安全采纳）。受影响机器补救：删除 `~/.yazcode`（内含被污染的复制
+  产物；宿主真数据在 `~/.zcode` 不动）后升级重启即可。
+
 ## 26.5.1 (2026-10-30)
 
 - **IAB 用户脚本 P4：自助管理**（`docs/specs/iab-userscripts.md` P4 节，设置卡内展开）：
