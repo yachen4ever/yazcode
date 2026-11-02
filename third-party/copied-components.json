@@ -408,13 +408,13 @@
   },
   {
     "id": "openviking-client-integration",
-    "referenceRevision": "7f3ae1af822d936c1d0b070537772b0f1d59122f",
-    "source": "https://raw.githubusercontent.com/volcengine/OpenViking/7f3ae1af822d936c1d0b070537772b0f1d59122f/examples/LICENSE",
+    "referenceRevision": "178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8",
+    "source": "https://raw.githubusercontent.com/volcengine/OpenViking/178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8/examples/LICENSE",
     "file": "third-party/upstream/081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6.txt",
     "sha256": "081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6",
-    "importRevision": "7f3ae1af822d936c1d0b070537772b0f1d59122f",
+    "importRevision": "178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8",
     "license": "Apache-2.0",
-    "provenance": "Vendored from OpenViking examples/ at revision 7f3ae1af822d936c1d0b070537772b0f1d59122f (upstream release v0.5.2, integration version 0.5.23): agent-hook-plugin plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except lib/ov-http.mjs, which carries yazcode-local error-handling hardening introduced in v26.0.7 and must not be overwritten by upstream syncs; integration.json ships the upstream 0.5.23 template and is rewritten by the install service at deploy time.",
+    "provenance": "Vendored from OpenViking examples/ at revision 178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8 (upstream release v0.5.3, integration version 0.5.29): agent-hook-plugin plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except lib/ov-http.mjs, which carries yazcode-local error-handling hardening introduced in v26.0.7 and must not be overwritten by upstream syncs; integration.json ships the upstream 0.5.29 template and is rewritten by the install service at deploy time.",
     "roots": [
       "vendor/openviking/zcode",
       "vendor/openviking/memory-plugin-shared"
