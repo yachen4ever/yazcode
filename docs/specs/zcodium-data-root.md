@@ -24,7 +24,15 @@ yazcode 与官方 ZCode 客户端共用 `~/.zcode`，双方读写彼此的凭据
      原子落到新根（目标已存在则视为并发方已迁移，清理临时目录）；
    - 成功后在旧根写入 `.migrated-to-yazcode` 标记（用户删除新根视为重置，不重复灌入）；
    - 任何失败不阻断启动：清理临时目录、记录错误，下次启动重试（无标记即重试）；
-   - 采用**复制而非移动**：官方 ZCode 客户端可能仍在使用旧根，不能使其中断。
+   - 采用**复制而非移动**：官方 ZCode 客户端可能仍在使用旧根，不能使其中断；
+   - **复制排除项（S1，2026-11-03）**：`*.sqlite` / `*.sqlite-wal` / `*.sqlite-shm`
+     全树递归排除——旧根可能是官方 ZCode 宿主的数据，其 `v2/tasks-index.sqlite`
+     携带上游迁移账本（其 `0004_project_execution_scopes` 与本仓 `0004_projects`
+     同号不同物），整库复制会让本仓迁移 runner 采纳外来账本（0001-0003 同源校验和
+     被跳过），随后本仓 `0004_projects` 执行 CREATE TABLE 撞上宿主已建的 projects 表，
+     **首装启动即阻断**（mint 双盲测试实证）。yazcode 在此类机器以**全新任务库**起步；
+     宿主任务历史不迁移（上游 schema 与本仓不兼容，本就无法安全采纳），`~/.zcode`
+     原样保留为档案；不做外来账本采纳/合并。
 4. 触发点：桌面早期 bootstrap（读 setting.json 前 + `setDataBaseDir` 后）、
    `main/index.ts` 装配后、CLI `main()` 入口、zcode-server-cli / server 入口。
    env 锁定的隔离 base 内天然无 `.zcode` 旧根，迁移自动 no-op。
@@ -37,13 +45,19 @@ yazcode 与官方 ZCode 客户端共用 `~/.zcode`，双方读写彼此的凭据
   远端 `~/.yazcode/server` 重新布局（由远端 agent 供给流程自动安装）。
 - 迁移期间旧客户端若正在写入 sqlite（WAL），复制出的库可能不含最后几笔事务；
   失败无标记、下次启动自动重试。
+- 旧根若为官方 ZCode 宿主数据：sqlite 库（含迁移账本）不复制（见行为规则 3 复制
+  排除项），其余文件照常复制；宿主客户端与其 `~/.zcode` 数据不受影响。
 
 ## 验收场景
 
 1. 全新机器（无 `~/.zcode`）→ 启动后只有 `~/.yazcode`，无迁移痕迹。
-2. 存在 `~/.zcode` → 首次启动后 `~/.yazcode` 含全部旧数据，旧根原样保留并带标记；
-   二次启动不再复制；删除 `~/.yazcode` 后重启不会重新灌入（标记生效）。
+2. 存在 `~/.zcode` → 首次启动后 `~/.yazcode` 含全部旧数据（S1 起：sqlite 库及
+   `-wal`/`-shm` 伴生除外），旧根原样保留并带标记；二次启动不再复制；删除
+   `~/.yazcode` 后重启不会重新灌入（标记生效）。
 3. 官方 ZCode 客户端继续使用 `~/.zcode`，双方互不干扰。
 4. `ZCODE_DATA_BASE_DIR=/isolated` 的 dev/e2e 实例：skills/settings-sync 等此前
    绕过隔离的服务现在全部落在 `/isolated/.yazcode`。
 5. 工作区项目级 `.zcode`（skills/commands/plugins/config.json）路径不变。
+6. ZCode 宿主机首装（`~/.zcode` 含 `v2/tasks-index.sqlite` 迁移账本）→ 首装后
+   `~/.yazcode` 无任何 `*.sqlite`(-wal/-shm) 文件、其余文件齐全、marker 落旧根；
+   yazcode 以全新任务库启动，宿主任务历史保留在 `~/.zcode` 不被触碰。
