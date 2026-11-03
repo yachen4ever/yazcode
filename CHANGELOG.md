@@ -11,7 +11,22 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.2 (未发布)
+## 26.5.2 (2026-10-30)
+
+- **S1 修复（阻断级）：ZCode 宿主机上 yazcode 首装启动失败**（mint 双盲测试发现，
+  `docs/specs/zcodium-data-root.md` 行为规则 3）：`migrateLegacyZCodeDataRoot` 整目录
+  复制宿主 `.zcode` 时把携带上游迁移账本的 `tasks-index.sqlite` 一并带入——本仓迁移
+  runner 采纳外来账本（宿主 `0004_project_execution_scopes` 与本仓 `0004_projects`
+  同号不同物），建表撞表致启动阻断。修复：复制排除全部 `*.sqlite` / `-wal` / `-shm`
+  （全树递归），yazcode 在此类机器以全新任务库起步，宿主数据原样留档；受影响机器
+  补救 = 删 `~/.yazcode` 与 `.migrated-to-yazcode` 标记后重装。
+- **vendored OpenViking 同步 0.5.23 → 0.5.29**（上游 v0.5.3，26 文件逐字节跟随）：
+  agent-hook-plugin host/hook 文件 + lib 4 文件 + codebuddy host 系列新增；版本锚点
+  推进（`INTEGRATION_VERSION = 0.5.29`）；`ov-http.mjs` 本地加固版保持不动（上游第三次
+  未动）；`check-vendor-openviking.mjs` 门禁转绿。
+- 附：`third-party` 许可台账随 vendored 输入重生成入库。
+
+## 26.5.1 (2026-10-30)
 
 - **修复（S1 阻断级）**：ZCode 宿主机上 yazcode 首装启动失败——legacy 数据根迁移
   （`~/.zcode` → `~/.yazcode`）整目录复制把宿主 `v2/tasks-index.sqlite`（含上游迁移
