@@ -498,7 +498,8 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 3. **从 URL 安装三段确认，任一步都不得落盘**：
    - 段 1 **拉取**：main 发 HTTP（https-only、20 MB 上限、20 s 超时、`redirect: "manual"`
      且 ≤5 跳、每跳重新校验协议与地址；SSRF 防护与 `desktopSaveFile` 同一套 BlockList +
-     DNS 钉扎连接），返回 `{ source, preview }`，**不写文件**；
+     DNS 钉扎连接；fake-ip 代理环境例外语义见实现边界 4b），返回 `{ source, preview }`，
+     **不写文件**；
    - 段 2 **预览**：渲染解析出的 `name / version / runAt / grants / match` + 源码预览，
      用户在此看到将要安装什么；
    - 段 3 **安装**：用户点「安装」才调用写盘通道，落 `pending_approval`。
@@ -558,6 +559,24 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
    （`blockedRemoteAddresses` + `resolvePublicAddresses` + 钉扎 lookup），
    `desktopSaveFile` 改为引用它，**行为不变**（仍 http+https、5 跳）；P4 传
    `allowedProtocols: ["https:"]`、`maxRedirects: 5`、`maxBytes: 20MB`、`timeoutMs: 20000`。
+
+4b. **fake-ip 代理环境下的公网判定分段（mint 双盲 F2）**：mihomo fake-ip 模式把
+    真公网域名的系统 DNS 解析结果映射到 `198.18.0.0/15`（RFC 2544 基准保留段），
+    逐 DNS 预检的公网闸门会把真公网域名误判为非公网，功能在该环境整体不可用。
+    处理口径（红线：不削弱 SSRF 防护）：
+    - `198.18.0.0/15` 从硬拒 BlockList 拆出为独立 `proxyTunnelFakeIpAddresses`；
+      解析结果命中它**不再整体拒绝**，命中其余黑名单段（回环/私网/链路本地/CGNAT/
+      TEST-NET/组播等 IPv4+IPv6 全表）仍立即拒绝——some 语义不变，不给
+      「多 A 记录挑公网」绕过面；
+    - 选型依据：fake-ip 环境下该段是 TUN 虚拟映射，钉扎连接实际由代理按域名转发到
+      真公网目标；非 fake-ip 环境下连接该段会超时失败（`download_failed`，
+      fail-closed），不产生内容泄露面。回环/私网/链路本地仍是硬拒，
+      SSRF 主防线与 DNS rebinding 钉扎完整保留；
+    - 否决的备选：直接从黑名单删除该段（削弱非 fake-ip 环境防线）、域名不做本地
+      DNS 预检（拆掉钉扎防线，与 `webfetch-egress-guard` 的信任模型不同——本闸门
+      服务用户主动安装的任意 URL）、只改报错文案（不满足「真公网放行」验收）。
+    - 该分段语义对共用守卫的 `desktopSaveFile`（另存/下载）同步生效，两消费方
+      行为保持一致。
 
 5. **UI 结构**（文件都 ≤400 行，超出即拆）：
    - 工具行：`新建` / `导入` / `从 URL 安装` 三个按钮，只有 `statusAvailable`（桌面宿主）
@@ -626,7 +645,9 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 8. **URL 安全边界**：`http://` 拒绝（`not_https`）；`http://127.0.0.1/…` 与
    `https://10.0.0.1/…` 拒绝（`remote_address_not_allowed`）；超过 20 MB 拒绝
    （`too_large`，含 chunked 无 content-length 的边读边计数）；重定向到非公网/非 https
-   地址拒绝；超时返回 `timeout`。
+   地址拒绝；超时返回 `timeout`。fake-ip 环境（实现边界 4b）：解析结果仅为
+   `198.18.0.0/15` 段的域名放行并完成拉取；解析结果同时含该段与黑名单段
+   （如 `127.0.0.1`）仍拒绝。
 9. **URL 预览与安装一致**：preview 的 `grants`/`match` 与安装后 `list()` 的对应字段一致；
    声明白名单外 grant 的源码在段 2 被阻断（不进入段 3）。
 10. **删除双确认**：删脚本 → manifest 条目消失 + 文件消失；有 GM 存储时出现第二个
