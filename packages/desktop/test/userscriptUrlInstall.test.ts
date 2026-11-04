@@ -129,6 +129,29 @@ describe("userscriptUrlInstall.fetchUserscriptSource", () => {
     );
   });
 
+  it("fake-ip 环境放行：解析结果仅 198.18.0.0/15 段的域名正常拉取（mint 双盲 F2）", async () => {
+    // mihomo fake-ip 下 update.greasyfork.org → 198.18.x.x（TUN 虚拟映射），
+    // 修复前被公网闸门误拒，真公网域名安装链接整体不可用。
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const result = await fetchUserscriptSource("https://update.greasyfork.org/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }),
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.source.content, GOOD_SCRIPT);
+    assert.equal(result.preview.name, "Installer");
+  });
+
+  it("fake-ip 段与黑名单段混合解析仍整体拒绝（some 语义不削弱）", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const result = await fetchUserscriptSource("https://mixed.test/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }, LOOPBACK_A),
+    });
+    assert.deepEqual(result, { ok: false, error: "remote_address_not_allowed" });
+  });
+
   it("content-length 超限拒绝（too_large）；无 content-length 的 chunked 边读边计数同样拦截", async () => {
     const twentyOneMB = 21 * 1024 * 1024;
     const withLength = fakeFetch(() => ({
