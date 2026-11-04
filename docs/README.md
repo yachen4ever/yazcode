@@ -98,6 +98,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | --- | --- |
 | `docs/specs/model-provider-remote-model-detection.md` | 自定义 Provider 的可用模型自动检测 |
 | `docs/specs/provider-tls-options.md` | 服务商级 TLS 选项：证书钉扎 / 跳过校验互斥与指纹回退 |
+| `docs/specs/builtin-provider-config-packaging.md` | 打包内 builtin Provider 配置事实源锁定：宿主注入隔离与三平台共用契约 |
 | `packages/services/specs/provider-balance-query.md` | 外部 API Key Provider 余额查询 |
 | `packages/services/specs/official-service-switches.md` | 官方服务开关的持久化与进程投影 |
 
