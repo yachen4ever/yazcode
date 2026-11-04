@@ -28,6 +28,11 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
    `AppSettings.embeddedBrowserUserscripts`：`Record<scriptId, { enabled: boolean; sha256?: string }>`，
    `scriptId` = 文件名去掉 `.user.js` 后缀。规则：
    - **发现 ≠ 启用**：新出现在目录里、manifest 无条目的脚本不注入（fail-closed）。
+     P3 起该类新发现文件的初始状态为 `pending_approval`（待批准），与 UI 入口拉平
+     （mint 双盲 F3）：必须经设置卡批准（拨开关或批准按钮，同 `approve` 语义）后
+     才进入服务集；不注入的判定本身不变。
+   - **显式禁用不复活**：条目 `enabled=false` 且无 `pendingApproval` 的脚本
+     （用户拨关或驳回过）保持 `disabled`，不因扫描逻辑变更为待批准——升级兼容红线。
    - **锚定**：条目 `enabled: true` 且无 `sha256` 时，store 在下一次匹配扫描时计算当前文件
      sha256 并持久化（一次性锚定写），随后开始注入。
    - **一致性门**：只服务「`enabled === true` 且条目 `sha256` 与当前文件 hash 一致」的脚本。
@@ -183,7 +188,9 @@ app ready（main）
 3. **grant fail-closed**：声明 `GM_xmlhttpRequest` 的脚本整只拒载并记录；白名单 grant 正常载入。
 4. **hash 一致性**：enabled 且 sha 一致 → 服务；文件内容变更 → 停止服务并记录；
    清除 sha256 重新锚定后恢复服务；enabled 无 sha → 扫描时锚定（manifest 被写入当前 hash）。
-5. **发现 ≠ 启用**：目录新文件、manifest 无条目 → 不服务。
+5. **发现 ≠ 启用**：目录新文件、manifest 无条目 → 状态 `pending_approval`、不服务；
+   经批准后才进入服务集。既有 `enabled=false` 显式禁用条目保持 `disabled`，
+   在役（enabled+sha 一致）条目保持 serving，升级后状态不降级。
 6. **IPC 契约**：match 只回服务集脚本且回包无文件路径；非法 url / 非法 scriptId / 超长 key /
    不可序列化 value 被拒。子 frame 存储面由 runtime 侧失效（存储函数位 `undefined`，
    调用即 TypeError 被 executeScript 吞掉，请求不会发出）；main 侧 `senderFrame.parent`
@@ -318,8 +325,9 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
 
 `serving`（enabled ∧ 已锚定 ∧ hash 一致）｜`enabled_pending_anchor`（enabled 无 sha，
 下次扫描锚定；仅在批准后未扫描的窗口可见）｜`hash_mismatch`（enabled 但内容变更失活）｜
-`disabled`（无条目或 enabled=false 且无 pendingApproval）｜`pending_approval`（agent
-请求启用待用户批准）｜`parse_failed` / `grant_rejected`（静态校验拒载）。
+`disabled`（enabled=false 且无 pendingApproval，即用户显式禁用/驳回过）｜
+`pending_approval`（待用户批准：agent 请求启用，或扫描发现的无条目新文件，mint 双盲
+F3 起两入口拉平）｜`parse_failed` / `grant_rejected`（静态校验拒载）。
 优先级：静态拒载 > manifest 状态。
 
 ### 验收场景（P2）
