@@ -62,6 +62,7 @@ import {
   createDesktopNativePackagePrunePatterns,
   parseAsarListWithPackState,
 } from "./scripts/desktop-native-package-policy.mjs";
+import { stripHostInjectedBuiltinProviderEnv } from "../../scripts/builtin-provider-config.mjs";
 import { replaceAppAsarFromStaging } from "./scripts/app-asar-repack.mjs";
 import {
   patchNsisInstallSectionFile,
@@ -70,7 +71,15 @@ import {
 
 const buildMetadata = getBuildMetadata();
 const targetPlatform = getTargetPlatform();
-const builtinProviderConfig = await loadBuiltinProviderConfig();
+// 宿主 CLI 会话会向子进程注入 ZCODE/YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE 指向宿主
+// runtime 副本，schema 可能比仓库解析器新：extraResources 的 from 会被指到宿主副本，
+// 打出「宿主 schema 内容 + 仓库旧解析器」的包，运行时解码 ZodError，表现为
+// 「Bundled 与 Active ZCode Built-in Release 均不可用」（mint 双盲 F1）。打包事实源
+// 必须锁定仓库 config/provider/zcode-builtin.json，加载前剔除宿主注入变量；
+// spec 见 docs/specs/builtin-provider-config-packaging.md。
+const builtinProviderConfig = await loadBuiltinProviderConfig({
+  env: stripHostInjectedBuiltinProviderEnv(),
+});
 const desktopProductIdentity = resolveDesktopProductIdentity({
   ...process.env,
   ZCODE_ENV: builtinProviderConfig.environment,

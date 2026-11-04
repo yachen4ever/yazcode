@@ -6,7 +6,7 @@
 
 import { spawn } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import process from "node:process";
 import { dirname, join, resolve } from "node:path";
@@ -632,6 +632,25 @@ function verifyPackagedRuntimeDependencies(os, arch) {
   const appAsarPath = resolveAppAsarPath(os, arch);
   if (!existsSync(appAsarPath)) {
     throw new Error(`打包产物缺少 app.asar: ${appAsarPath}`);
+  }
+
+  // builtin Provider 配置是 extraResources（asar 外）副本，主进程运行时唯一读取源。
+  // mint 双盲 F1 曾打出「宿主 schema 内容 + 仓库旧解析器」的包，运行时解码失败，
+  // 表现为「Bundled 与 Active ZCode Built-in Release 均不可用」。这里对最终产物做
+  // 存在性 + 可 JSON 解析断言，保证坏包在打包阶段即失败而不是流到用户手里。
+  // schema 兼容性由构建期 loadBuiltinProviderConfig 的 decode 校验兜底（见
+  // docs/specs/builtin-provider-config-packaging.md）。
+  const resourcesRoot = dirname(appAsarPath);
+  const builtinConfigPath = resolve(resourcesRoot, "config", "provider", "zcode-builtin.json");
+  if (!existsSync(builtinConfigPath)) {
+    throw new Error(`打包产物缺少 builtin Provider 配置: ${builtinConfigPath}`);
+  }
+  try {
+    JSON.parse(readFileSync(builtinConfigPath, "utf8"));
+  } catch (error) {
+    throw new Error(`打包产物内 builtin Provider 配置不是合法 JSON: ${builtinConfigPath}`, {
+      cause: error,
+    });
   }
 
   // pnpm hoisted 依赖布局下，electron-builder 可能把运行时代码本体装进 app.asar，
