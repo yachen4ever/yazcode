@@ -26,6 +26,26 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   未动）；`check-vendor-openviking.mjs` 门禁转绿。
 - 附：`third-party` 许可台账随 vendored 输入重生成入库。
 
+### 验收结论（2026-11-05，workwin 实机 26.5.1 → 26.5.2）
+
+- 部署与保留：计划任务静默安装至 26.5.2；升级保留全绿（hide-ai-copilot manifest 哈希
+  与磁盘文件互证、GM 存储/忽略证书/locale 保留、setting.json 与升级前备份逐字节相同）。
+- A 基线：模型配置与活会话端到端可用；OV vendored 0.5.29 ↔ 服务端 0.5.3 MCP 连通并经
+  会话实测（服务端暴露 24 工具：rule_search 属 Rules(Beta) 默认未启用，服务端配置侧
+  事项）；桌面 surface 技能选择器可用，`$visualize` 在位。
+- B IAB P4：列表卡（徽标/@match 域名/开关/注入状态）✓；新建→待批准（写盘不写
+  enabled）→批准（enabled+sha 钉住）→服务中 ✓；编辑→哈希失配停服（enabled 仍 true
+  但不服务，spec 语义）→重新批准→sha 重钉（文件↔manifest 互证），全链无 enabled:true
+  写入 ✓；删除清理文件与 manifest（.bak 保留为既有惯例）✓；注入实效（guest 页 DOM
+  标记实证）+ lastInjectedAt 首写与二次导航覆盖 ✓。mint 报告 F3（目录直放扫描入口
+  单开关直达服务中）实机复现属实，修复归 26.5.3 批次。
+- C 多目录：侧栏项目名标注 + roots 数量徽标 ✓；G1 盖章 tasks-index 任务行三件套落库
+  （project_id/root_path/execution_directories，与 spec additionalDirectories 语义
+  一致）✓；双 root 项目数据穿越升级无损；项目编辑器对话框渲染正确（原生目录选择器
+  存在 OS 级自动化边界，创建流以既有项目数据等效覆盖）。
+- 环境备注：门户 nlkf-eda.anhuitelecom.com 宿主机不可达（TCP 443 超时），hide-ai-copilot
+  注入实效未复测（其服务态与注入管线经新脚本实测全通）。
+
 ## 26.5.1 (2026-10-30)
 
 - **修复（S1 阻断级）**：ZCode 宿主机上 yazcode 首装启动失败——legacy 数据根迁移
