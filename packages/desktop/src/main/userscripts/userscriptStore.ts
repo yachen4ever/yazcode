@@ -23,6 +23,7 @@ export interface UserscriptManifestPort {
 
 export type UserScriptScanFindingStatus =
   | "disabled"
+  | "pending_approval"
   | "parse_failed"
   | "grant_rejected"
   | "hash_mismatch"
@@ -179,8 +180,12 @@ export function createUserscriptStore(options: UserscriptStoreOptions) {
 
       const manifestEntry = manifest[scriptId];
       if (!manifestEntry || manifestEntry.enabled !== true) {
-        // 发现 ≠ 启用：新文件、显式禁用或待批准（pendingApproval 恒 enabled=false）的脚本不注入。
-        findings.push({ scriptId, status: "disabled" });
+        // 发现 ≠ 启用：无条目（目录直放新发现，mint 双盲 F3 起待批准）与显式禁用/
+        // 待批准（pendingApproval 恒 enabled=false）的脚本都不注入。
+        findings.push({
+          scriptId,
+          status: manifestEntry ? "disabled" : "pending_approval",
+        });
         continue;
       }
       if (!manifestEntry.sha256) {
@@ -249,8 +254,14 @@ export function toStatusItem(
   }
   const def = evaluation.def;
   let status: UserScriptStatusValue;
-  if (!entry || entry.enabled !== true) {
-    status = entry?.pendingApproval === true ? "pending_approval" : "disabled";
+  if (!entry) {
+    // mint 双盲 F3：目录直放的无条目新文件与 UI 入口拉平，初始即待批准——
+    // 拨开关/批准按钮（同 approve 语义）后才能服务，杜绝「无批准环节直达服务中」。
+    status = "pending_approval";
+  } else if (entry.enabled !== true) {
+    // 显式禁用（用户拨关或驳回过）保持 disabled，不因扫描逻辑变更复活为待批准；
+    // agent 请求启用的条目（pendingApproval 恒 enabled=false）保持待批准。
+    status = entry.pendingApproval === true ? "pending_approval" : "disabled";
   } else if (!entry.sha256) {
     status = "enabled_pending_anchor";
   } else if (entry.sha256 !== sha256) {
