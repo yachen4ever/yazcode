@@ -3,6 +3,7 @@ import {
   parseRemoteModelListPage,
   type RemoteModelCatalogRequest,
   type RemoteModelCatalogResult,
+  type RemoteModelListRequest,
 } from "@zcode/provider";
 import {
   createInsecureTlsFetch,
@@ -52,13 +53,14 @@ export function createRemoteModelCatalogExecutor(dependencies: {
           const statusText = `Provider 返回 ${response.status}${response.statusText ? ` ${response.statusText}` : ""}`;
           // 404 高频根因是网关把列表挂在 /v1/models 而 Base URL 没带 /v1（正式执行链
           // 同样要求 Base URL 自含前缀）；带上实际请求 URL 并给出提示，避免用户盲猜。
+          // URL 只保留 origin+pathname：查询串/userinfo 可能携带凭据，不能回显给 Renderer。
           const hint =
             response.status === 404
-              ? `（请求：GET ${request.url}；若为 OpenAI 兼容网关，请检查 Base URL 是否遗漏 /v1 前缀）`
-              : `（请求：GET ${request.url}）`;
+              ? `（请求：GET ${publicRequestUrl(request.url)}；若为 OpenAI 兼容网关，请检查 Base URL 是否遗漏 /v1 前缀）`
+              : `（请求：GET ${publicRequestUrl(request.url)}）`;
           return {
             success: false,
-            message: `${statusText}${hint}`,
+            message: redactCredentials(`${statusText}${hint}`, request, input),
           };
         }
         const parsed = parseRemoteModelListPage(await response.json());
@@ -77,8 +79,62 @@ export function createRemoteModelCatalogExecutor(dependencies: {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : String(error),
+        message: redactCredentials(
+          error instanceof Error ? error.message : String(error),
+          null,
+          input,
+        ),
       };
     }
   };
+}
+
+/** URL 只用于诊断端点，不能把 userinfo 或查询串中的凭据带回 Renderer。 */
+function publicRequestUrl(value: string): string {
+  const url = new URL(value);
+  return `${url.origin}${url.pathname}`;
+}
+
+/**
+ * 错误消息出 Host 前的凭据脱敏（spec：model-provider-remote-model-detection.md 不变量 5，
+ * 上游 ZCodium ac9dbd7e 同款移植）。Node fetch 会在非法 header 校验异常中原样回显其值，
+ * 只隐藏 apiKey 不足以保护自定义鉴权头；同时覆盖 JSON 转义与 URL 编码回显形态，
+ * 按长度降序替换防止长值嵌短值残留，其余可诊断文本原样保留。
+ * secrets 同时纳入生成请求头（如 apiKey 派生的 Authorization）与显式 headers，
+ * 防未来 header 构造逻辑新增值域时脱敏漏项。
+ */
+function redactCredentials(
+  message: string,
+  request: RemoteModelListRequest | null,
+  input: RemoteModelCatalogRequest,
+): string {
+  const requestHeaderValues = request ? Object.values(request.headers) : [];
+  const explicitHeaderValues = Object.values(input.headers ?? {});
+  const secrets = [
+    input.apiKey ?? "",
+    ...requestHeaderValues,
+    ...explicitHeaderValues,
+    ...[...requestHeaderValues, ...explicitHeaderValues].map((value) =>
+      value.replace(/^(?:Bearer|Basic)\s+/iu, ""),
+    ),
+  ];
+  try {
+    const url = new URL(input.baseUrl);
+    secrets.push(url.username, url.password, ...url.searchParams.values(), url.hash.slice(1));
+  } catch {
+    // URL 校验本身也可能抛错；仍对已知的 Key 和 headers 脱敏。
+  }
+  const variants = new Set(
+    secrets.flatMap((secret) =>
+      [secret, secret.trim()].flatMap((value) =>
+        value
+          ? [value, JSON.stringify(value).slice(1, -1), encodeURIComponent(value.toWellFormed())]
+          : [],
+      ),
+    ),
+  );
+  for (const secret of [...variants].sort((left, right) => right.length - left.length)) {
+    message = message.replaceAll(secret, "[REDACTED]");
+  }
+  return message;
 }

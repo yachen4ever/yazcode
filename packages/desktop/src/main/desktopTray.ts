@@ -11,6 +11,14 @@ import {
 
 let desktopTray: Tray | null = null;
 let rebuildDesktopTrayContextMenu: (() => void) | null = null;
+// 托盘就绪门禁（spec：packages/desktop/specs/desktop-tray-close-gate.md）：
+// Tray 构造失败时窗口不得隐藏到「不存在的托盘」，关闭走正常关闭流。
+let desktopTrayReady = false;
+
+/** Windows 托盘图标是否真实创建成功（关闭到托盘门禁的输入）。 */
+export function isDesktopTrayReady(): boolean {
+  return desktopTrayReady;
+}
 
 function resolveDesktopTrayIconPath() {
   return app.isPackaged
@@ -36,9 +44,11 @@ export function createWindowsDesktopTray(options: {
   try {
     desktopTray = new Tray(resolveDesktopTrayIconPath());
   } catch (error) {
+    desktopTrayReady = false;
     options.logger.warn("[desktop-tray] failed to create tray icon", error);
     return null;
   }
+  desktopTrayReady = true;
 
   const getLabel = (id: (typeof desktopMenuMessageIds)[keyof typeof desktopMenuMessageIds]) =>
     getDesktopMenuMessage(options.getLocale(), id);

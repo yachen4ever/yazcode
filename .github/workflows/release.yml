@@ -297,7 +297,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-14
+          # macos-14 已于 2026-11-02 退役（actions/runner-images#13518，上游 ZCodium #108 同款迁移）。
+          # macos-15 是 ARM64 原生 runner；本仓已移除 Intel mac 构建，无需 macos-15-intel。
+          - runner: macos-15
             target: mac
             arch: arm64
             glob: "*.dmg"

@@ -13,6 +13,7 @@ import {
   syncAppUnreadBadge,
 } from "./unreadBadge.js";
 import { attachDesktopWindowSizePersistence, type DesktopWindowSize } from "./desktopWindowSize.js";
+import { shouldHideWindowToTray } from "./desktopTrayGate.js";
 import {
   registerMainApplicationWindow,
   unregisterMainApplicationWindow,
@@ -351,6 +352,8 @@ export function handleDesktopWindowCloseRequest(options: {
   forceQuit: boolean;
   explicitQuitRequested?: boolean;
   closeToTrayOnWindows?: boolean;
+  /** 托盘就绪门禁（desktopTrayReady）；缺省 true 保持既有调用兼容，生产唯一调用点显式接线。 */
+  closeToTraySupported?: boolean;
   isLastWindow: boolean;
   label: string;
   logger: { info: (...args: unknown[]) => void };
@@ -360,10 +363,14 @@ export function handleDesktopWindowCloseRequest(options: {
   hideWindow?: () => void;
 }) {
   if (
-    options.platform === "win32" &&
-    options.closeToTrayOnWindows &&
-    !options.forceQuit &&
-    !options.explicitQuitRequested
+    shouldHideWindowToTray({
+      platform: options.platform,
+      closeToTrayOnWindows: options.closeToTrayOnWindows ?? true,
+      // 托盘创建失败时窗口不得隐藏到「不存在的托盘」（spec：desktop-tray-close-gate.md）。
+      closeToTraySupported: options.closeToTraySupported ?? true,
+      forceQuit: options.forceQuit,
+      explicitQuitRequested: options.explicitQuitRequested,
+    })
   ) {
     options.logger.info(`[createWindow] window close hidden to tray (${options.label})`);
     options.hideWindow?.();

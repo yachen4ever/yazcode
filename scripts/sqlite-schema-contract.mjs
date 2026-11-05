@@ -1,7 +1,11 @@
 // sqlite schema 只增契约内核（docs/specs/sqlite-schema-contract.md）。
 // 契约语义与上游 zai-org main@3c5b2276 的 scripts/sqlite-schema-contract.mjs 逐字对齐：
 // 纯逻辑、无仓库依赖，供 scripts/check-sqlite-schema.ts 与 scripts/test/ 复用。
+import { execFile as execFileCallback } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
+import { promisify } from "node:util";
+
+const execFile = promisify(execFileCallback);
 
 const identifier = (name) => `"${name.replaceAll('"', '""')}"`;
 // 字符串中的 CHECK/括号不是约束，字面量大小写也不能随 SQL 关键字一起归一化。
@@ -123,4 +127,69 @@ export function assertAdditiveSchema(beforeSql, afterSql) {
     before.close();
     after.close();
   }
+}
+
+async function hasCommit(run, ref) {
+  try {
+    await run("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * schema 只增约束必须与「目标分支」比较，不能用 HEAD（上游 ZCodium #90 maintainer
+ * 加固同款回流，spec：docs/specs/sqlite-schema-contract.md 防篡改段）：
+ * pre-push 在提交之后运行，HEAD 已包含新 baseline——「破坏性迁移 + 更新后 baseline
+ * 同提交」会拿新 baseline 与新 schema 互比，校验静默通过。
+ * 解析顺序：显式变量 → CI 目标分支变量 → origin/HEAD / origin/main 等候选的
+ * merge-base；全部不可解析回退 HEAD 并由调用方显式告警。
+ * run 注入便于测试（默认真实 git，cwd 由调用方决定）。
+ */
+export async function resolveSchemaBase({
+  env = process.env,
+  cwd,
+  run = execFile,
+} = {}) {
+  const exec = (cmd, args) => run(cmd, args, { cwd: cwd ?? process.cwd() });
+
+  const explicit = env.SQLITE_SCHEMA_BASE_REF?.trim();
+  if (explicit) {
+    if (await hasCommit(exec, explicit)) {
+      return { base: explicit, label: `explicit ${explicit}` };
+    }
+    console.warn(`[db:schema:check] ignore invalid SQLITE_SCHEMA_BASE_REF=${explicit}`);
+  }
+
+  const ciBase = env.CI_MERGE_REQUEST_DIFF_BASE_SHA?.trim();
+  if (ciBase) {
+    if (await hasCommit(exec, ciBase)) {
+      return { base: ciBase, label: `CI ${ciBase}` };
+    }
+    console.warn(`[db:schema:check] ignore invalid CI_MERGE_REQUEST_DIFF_BASE_SHA=${ciBase}`);
+  }
+
+  const originHead = await exec("git", [
+    "symbolic-ref",
+    "--quiet",
+    "--short",
+    "refs/remotes/origin/HEAD",
+  ])
+    .then((result) => result.stdout.trim())
+    .catch(() => "");
+  const githubBase = env.GITHUB_BASE_REF?.trim();
+  for (const ref of [
+    originHead,
+    githubBase ? `origin/${githubBase}` : "",
+    "origin/main",
+    "main",
+  ]) {
+    if (!ref || !(await hasCommit(exec, ref))) continue;
+    const mergeBase = await exec("git", ["merge-base", "HEAD", ref])
+      .then((result) => result.stdout.trim())
+      .catch(() => "");
+    if (mergeBase) return { base: mergeBase, label: `merge-base ${ref}` };
+  }
+  return { base: "HEAD", label: "HEAD (未找到目标分支，destructive 变更不可检出)" };
 }
