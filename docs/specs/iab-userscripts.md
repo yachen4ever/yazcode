@@ -28,6 +28,11 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
    `AppSettings.embeddedBrowserUserscripts`：`Record<scriptId, { enabled: boolean; sha256?: string }>`，
    `scriptId` = 文件名去掉 `.user.js` 后缀。规则：
    - **发现 ≠ 启用**：新出现在目录里、manifest 无条目的脚本不注入（fail-closed）。
+     P3 起该类新发现文件的初始状态为 `pending_approval`（待批准），与 UI 入口拉平
+     （mint 双盲 F3）：必须经设置卡批准（拨开关或批准按钮，同 `approve` 语义）后
+     才进入服务集；不注入的判定本身不变。
+   - **显式禁用不复活**：条目 `enabled=false` 且无 `pendingApproval` 的脚本
+     （用户拨关或驳回过）保持 `disabled`，不因扫描逻辑变更为待批准——升级兼容红线。
    - **锚定**：条目 `enabled: true` 且无 `sha256` 时，store 在下一次匹配扫描时计算当前文件
      sha256 并持久化（一次性锚定写），随后开始注入。
    - **一致性门**：只服务「`enabled === true` 且条目 `sha256` 与当前文件 hash 一致」的脚本。
@@ -183,7 +188,9 @@ app ready（main）
 3. **grant fail-closed**：声明 `GM_xmlhttpRequest` 的脚本整只拒载并记录；白名单 grant 正常载入。
 4. **hash 一致性**：enabled 且 sha 一致 → 服务；文件内容变更 → 停止服务并记录；
    清除 sha256 重新锚定后恢复服务；enabled 无 sha → 扫描时锚定（manifest 被写入当前 hash）。
-5. **发现 ≠ 启用**：目录新文件、manifest 无条目 → 不服务。
+5. **发现 ≠ 启用**：目录新文件、manifest 无条目 → 状态 `pending_approval`、不服务；
+   经批准后才进入服务集。既有 `enabled=false` 显式禁用条目保持 `disabled`，
+   在役（enabled+sha 一致）条目保持 serving，升级后状态不降级。
 6. **IPC 契约**：match 只回服务集脚本且回包无文件路径；非法 url / 非法 scriptId / 超长 key /
    不可序列化 value 被拒。子 frame 存储面由 runtime 侧失效（存储函数位 `undefined`，
    调用即 TypeError 被 executeScript 吞掉，请求不会发出）；main 侧 `senderFrame.parent`
@@ -318,8 +325,9 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
 
 `serving`（enabled ∧ 已锚定 ∧ hash 一致）｜`enabled_pending_anchor`（enabled 无 sha，
 下次扫描锚定；仅在批准后未扫描的窗口可见）｜`hash_mismatch`（enabled 但内容变更失活）｜
-`disabled`（无条目或 enabled=false 且无 pendingApproval）｜`pending_approval`（agent
-请求启用待用户批准）｜`parse_failed` / `grant_rejected`（静态校验拒载）。
+`disabled`（enabled=false 且无 pendingApproval，即用户显式禁用/驳回过）｜
+`pending_approval`（待用户批准：agent 请求启用，或扫描发现的无条目新文件，mint 双盲
+F3 起两入口拉平）｜`parse_failed` / `grant_rejected`（静态校验拒载）。
 优先级：静态拒载 > manifest 状态。
 
 ### 验收场景（P2）
@@ -498,7 +506,8 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 3. **从 URL 安装三段确认，任一步都不得落盘**：
    - 段 1 **拉取**：main 发 HTTP（https-only、20 MB 上限、20 s 超时、`redirect: "manual"`
      且 ≤5 跳、每跳重新校验协议与地址；SSRF 防护与 `desktopSaveFile` 同一套 BlockList +
-     DNS 钉扎连接），返回 `{ source, preview }`，**不写文件**；
+     DNS 钉扎连接；fake-ip 代理环境例外语义见实现边界 4b），返回 `{ source, preview }`，
+     **不写文件**；
    - 段 2 **预览**：渲染解析出的 `name / version / runAt / grants / match` + 源码预览，
      用户在此看到将要安装什么；
    - 段 3 **安装**：用户点「安装」才调用写盘通道，落 `pending_approval`。
@@ -558,6 +567,24 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
    （`blockedRemoteAddresses` + `resolvePublicAddresses` + 钉扎 lookup），
    `desktopSaveFile` 改为引用它，**行为不变**（仍 http+https、5 跳）；P4 传
    `allowedProtocols: ["https:"]`、`maxRedirects: 5`、`maxBytes: 20MB`、`timeoutMs: 20000`。
+
+4b. **fake-ip 代理环境下的公网判定分段（mint 双盲 F2）**：mihomo fake-ip 模式把
+    真公网域名的系统 DNS 解析结果映射到 `198.18.0.0/15`（RFC 2544 基准保留段），
+    逐 DNS 预检的公网闸门会把真公网域名误判为非公网，功能在该环境整体不可用。
+    处理口径（红线：不削弱 SSRF 防护）：
+    - `198.18.0.0/15` 从硬拒 BlockList 拆出为独立 `proxyTunnelFakeIpAddresses`；
+      解析结果命中它**不再整体拒绝**，命中其余黑名单段（回环/私网/链路本地/CGNAT/
+      TEST-NET/组播等 IPv4+IPv6 全表）仍立即拒绝——some 语义不变，不给
+      「多 A 记录挑公网」绕过面；
+    - 选型依据：fake-ip 环境下该段是 TUN 虚拟映射，钉扎连接实际由代理按域名转发到
+      真公网目标；非 fake-ip 环境下连接该段会超时失败（`download_failed`，
+      fail-closed），不产生内容泄露面。回环/私网/链路本地仍是硬拒，
+      SSRF 主防线与 DNS rebinding 钉扎完整保留；
+    - 否决的备选：直接从黑名单删除该段（削弱非 fake-ip 环境防线）、域名不做本地
+      DNS 预检（拆掉钉扎防线，与 `webfetch-egress-guard` 的信任模型不同——本闸门
+      服务用户主动安装的任意 URL）、只改报错文案（不满足「真公网放行」验收）。
+    - 该分段语义对共用守卫的 `desktopSaveFile`（另存/下载）同步生效，两消费方
+      行为保持一致。
 
 5. **UI 结构**（文件都 ≤400 行，超出即拆）：
    - 工具行：`新建` / `导入` / `从 URL 安装` 三个按钮，只有 `statusAvailable`（桌面宿主）
@@ -626,7 +653,9 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 8. **URL 安全边界**：`http://` 拒绝（`not_https`）；`http://127.0.0.1/…` 与
    `https://10.0.0.1/…` 拒绝（`remote_address_not_allowed`）；超过 20 MB 拒绝
    （`too_large`，含 chunked 无 content-length 的边读边计数）；重定向到非公网/非 https
-   地址拒绝；超时返回 `timeout`。
+   地址拒绝；超时返回 `timeout`。fake-ip 环境（实现边界 4b）：解析结果仅为
+   `198.18.0.0/15` 段的域名放行并完成拉取；解析结果同时含该段与黑名单段
+   （如 `127.0.0.1`）仍拒绝。
 9. **URL 预览与安装一致**：preview 的 `grants`/`match` 与安装后 `list()` 的对应字段一致；
    声明白名单外 grant 的源码在段 2 被阻断（不进入段 3）。
 10. **删除双确认**：删脚本 → manifest 条目消失 + 文件消失；有 GM 存储时出现第二个

@@ -89,7 +89,8 @@ describe("userscriptService 命令面（确认流）", () => {
     assert.equal(fixture.manifestPort.saves.length, savesBefore);
     const portal = statuses.find((item) => item.scriptId === "portal");
     assert.ok(portal);
-    assert.equal(portal.status, "disabled");
+    // mint 双盲 F3：portal 无 manifest 条目（目录在、条目无），初始态待批准。
+    assert.equal(portal.status, "pending_approval");
     assert.equal(portal.name, "portal");
     assert.deepEqual(portal.match, ["https://oa.test/*"]);
     assert.match(portal.sha256, /^[0-9a-f]{64}$/);

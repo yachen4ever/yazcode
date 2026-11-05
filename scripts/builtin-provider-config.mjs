@@ -7,6 +7,35 @@ import { tsImport } from "tsx/esm/api";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 
+/**
+ * 剔除宿主 CLI 注入的 builtin 配置源环境变量（新旧前缀全量点名）。
+ *
+ * 在 ZCode 宿主会话内构建时，宿主运行时会向子进程注入
+ * ZCODE_BUILTIN_PROVIDER_CONFIG_FILE / YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE（及
+ * _BUNDLED_CONFIG_FILE 变体）指向宿主 runtime 数据副本，其 schema 可能比仓库解析器
+ * 新。构建链若直接继承该环境，staging / extraResources 会静默改用宿主副本，打出
+ * 「宿主 schema 内容 + 仓库旧解析器」的包，运行时解码 ZodError，表现为
+ * 「Bundled 与 Active ZCode Built-in Release 均不可用」（mint 双盲 F1，
+ * spec 见 docs/specs/builtin-provider-config-packaging.md）。
+ *
+ * 与 scripts/build-desktop-agent-cli.mjs 的前缀口径一致：点名
+ * ZCODE_BUILTIN_PROVIDER / YAZCODE_BUILTIN_PROVIDER 前缀（开放集合整体剔除，不做
+ * 点名单删补丁），不触碰 release.yml 合法注入的 ZCODE_APP_VERSION / ZCODE_ENV。
+ * 开发者经 .env 文件的显式覆盖走 loadEndpointEnv 合并，不受本函数影响。
+ *
+ * @param {Record<string, string | undefined>} env 待清洗的环境（默认 process.env 的浅拷贝）
+ * @returns {Record<string, string | undefined>} 剔除宿主注入变量后的新对象，不改原对象
+ */
+export function stripHostInjectedBuiltinProviderEnv(env = process.env) {
+  const cleaned = { ...env };
+  for (const key of Object.keys(cleaned)) {
+    if (key.startsWith("ZCODE_BUILTIN_PROVIDER") || key.startsWith("YAZCODE_BUILTIN_PROVIDER")) {
+      delete cleaned[key];
+    }
+  }
+  return cleaned;
+}
+
 /** @param {{root?: string, env?: Record<string, string | undefined>}} options */
 export async function resolveBuiltinProviderBuildEnvironment({
   root = repositoryRoot,

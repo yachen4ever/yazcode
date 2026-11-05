@@ -98,6 +98,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | --- | --- |
 | `docs/specs/model-provider-remote-model-detection.md` | 自定义 Provider 的可用模型自动检测 |
 | `docs/specs/provider-tls-options.md` | 服务商级 TLS 选项：证书钉扎 / 跳过校验互斥与指纹回退 |
+| `docs/specs/builtin-provider-config-packaging.md` | 打包内 builtin Provider 配置事实源锁定：宿主注入隔离与三平台共用契约 |
 | `packages/services/specs/provider-balance-query.md` | 外部 API Key Provider 余额查询 |
 | `packages/services/specs/official-service-switches.md` | 官方服务开关的持久化与进程投影 |
 
@@ -122,6 +123,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `docs/specs/multi-root-projects.md` | 多目录项目四期：数据层/服务层/协议三通道与 CLI 白名单/UI 期（含 G1 缺口登记） |
 | `docs/reports/release-26.2.1-acceptance.md` | 26.2.1 实机验收记录（gen-ui 七项） |
 | `docs/reports/vision-fallback-report.md` | 视觉桥接交付报告（改动清单/决策/验收自测） |
+| `docs/reports/mint-2652-f4-f7-disposition.md` | mint 26.5.2 双盲 F4–F7 逐项处置：F4 现状核实、F5 不做依据、F6 复测指引、F7 错误条关闭行为契约 |
 | `docs/specs/browser-cookies-tool.md` | Browser cookies 工具（get/set，跨后端 session 注入） |
 | `.agents/specs/bots-astrbot-bridge.md` | 机器人 AstrBot 桥接协议 v2 |
 

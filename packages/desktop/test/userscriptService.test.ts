@@ -369,7 +369,8 @@ describe("userscriptService.lastInjectedAt", () => {
  * P4 落盘 ≠ 批准（docs/specs/iab-userscripts.md P4 验收场景 1/3）：
  * 写盘通道（userscriptFiles）与状态投影（service.listStatus）共享同一目录与
  * manifest 端口——写盘后 main 一概不 patch manifest：
- * - 新建：无条目 → 状态 disabled（服务集不含），UI patch pendingApproval 后才进待批准；
+ * - 新建：无条目 → 状态 pending_approval（服务集不含，mint 双盲 F3 起与 UI 入口拉平），
+ *   UI patch pendingApproval 后仍待批准；
  * - 编辑已批准脚本：manifest 不变（仍 enabled + 旧 sha），扫描自然落 hash_mismatch。
  */
 describe("userscriptService P4 落盘 ≠ 批准", () => {
@@ -421,11 +422,11 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
       // 写盘通道自身不产生任何 manifest 写。
       assert.deepEqual(ctx.saved, []);
 
-      // 发现 ≠ 启用：新文件无条目 → disabled；match 服务集不含该脚本。
+      // 发现 ≠ 启用：新文件无条目 → 待批准（F3 两入口拉平）；match 服务集不含该脚本。
       const statusAfterWrite = (await ctx.service.listStatus()).find(
         (item) => item.scriptId === "fresh",
       );
-      assert.equal(statusAfterWrite?.status, "disabled");
+      assert.equal(statusAfterWrite?.status, "pending_approval");
       const matchResponse = await ctx.service.match(
         { url: "https://fresh.test/page" },
         mainFrameContext,

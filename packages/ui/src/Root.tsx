@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- Root 当前集中编排启动和 workspace shell wiring，先保持入口收口避免跨层状态拆散。 */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LucideProvider, RefreshCw } from "lucide-react";
+import { LucideProvider, RefreshCw, X } from "lucide-react";
 import {
   APP_RUNTIME_PREFERENCES_CHANGED_BROADCAST_CHANNEL,
   DesktopCommandIds,
@@ -190,15 +190,36 @@ function RootInner({
   const rootModelSelectionRead = useModelSelectionServiceView(services.modelSelectionService);
   const rootModelSelectionView =
     rootModelSelectionRead.state.status === "ready" ? rootModelSelectionRead.state.view : null;
+  // mint 双盲 F7：错误条遮住设置页右下「清除缓存」按钮且长期驻留。手动关闭只收起本次
+  // 提示（读失败仍在，设置页模型区块保留重试入口）；点重试视为用户重新关注，恢复可见。
+  // 关闭态是会话内 UI 状态，不持久化（行为契约见 docs/reports/mint-2652-f4-f7-disposition.md）。
+  const [rootModelSelectionErrorDismissed, setRootModelSelectionErrorDismissed] = useState(false);
   const rootModelSelectionErrorNode =
-    rootModelSelectionRead.state.status === "error" ? (
+    rootModelSelectionRead.state.status === "error" && !rootModelSelectionErrorDismissed ? (
       <div className="fixed end-4 bottom-4 z-50 flex max-w-sm items-center gap-3 rounded-lg border border-destructive/30 bg-surface-raised px-3 py-2 text-ui-base text-foreground shadow-lg">
         <span className="min-w-0 flex-1">
           {intl.formatMessage({ id: "root.modelSelection.loadFailed" })}
         </span>
-        <Button type="button" variant="ghost" size="sm" onClick={rootModelSelectionRead.reload}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setRootModelSelectionErrorDismissed(false);
+            rootModelSelectionRead.reload();
+          }}
+        >
           <RefreshCw className="size-3.5" aria-hidden="true" />
           {intl.formatMessage({ id: "common.retry" })}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={intl.formatMessage({ id: "common.close" })}
+          onClick={() => setRootModelSelectionErrorDismissed(true)}
+        >
+          <X className="size-3.5" aria-hidden="true" />
         </Button>
       </div>
     ) : null;

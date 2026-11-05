@@ -46,7 +46,6 @@ for (const [network, prefix] of [
   ["192.0.0.0", 24],
   ["192.0.2.0", 24],
   ["192.168.0.0", 16],
-  ["198.18.0.0", 15],
   ["198.51.100.0", 24],
   ["203.0.113.0", 24],
   ["224.0.0.0", 4],
@@ -64,6 +63,21 @@ for (const [network, prefix] of [
 ] as const) {
   blockedRemoteAddresses.addSubnet(network, prefix, "ipv6");
 }
+
+/**
+ * 198.18.0.0/15（RFC 2544 基准保留段）单独拆出、不参与硬拒（mint 双盲 F2，
+ * spec 见 docs/specs/iab-userscripts.md 实现边界 4b）。
+ *
+ * mihomo fake-ip 模式把真公网域名的系统 DNS 解析结果映射到该段，逐 DNS 预检的
+ * 公网闸门曾把真公网域名误判为非公网，fake-ip 代理环境（TUN 常见配置）下
+ * 「从 URL 安装」整体不可用。选型依据：
+ * - fake-ip 环境下该段是 TUN 虚拟映射，钉扎连接实际由代理按域名转发到真公网目标；
+ * - 非 fake-ip 环境下连接该段会超时失败（download_failed，fail-closed），
+ *   不产生内容泄露面；
+ * - 回环/私网/链路本地/CGNAT/TEST-NET/组播等硬拒完整保留，SSRF 主防线不削弱。
+ */
+export const proxyTunnelFakeIpAddresses = new BlockList();
+proxyTunnelFakeIpAddresses.addSubnet("198.18.0.0", 15, "ipv4");
 
 export type RemoteLookupAddress = Awaited<ReturnType<typeof lookup>>;
 
@@ -97,7 +111,9 @@ export interface RemoteFetchGuardResult {
 /**
  * 解析公网地址：localhost（含子域）直接拒绝；DNS 查询异常归 download_failed；
  * 任一解析结果落在黑名单内即拒绝（some 语义：存在私网解析就整体拒绝，
- * 不给「多 A 记录里挑一个公网」的绕过面）。
+ * 不给「多 A 记录里挑一个公网」的绕过面）。解析结果落在 fake-ip 段
+ * （proxyTunnelFakeIpAddresses）不算命中黑名单——该段是 TUN 代理的虚拟映射，
+ * 由钉扎连接交给代理转发；命中黑名单段与 fake-ip 段混合时仍整体拒绝。
  */
 export async function resolvePublicAddresses(
   url: URL,

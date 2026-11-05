@@ -50,7 +50,7 @@ describe("createUserscriptStore.scan", () => {
     assert.deepEqual(result.findings, []);
   });
 
-  it("只扫一层 *.user.js：子目录与其它扩展名忽略；新文件无条目不服务（发现≠启用）", async () => {
+  it("只扫一层 *.user.js：子目录与其它扩展名忽略；新文件无条目 → 待批准且不服务（发现≠启用，F3）", async () => {
     const scriptsDir = join(dir, "scan");
     await mkdir(scriptsDir, { recursive: true });
     await writeFile(join(scriptsDir, "a.user.js"), scriptBody("https://a.test/*"));
@@ -69,7 +69,8 @@ describe("createUserscriptStore.scan", () => {
       result.findings.map((finding) => finding.scriptId),
       ["a"],
     );
-    assert.equal(result.findings[0]?.status, "disabled");
+    // mint 双盲 F3：扫描发现的未知文件初始态为待批准（与 UI 入口拉平），不服务。
+    assert.equal(result.findings[0]?.status, "pending_approval");
   });
 
   it("enabled 无 sha256 → 扫描时锚定（manifest 写回当前 hash）并开始服务", async () => {
@@ -163,5 +164,71 @@ describe("createUserscriptStore.scan", () => {
     for (const finding of result.findings) {
       assert.equal(finding.status, "parse_failed", finding.scriptId);
     }
+  });
+});
+
+describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼容）", () => {
+  let dir: string;
+  before(async () => {
+    dir = await mkdtemp(join(tmpdir(), "yazcode-userscripts-f3-"));
+  });
+  after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  /** 建一个已落盘的脚本并返回 store + sha256。 */
+  async function setup(scriptsDirName: string, manifest: Record<string, { enabled: boolean; sha256?: string; pendingApproval?: boolean }>) {
+    const scriptsDir = join(dir, scriptsDirName);
+    await mkdir(scriptsDir, { recursive: true });
+    const code = scriptBody(`https://${scriptsDirName}.test/*`);
+    await writeFile(join(scriptsDir, "s.user.js"), code);
+    const { port, saved } = fakeManifestPort(manifest as never);
+    const store = createUserscriptStore({
+      scriptsDir,
+      manifestPort: port,
+      logger: { info: () => {}, warn: () => {} },
+    });
+    return { store, port, saved, sha256: computeScriptSha256(Buffer.from(code)) };
+  }
+
+  const statusOf = (items: Awaited<ReturnType<Awaited<ReturnType<typeof createUserscriptStore>["inspect"]>>>) =>
+    items.find((item) => item.scriptId === "s")?.status;
+
+  it("扫描发现的无条目新文件 → 待批准 → 批准后 → 服务中（两入口拉平）", async () => {
+    const { store, port } = await setup("discover", {});
+    // 重进设置页扫描识别：初始态待批准（与 UI 新建入口一致）。
+    assert.equal(statusOf(await store.inspect()), "pending_approval");
+    assert.deepEqual((await store.scan()).serveable, []);
+
+    // 批准（UI 拨开关/批准按钮同语义：钉住所见 sha）→ 服务中。
+    await port.saveManifest({ s: { enabled: true, sha256: computeScriptSha256(Buffer.from(scriptBody("https://discover.test/*"))) } });
+    assert.equal(statusOf(await store.inspect()), "serving");
+    assert.equal((await store.scan()).serveable.length, 1);
+  });
+
+  it("既有显式禁用条目保持 disabled，不复活为待批准（升级兼容红线）", async () => {
+    const { store } = await setup("explicit-disabled", { s: { enabled: false } });
+    assert.equal(statusOf(await store.inspect()), "disabled");
+    assert.deepEqual((await store.scan()).serveable, []);
+  });
+
+  it("既有在役脚本（enabled+sha 一致）升级后保持 serving，状态不降级", async () => {
+    const scriptsDir = join(dir, "in-service");
+    await mkdir(scriptsDir, { recursive: true });
+    const code = scriptBody("https://in-service.test/*");
+    await writeFile(join(scriptsDir, "s.user.js"), code);
+    const store = createUserscriptStore({
+      scriptsDir,
+      manifestPort: fakeManifestPort({ s: { enabled: true, sha256: computeScriptSha256(Buffer.from(code)) } }).port,
+      logger: { info: () => {}, warn: () => {} },
+    });
+    assert.equal(statusOf(await store.inspect()), "serving");
+    assert.equal((await store.scan()).serveable.length, 1);
+  });
+
+  it("agent 请求启用的待批准条目（pendingApproval）保持待批准，不受入口拉平影响", async () => {
+    const { store } = await setup("agent-pending", { s: { enabled: false, pendingApproval: true } });
+    assert.equal(statusOf(await store.inspect()), "pending_approval");
+    assert.deepEqual((await store.scan()).serveable, []);
   });
 });
