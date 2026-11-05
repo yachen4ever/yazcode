@@ -12,12 +12,20 @@ import { TaskIndexRepo } from "../packages/services/src/session/taskIndexRepo.js
 import { AutomationRepo } from "../packages/services/src/session/automationRepo.js";
 import { OffPeakTaskRepo } from "../packages/services/src/session/offPeakTaskRepo.js";
 import { SQLITE_MIGRATIONS } from "../apps/zcode-cli/packages/adapters/src/storage/session-store/migrations.js";
-import { assertAdditiveSchema, dumpSqliteSchema } from "./sqlite-schema-contract.mjs";
+import { assertAdditiveSchema, dumpSqliteSchema, resolveSchemaBase } from "./sqlite-schema-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const update = process.argv.includes("--update");
-const base =
-  process.env.CI_MERGE_REQUEST_DIFF_BASE_SHA || process.env.SQLITE_SCHEMA_BASE_REF || "HEAD";
+// 基线解析：显式变量 → CI 目标分支 → origin/main 等 merge-base（HEAD 兜底时告警）。
+// HEAD 在 pre-push 场景已含本次提交，「破坏性迁移 + 更新后 baseline 同提交」会静默
+// 通过——详见 docs/specs/sqlite-schema-contract.md 防篡改段（上游 #90 加固回流）。
+const { base, label: baseLabel } = await resolveSchemaBase({ cwd: repoRoot });
+if (base === "HEAD") {
+  console.warn(
+    `[db:schema:check] base is HEAD (${baseLabel}); destructive schema changes cannot be detected`,
+  );
+}
+console.log(`SQLite schema base: ${base} (${baseLabel})`);
 const exec = promisify(execFile);
 await exec("git", ["rev-parse", "--verify", `${base}^{commit}`], { cwd: repoRoot });
 const directory = await mkdtemp(join(tmpdir(), "yazcode-schema-check-"));
