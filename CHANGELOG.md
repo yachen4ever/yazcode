@@ -11,6 +11,41 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.3 (2026-11-06)
+
+- **mint 二轮双盲修复批（F1–F7）**：
+  - **F1（严重）**：Linux AppImage 内置 release 读取失败致模型配置/浏览器控制全不可用——真因是
+    electron-builder 配置链为全仓唯一未清洗宿主注入的 builtin 配置消费方（宿主会话注入
+    `ZCODE/YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE` 把 extraResources 指向宿主 runtime 副本，打出
+    「宿主 schema 内容 + 仓库旧解析器」的坏包）。修法：构建前剔除 `ZCODE_BUILTIN_PROVIDER` /
+    `YAZCODE_BUILTIN_PROVIDER` 前缀注入变量 + 构建期 decode 校验 + bundle 产物存在性/JSON 断言
+    （坏包打包即失败）；新 spec `docs/specs/builtin-provider-config-packaging.md`。
+  - **F2**：fake-ip 代理环境（系统 DNS 把公网域名解析到 198.18.0.0/15）下「从 URL 安装」误拒
+    真公网域名——该段从硬拒黑名单拆出独立 `proxyTunnelFakeIpAddresses`（TUN 虚拟映射，钉扎连接
+    由代理按域名转发；非 fake-ip 环境连接该段超时 fail-closed），黑名单 some 语义与回环/私网/
+    链路本地/CGNAT/TEST-NET 硬拒完整保留，SSRF 防线不削弱。
+  - **F3**：目录直放 `.user.js` 拨一次启用开关即直达「服务中」、与 UI 入口批准门槛不一致——扫描
+    发现的无条目新文件初始态改「待批准」（显式禁用不复活、在役脚本不降级、agent 待批准条目不受
+    影响，注入面不变）。
+  - **F7**：模型配置加载失败错误条加手动关闭按钮（重试重置关闭态），不再长期驻留遮挡「清除缓存」。
+  - F4/F5/F6 核实处置：删除双确认现状即 spec 口径（有 GM 存储才第二道确认）；引导系统为审计版
+    已移除模块不重开；模型设置重试静态三态已有、关窗现象随本版复测——处置记录
+    `docs/reports/mint-2652-f4-f7-disposition.md`。
+- **上游引入实施批**（ZCodium v1.17.1→v1.17.4 + zai-org 3.17.x 调研落地，
+  `docs/upstream-port-tasks-20261105.md`）：
+  - desktop mac 构建迁移退役 runner `macos-14` → `macos-15`（actions/runner-images#13518，
+    退役日 2026-11-02 已过），另加发布矩阵合同测试（30 行锁 runner↔架构映射）；
+  - 模型发现凭据脱敏（上游 ac9dbd7e 移植增强）：错误消息出 Host 前对 apiKey、生成/显式请求头值
+    （含 Bearer|Basic 剥离变体）、URL userinfo/query/fragment 按原文、JSON 转义、URL 编码三形态
+    长度降序替换 `[REDACTED]`；404 排查 hint 保留 origin+pathname；
+  - Windows 关闭到托盘加托盘就绪门禁（`desktopTrayGate`）：Tray 创建失败时窗口不再 hide 到
+    不存在的托盘，新 spec `packages/desktop/specs/desktop-tray-close-gate.md`；
+  - sqlite schema 门禁基线解析改目标分支 merge-base（上游 #90 加固回流），堵「破坏性迁移 +
+    baseline 同提交」的 HEAD 绕过面，无法解析时显式告警；
+  - 删除断言过期（generic provider + ZCodium feed）且无引用的孤儿测试 `github-updates.test.mjs`。
+- **工程**：发版顺序 spec 固化 mint 双盲环节——构建 draft → 双盲测试 → 实机部署验收 → 转正
+  （`docs/specs/release-acceptance-order.md`，26.5.2 轮实际顺序回填）。
+
 ## 26.5.2 (2026-10-30)
 
 - **S1 修复（阻断级）：ZCode 宿主机上 yazcode 首装启动失败**（mint 双盲测试发现，
