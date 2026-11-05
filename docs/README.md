@@ -116,6 +116,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | `docs/upstream-port-tasks-20261022.md` | 上游变更引入评估（基准 3.16.2 / ZCodium 1.16.2）：架构治理自测、sqlite schema 只增契约两个建议立项项 |
 | `docs/upstream-port-tasks-20261025.md` | 上游变更引入评估（ZCodium 1.16.3 / #76 / v1.17.0）：仅 #66 浏览器迟到上报一项引入候选，v1.17.0 不引入 |
 | `docs/upstream-port-tasks-20261026.md` | 上游变更引入评估（ZCodium v1.16.2→v1.17.1）：无必引项；DMG 契约测试候选与 y430p 独立复核回填 |
+| `docs/upstream-port-tasks-20261105.md` | 上游变更引入评估（ZCodium v1.17.1→v1.17.4 + zai-org 3.17.x sync）：macos-14 runner 与模型发现脱敏两项引入候选；B1/B2/B3 全部确认合并 |
 | `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
 | `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
 | `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
