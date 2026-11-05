@@ -143,3 +143,64 @@ test("executor：网络异常与无法解析的响应都转为失败结果", asy
   assert.equal(result.success, false);
   assert.match(result.success ? "" : result.message, /data/);
 });
+
+// ——凭据不回显（spec 不变量 5，上游 ZCodium ac9dbd7e 同款移植）——
+
+test("executor：错误消息中的 apiKey 不回显，404 hint 只保留 origin+pathname", async () => {
+  const executor = createRemoteModelCatalogExecutor({
+    fetch: async () => new Response(null, { status: 404, statusText: "Not Found" }),
+  });
+  const result = await executor(
+    openAiRequest({
+      baseUrl: "https://user:password@gateway.example/v1?api_key=query-secret#fragment-secret",
+      apiKey: "sk-secret-123",
+    }),
+  );
+  assert.equal(result.success, false);
+  const message = result.success ? "" : result.message;
+  for (const secret of ["sk-secret-123", "user:", "password", "query-secret", "fragment-secret"]) {
+    assert.ok(!message.includes(secret), `错误消息必须脱敏 ${secret}`);
+  }
+  // 404 排查 hint 保留端点定位能力（origin+pathname），提示文案不废。
+  assert.match(message, /GET https:\/\/gateway\.example\/v1\/models/);
+  assert.match(message, /遗漏 \/v1 前缀/);
+});
+
+test("executor：自定义 header 的原文、JSON 转义和 URL 编码凭据都脱敏", async () => {
+  const secret = "fixture-header\nprivate-tail";
+  const executor = createRemoteModelCatalogExecutor({
+    fetch: async () => {
+      throw new Error(`${secret}; ${JSON.stringify(secret)}; ${encodeURIComponent(secret)}`);
+    },
+  });
+  const result = await executor(openAiRequest({ headers: { "X-Fixture": secret } }));
+  assert.deepEqual(result, { success: false, message: '[REDACTED]; "[REDACTED]"; [REDACTED]' });
+});
+
+test("executor：显式 Authorization 被去掉 Bearer 前缀回显时仍脱敏", async () => {
+  const executor = createRemoteModelCatalogExecutor({
+    fetch: async () => {
+      throw new Error("invalid credential: fixture-auth-token");
+    },
+  });
+  assert.deepEqual(
+    await executor(openAiRequest({ headers: { Authorization: "Bearer fixture-auth-token" } })),
+    {
+      success: false,
+      message: "invalid credential: [REDACTED]",
+    },
+  );
+});
+
+test("executor：真实 fetch 的非法鉴权头异常不得把草稿 Key 回显到 UI", async () => {
+  // apiKey 含换行 → 生成的 Authorization 头非法 → Node fetch 校验异常原样回显其值，
+  // 正是「仅隐藏 apiKey 裸值不够」的根因路径（端口 9=discard，连接必然失败）。
+  const apiKey = "fixture-api-key\nprivate-tail";
+  const executor = createRemoteModelCatalogExecutor({});
+  const result = await executor(openAiRequest({ baseUrl: "http://127.0.0.1:9/v1", apiKey }));
+  assert.equal(result.success, false);
+  const message = result.success ? "" : result.message;
+  assert.ok(!message.includes(apiKey));
+  assert.ok(!message.includes("fixture-api-key"));
+  assert.match(message, /header/i);
+});
