@@ -20,6 +20,8 @@ mint 实测「一道确认即删除」的被测脚本没有 GM 存储文件，�
 改动面在 `IabUserscriptRowDetails.tsx` 的 `handleDeleteConfirmed` 分支
 （`hasStorageFile ? 框2 : deleteScript(false)`），需先改 spec 再动代码。
 
+**口径决定（2026-11-05）**：维持现状（有 GM 存储才第二道确认），不做恒定两步改动。
+
 ## F5 首装自动触发引导——不做（引导系统为审计版已移除模块）
 
 调查结论：设置底部「引导」按钮与快捷键当前是**死链**——审计版移除官方引导
@@ -32,6 +34,8 @@ mint 实测「一道确认即删除」的被测脚本没有 GM 存储文件，�
 死胡同，F5 报告的实际痛点（首装即死路）随 F1 消失。若要重新启用引导，需先立项决定
 启用范围（OnboardingDialog 欢迎页 / OccupationOnboarding 迁移向导）与首装触发条件
 （`settingsSyncFirstRunPromptHandled` / onboarding record `shouldOnboard` 均可复用）。
+
+**口径决定（2026-11-05）**：不重开引导系统，维持移除现状。
 
 ## F6 模型设置重试反馈——静态链路已具备反馈语义，关窗现象待复测，不臆测改代码
 
