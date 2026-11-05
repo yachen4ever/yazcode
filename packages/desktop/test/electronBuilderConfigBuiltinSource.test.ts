@@ -93,4 +93,19 @@ describe("builtin provider 配置打包事实源", () => {
     const entry = await loadBuiltinConfigEntry("clean");
     assert.equal(entry.from, repositoryConfigPath);
   });
+
+  it("loadBuiltinProviderConfig 单点防御：污染 env 直传时事实源仍锁定仓库（R2）", async () => {
+    // R2 实证：prepare-prebuilds/SEA 等链路经本函数直吃 process.env，宿主注入
+    // 指向 GLM runtime 副本时构建即炸；清洗收编进函数后所有消费链统一受保护。
+    const { loadBuiltinProviderConfig } = await import(
+      "../../../scripts/builtin-provider-config.mjs"
+    );
+    const config = await loadBuiltinProviderConfig({
+      env: {
+        ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host-runtime/endpoint-x/zcode-builtin.json",
+        YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host-runtime/endpoint-x/zcode-builtin.json",
+      },
+    });
+    assert.equal(config.sourcePath, repositoryConfigPath);
+  });
 });

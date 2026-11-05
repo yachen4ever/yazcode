@@ -70,6 +70,13 @@ export async function resolveBuiltinProviderBuildEnvironment({
 
 /** @param {{root?: string, env?: Record<string, string | undefined>}} options */
 export async function loadBuiltinProviderConfig({ root = repositoryRoot, env = process.env } = {}) {
+  // 宿主注入单点防御（R2 修复，spec：docs/specs/builtin-provider-config-packaging.md）：
+  // y430p 本机实证——zcode 宿主会话内构建时 prepare-prebuilds/SEA 等链路经本函数
+  // 直吃 process.env 的 ZCODE_BUILTIN_PROVIDER_CONFIG_FILE（GLM runtime 副本），
+  // 构建即炸 Invalid Built-in Provider config。剔除在事实源读取前统一执行，
+  // 覆盖所有消费链，不再依赖各链自行清洗；.env 显式覆盖（loadEndpointEnv 合并）
+  // 不受影响。对显式传入的 env 同样幂等生效。
+  env = stripHostInjectedBuiltinProviderEnv(env);
   env = await loadEndpointEnv({ root, env });
   const environment = await resolveBuiltinProviderBuildEnvironment({ root, env });
   const sourcePath = resolve(
