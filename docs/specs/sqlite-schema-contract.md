@@ -30,9 +30,19 @@
 
 ## 防篡改与更新流程
 
-- 比对基准取 `git show ${base}:<baseline>`（base = `CI_MERGE_REQUEST_DIFF_BASE_SHA` ||
-  `SQLITE_SCHEMA_BASE_REF` || `HEAD`）：**手改工作区基线不能绕过只增约束**——相对上次
-  提交的 schema 演化仍须只增。首次引入基线时无历史文件，跳过该方向。
+- 比对基准取 `git show ${base}:<baseline>`。base 解析顺序（上游 ZCodium #90 maintainer
+  加固同款回流，`8fc8ef06`）：
+  1. 显式变量 `CI_MERGE_REQUEST_DIFF_BASE_SHA` / `SQLITE_SCHEMA_BASE_REF`（显式传入
+     的无效值忽略并告警）；
+  2. 目标分支 merge-base：`origin/HEAD` → `origin/${GITHUB_BASE_REF}` → `origin/main`
+     → `main` 等候选中首个可解析者与 HEAD 求 merge-base；
+  3. 全部不可解析时回退 `HEAD` 并**显式告警**（destructive 变更在该模式下不可检出）。
+- **为什么不能用 HEAD**：pre-push 门禁在提交之后运行，HEAD 已包含本次提交——
+  「破坏性迁移 + 更新后 baseline 同提交」会让 `git show HEAD:...baseline` 拿到新
+  baseline 与新 schema 互比，校验静默通过。merge-base 把基准钉在目标分支分叉点，
+  同提交场景下 previous 仍是旧 baseline，破坏性演化被检出。
+- **手改工作区基线不能绕过只增约束**——相对基准的 schema 演化仍须只增。首次引入
+  基线时无历史文件，跳过该方向。
 - 检查态还要求工作区基线与当前 schema **逐字节一致**：不一致即要求显式
   `pnpm db:schema:update` 重生成、diff 进 review，杜绝「基线悄悄过期」。
 - `--update` 永远从真实迁移产物写基线；schema 破坏性变更的合入路径 = 先修迁移、
