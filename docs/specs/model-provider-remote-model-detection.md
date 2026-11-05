@@ -46,8 +46,8 @@
 
 ## 失败语义
 
-- 401/403/404/网络错误/超时都返回 `{ success: false, message }`，UI 展示原文消息；
-  检测失败不影响手输模型 ID 的任何能力。
+- 401/403/404/网络错误/超时都返回 `{ success: false, message }`，UI 展示**脱敏后**的
+  消息（凭据不回显，见不变量 5）；检测失败不影响手输模型 ID 的任何能力。
 - 超时使用 AbortSignal（默认 15s），Host 侧注入的 fetch 可被测试替换。
 
 ## 不变量
@@ -57,6 +57,13 @@
 3. 检测请求的 URL/头语义与正式执行链保持一致；两处语义分叉视为 bug。
 4. 检测请求的 TLS 选项（`tlsCaPath` / `allowInsecureTls`，见
    `provider-tls-options.md`）与正式执行链同源：检测连通即代表执行链连通。
+5. **凭据不回显（上游引入批 B，ZCodium ac9dbd7e 同款移植）**：任何返回 Renderer 或
+   写入日志的检测错误消息在离开 Host 前脱敏——apiKey、显式 headers 值（含
+   Bearer/Basic 前缀剥离变体）与 URL 凭据成分（userinfo/query/fragment）按原文、
+   JSON 转义、URL 编码三形态替换为 `[REDACTED]`（按长度降序替换，防长值嵌短值残留）；
+   404 排查 hint 中的请求 URL 只保留 origin+pathname（保留端点定位能力，不泄查询串
+   与 userinfo）。根因：Node fetch 对非法 header 的校验异常会原样回显其值，仅隐藏
+   apiKey 不足以保护自定义鉴权头。
 
 ## 验收场景
 
