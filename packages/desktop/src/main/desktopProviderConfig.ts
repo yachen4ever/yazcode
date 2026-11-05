@@ -1,5 +1,4 @@
 import { app } from "electron";
-import { join } from "node:path";
 import { resolveZCodeBuiltinProviderConfigFilePath as resolveWithDefaults } from "./desktopProviderConfigPaths.js";
 
 export function resolveZCodeBuiltinProviderConfigFilePath(options?: {
