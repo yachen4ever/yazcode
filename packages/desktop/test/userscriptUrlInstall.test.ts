@@ -129,27 +129,123 @@ describe("userscriptUrlInstall.fetchUserscriptSource", () => {
     );
   });
 
-  it("fake-ip 环境放行：解析结果仅 198.18.0.0/15 段的域名正常拉取（mint 双盲 F2）", async () => {
-    // mihomo fake-ip 下 update.greasyfork.org → 198.18.x.x（TUN 虚拟映射），
-    // 修复前被公网闸门误拒，真公网域名安装链接整体不可用。
+  it("fake-ip 环境放行：解析落 198.18.0.0/15 + DoH 复核真实公网 IP → 拉取成功（R2 候选 A）", async () => {
+    // mihomo fake-ip 下 update.greasyfork.org → 198.18.x.x（TUN 虚拟映射）；
+    // R2 起放行必须经 DoH 独立复核证明真实 IP 是公网。
     const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const dohQueries: string[] = [];
     const result = await fetchUserscriptSource("https://update.greasyfork.org/x.user.js", {
       fetchImpl: impl,
       lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }),
+      dohJsonImpl: async (url) => {
+        dohQueries.push(url);
+        return {
+          Status: 0,
+          Answer: [{ type: 1, data: "104.18.32.7" }],
+        };
+      },
     });
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.equal(result.source.content, GOOD_SCRIPT);
     assert.equal(result.preview.name, "Installer");
+    // A 与 AAAA 并发查询，均走 DoH JSON API。
+    assert.equal(dohQueries.length, 2);
+    assert.ok(dohQueries.every((q) => q.includes("name=update.greasyfork.org")));
   });
 
-  it("fake-ip 段与黑名单段混合解析仍整体拒绝（some 语义不削弱）", async () => {
+  it("fake-ip 段与黑名单段混合解析仍整体拒绝（some 语义不削弱，不触发 DoH）", async () => {
     const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    let dohCalled = false;
     const result = await fetchUserscriptSource("https://mixed.test/x.user.js", {
       fetchImpl: impl,
       lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }, LOOPBACK_A),
+      dohJsonImpl: async () => {
+        dohCalled = true;
+        return { Status: 0, Answer: [] };
+      },
     });
     assert.deepEqual(result, { ok: false, error: "remote_address_not_allowed" });
+    assert.equal(dohCalled, false);
+  });
+
+  it("fake-ip 解析 + DoH 复核返回回环 → 闸门层拒绝（mint 负向：127-0-0-1.sslip.io）", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const result = await fetchUserscriptSource("https://127-0-0-1.sslip.io:8444/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }),
+      dohJsonImpl: async () => ({ Status: 0, Answer: [{ type: 1, data: "127.0.0.1" }] }),
+    });
+    assert.deepEqual(result, { ok: false, error: "remote_address_not_allowed" });
+  });
+
+  it("fake-ip 解析 + DoH 复核返回内网 → 闸门层拒绝（mint 负向：192-168-5-15.sslip.io）", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const result = await fetchUserscriptSource("https://192-168-5-15.sslip.io:8553/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }),
+      dohJsonImpl: async () => ({ Status: 0, Answer: [{ type: 1, data: "192.168.5.15" }] }),
+    });
+    assert.deepEqual(result, { ok: false, error: "remote_address_not_allowed" });
+  });
+
+  it("fake-ip 解析 + DoH 复核失败/超时/NXDOMAIN → fail-closed 拒绝", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const fakeIp = lookupReturning({ address: "198.18.1.50", family: 4 });
+    // DoH 网络失败。
+    const networkFailure = await fetchUserscriptSource("https://a.test/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: fakeIp,
+      dohJsonImpl: async () => {
+        throw new Error("DoH unreachable");
+      },
+    });
+    assert.deepEqual(networkFailure, { ok: false, error: "remote_address_not_allowed" });
+    // DoH NXDOMAIN（Status=3）。
+    const nxdomain = await fetchUserscriptSource("https://b.test/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: fakeIp,
+      dohJsonImpl: async () => ({ Status: 3 }),
+    });
+    assert.deepEqual(nxdomain, { ok: false, error: "remote_address_not_allowed" });
+    // NOERROR 但无 Answer（无 A/AAAA 记录）。
+    const noAnswer = await fetchUserscriptSource("https://c.test/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: fakeIp,
+      dohJsonImpl: async () => ({ Status: 0 }),
+    });
+    assert.deepEqual(noAnswer, { ok: false, error: "remote_address_not_allowed" });
+  });
+
+  it("fake-ip 解析 + DoH 返回多记录混合（公网 + 私网）→ some 语义拒绝", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    const result = await fetchUserscriptSource("https://multi.test/x.user.js", {
+      fetchImpl: impl,
+      lookupImpl: lookupReturning({ address: "198.18.1.50", family: 4 }),
+      dohJsonImpl: async () => ({
+        Status: 0,
+        Answer: [
+          { type: 1, data: "104.18.32.7" },
+          { type: 1, data: "10.0.0.8" },
+        ],
+      }),
+    });
+    assert.deepEqual(result, { ok: false, error: "remote_address_not_allowed" });
+  });
+
+  it("非 fake-ip 公网解析不触发 DoH（普通环境零新依赖）", async () => {
+    const { impl } = fakeFetch(() => ({ chunks: [text(GOOD_SCRIPT)] }));
+    let dohCalled = false;
+    const result = await fetchUserscriptSource("https://cdn.test/scripts/installed.user.js", {
+      fetchImpl: impl,
+      lookupImpl: publicLookup(),
+      dohJsonImpl: async () => {
+        dohCalled = true;
+        return { Status: 0, Answer: [] };
+      },
+    });
+    assert.equal(result.ok, true);
+    assert.equal(dohCalled, false);
   });
 
   it("content-length 超限拒绝（too_large）；无 content-length 的 chunked 边读边计数同样拦截", async () => {

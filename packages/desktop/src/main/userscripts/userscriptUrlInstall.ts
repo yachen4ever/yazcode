@@ -7,6 +7,7 @@ import type { IabUserscriptFetchSourceResult, IabUserscriptSourcePreview } from 
 import {
   fetchRemoteWithGuard,
   RemoteFetchError,
+  type RemoteDohJsonImpl,
   type RemoteFetchImpl,
   type RemoteLookupImpl,
 } from "../remoteFetchGuard.js";
@@ -30,6 +31,8 @@ export interface FetchUserscriptSourceDeps {
   fetchImpl?: RemoteFetchImpl;
   /** 测试注入；缺省 dns.promises.lookup。 */
   lookupImpl?: RemoteLookupImpl;
+  /** 测试注入；缺省 DoH JSON API（fake-ip 复核，spec 实现边界 4b）。 */
+  dohJsonImpl?: RemoteDohJsonImpl;
   /** 测试注入；缺省 USER_SCRIPT_URL_FETCH_TIMEOUT_MS（20s）。 */
   timeoutMs?: number;
 }
@@ -81,6 +84,7 @@ export async function fetchUserscriptSource(
       timeoutMs: deps.timeoutMs ?? USER_SCRIPT_URL_FETCH_TIMEOUT_MS,
       fetchImpl: deps.fetchImpl,
       lookupImpl: deps.lookupImpl,
+      dohJsonImpl: deps.dohJsonImpl,
     });
   } catch (error) {
     if (error instanceof RemoteFetchError) {
