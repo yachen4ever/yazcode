@@ -109,7 +109,11 @@ import { resolveWindowsAppUserModelIdForFlavor } from "../../scripts/desktop-pro
 import type { DesktopWindowSize } from "./desktopWindowSize.js";
 import { maybeWarnArchitectureMismatch } from "./desktopArchitectureGuard.js";
 import { maybeBlockStartupForForceUpdate } from "./forceUpdateGuard.js";
-import { createWindowsDesktopTray, updateWindowsDesktopTrayMenu } from "./desktopTray.js";
+import {
+  createWindowsDesktopTray,
+  isDesktopTrayReady,
+  updateWindowsDesktopTrayMenu,
+} from "./desktopTray.js";
 import { createWindowsCuaOperationIndicator } from "./windowsCuaOperationIndicator.js";
 import {
   configureDockMenu,
@@ -1502,13 +1506,15 @@ function createWindowInstance(startupBootstrap: StartupWindowBootstrap = {}) {
     preloadPath,
     logger,
     forceQuitRef,
-    handleBeforeClose: (win, label) =>
-      handleDesktopWindowCloseRequest({
-        platform: process.platform,
-        forceQuit: forceQuitRef.current,
-        explicitQuitRequested: explicitQuitRef.current,
-        closeToTrayOnWindows,
-        isLastWindow: getMainApplicationWindows().length === 1,
+      handleBeforeClose: (win, label) =>
+        handleDesktopWindowCloseRequest({
+          platform: process.platform,
+          forceQuit: forceQuitRef.current,
+          explicitQuitRequested: explicitQuitRef.current,
+          closeToTrayOnWindows,
+          // 托盘创建失败时不得把窗口隐藏到「不存在的托盘」（spec：desktop-tray-close-gate.md）。
+          closeToTraySupported: isDesktopTrayReady(),
+          isLastWindow: getMainApplicationWindows().length === 1,
         label,
         logger,
         shouldConfirmQuit: shouldConfirmAppQuit(),
