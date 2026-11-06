@@ -249,6 +249,29 @@ YAZCODE_REMOTE_ASSET_CDN_BASE_URL
 5. **无旁路裸消费**：总账表逐点标注去向（白名单 / 剔除 / 显式通道），grep 复跑无非环境
    变量前缀误伤、无遗留分散洗涤实现。
 
+## 总账去向标注（验收标准「逐点标注去向」的落点）
+
+盘点出的 61 处环境消费点，其去向逐类判定如下——**白名单外的前缀键一律被原语剔除**
+（这是 deny-by-default 的关键：不需要逐点改代码，剔除发生在进程环境层），
+因此「去向」指的是该消费点在**剥离之后**从哪取到值：
+
+| 消费点族群 | 剥离后的取值来源 | 备注 |
+| --- | --- | --- |
+| 桌面 main 自身注入写侧（`desktopRuntimeEnv.ts` 显式写入的 ZCODE_RUNTIME_ENV / ZCODE_ENV / ZCODE_APP_VERSION / 数据根双写 / 托盘安装目录 / CUA helper 路径 / lark 二进制 / 动态工作流模式） | **Main 决策**（剥离后由 main 显式写回，不依赖继承环境） | 写侧不受剥离影响 |
+| host → agent spawn env（`services/node.ts` resolveSpawnEnv：代理/CA、官方服务开关、endpoint origin、CUA broker） | **显式构造**（`agentProxyEnv.ts` / `officialPlatformPolicy.ts` 逐键写入） | 写侧不受剥离影响 |
+| 打包态 builtin 配置路径（`desktopProviderConfigPaths.ts`） | **包内路径**（R2 语义，打包态忽略 env） | 不变 |
+| CLI 侧 builtin/personal 配置路径（`provider-runtime-env.ts`、`standalone-account-provider-runtime.ts`、`auth-login.ts`） | **host 注入的显式 env**（host 侧已按 R2 修正为包内路径，随 initMessage 传递） | 不变 |
+| 构建期事实源（`builtin-provider-config.mjs`） | **仓库 config/provider/zcode-builtin.json** | R2 + 本批原语双重保证 |
+| 构建期版本/环境（`build-metadata.mjs`、`prepare-prebuilds.mjs`、`build-zcode.mjs`） | **CI 注入（发布注入集）或 .env 文件** | 本批：本地构建不信任同名 shell 注入 |
+| dev 隔离目录族（`ZCODE_DESKTOP_*`、`ZCODE_DATA_BASE_DIR`） | **dev 启动器显式注入**（dev-desktop-env.mjs 白名单开启） | 打包态剔除 |
+| 构建期开关/镜像（`ZCODE_TARGET_*`、`ZCODE_SKIP_*`、`ZCODE_*_MIRROR`、`ZCODE_DEPS_BASE_URL`） | **构建脚本显式传参**（dev 通道集） | 始终可信 |
+| server 侧（`entry-http.ts` 的 host/port/token/static-root、`zcode-server-cli` 的 builtin 路径） | **启动方显式配置**（CLI 参数/环境由 server 进程自身 owner 决定） | 打包态启动的 desktop 不经此面 |
+| 测试侧 | **测试自身写入或注入对象** | 盘点确认：无一处依赖「宿主环境恰好存在某 ZCODE_*」 |
+
+**关键结论**：剥离发生在**环境层**而非逐点改代码——所有消费点在剥离后自动获得
+「白名单外的注入值不可见」保证；写侧（main/host 显式构造）不受影响。这正是
+deny-by-default 相对「点名式防护」的结构性优势。
+
 ## 已知问题（盘点中发现的既有缺陷，本批不修，登记）
 
 - **F1**：`ZCODIUM_REMOTE_ASSET_CDN_BASE_URL` 是死注入——release.yml 注入它，但两处消费点
