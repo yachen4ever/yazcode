@@ -110,11 +110,19 @@ describe("builtin provider 配置打包事实源", () => {
       ZCODE_DIST_BASE_URL: "https://attacker.example/releases/",
     } as Record<string, string>;
     // 非 CI（本地构建）：发布注入集不被信任——宿主可能注入同名旧版本号。
-    const local = stripHostInjectedBuiltinProviderEnv(injected);
-    assert.deepEqual(Object.keys(local).sort(), []);
-    // CI（发布链）：release.yml 合法注入的变量保留。
-    const ci = stripHostInjectedBuiltinProviderEnv(injected, { allowPublishInjection: true });
-    assert.deepEqual(Object.keys(ci).sort(), ["ZCODE_APP_VERSION", "ZCODE_DIST_BASE_URL"]);
+    // 包装默认值依赖 process.env.CI 判定语境；测试自身须钉死「非 CI」，
+    // 否则在 CI runner 上跑本用例时默认翻转、断言失去语境（2026-11-06 CI 实证）。
+    const savedCi = process.env.CI;
+    delete process.env.CI;
+    try {
+      const local = stripHostInjectedBuiltinProviderEnv(injected);
+      assert.deepEqual(Object.keys(local).sort(), []);
+      // CI（发布链）：release.yml 合法注入的变量保留。
+      const ci = stripHostInjectedBuiltinProviderEnv(injected, { allowPublishInjection: true });
+      assert.deepEqual(Object.keys(ci).sort(), ["ZCODE_APP_VERSION", "ZCODE_DIST_BASE_URL"]);
+    } finally {
+      if (savedCi !== undefined) process.env.CI = savedCi;
+    }
   });
 
   it("宿主注入不兼容 fixture 时，extraResources 事实源仍锁定仓库文件（清洗生效）", async () => {

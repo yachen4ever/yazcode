@@ -1809,7 +1809,7 @@
     "packages/rpc/src/serialization.ts": "e949418e1cd17cc863c147fc8d1ff15237e1b5f0cb8e3344fd2a9ccfae9d54e7",
     "packages/server/package.json": "0a6119239c88af79bc766e3c023eb4437105a0d35b03ecca1137d1e688e60a90",
     "packages/services/package.json": "452bea73bbd80ddb88830291972b7375b4312bf6c515665a03c795a4b5a29b90",
-    "packages/shared/package.json": "9249143ec591dbb88a50999260479f3ca734a3a5cce5985f6011d090c9702b82",
+    "packages/shared/package.json": "ba3339684a06d66d18cc60bc7f4db46ec80ed4ce698f6ac8ca8570081dc36c17",
     "packages/shared/src/zcode-protocol-v4/wire-codec.ts": "ac2494a3acc795c809c94ee9393f50271a9c2a0fd33813459e5ab93842ceef75",
     "packages/ui/package.json": "b1f18f5b8d1a59b157d1a1e6a5080f4cafc35247152c34e40f8e3312c1b2cc21",
     "packages/ui/src/components/ai-elements/agent.tsx": "830e7ea9e927de1524851337f1d35bda0e5690e3e4fa307fff854b60006b16c7",
