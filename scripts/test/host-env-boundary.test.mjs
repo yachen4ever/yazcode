@@ -43,10 +43,19 @@ test("污染 env 的注入变量不影响构建环境判定（ZCODE_ENV 翻转�
   const { loadBuiltinProviderConfig } = await import("../builtin-provider-config.mjs");
   // 宿主注入 ZCODE_ENV=production：非 CI 语境下不可信（会被当作发布环境翻转）。
   // 构建期判定只认 CI 注入或 .env 文件，宿主注入的 shell 值不参与。
-  const polluted = await loadBuiltinProviderConfig({ env: { ...HOST_INJECTED } });
-  const clean = await loadBuiltinProviderConfig({ env: { PATH: "/usr/bin" } });
-  assert.equal(polluted.environment, clean.environment);
-  assert.notEqual(polluted.environment, "production", "宿主注入的 ZCODE_ENV 不得翻转构建环境");
+  // 用例钉死非 CI 语境：包装默认值按 process.env.CI 翻转发布注入信任，而
+  // ZCODE_ENV 恰在发布注入白名单——CI runner 上跑本用例时若不 stub，宿主注入
+  // 语义会被合法化、断言失去语境（2026-11-06 CI 实证）。
+  const savedCi = process.env.CI;
+  delete process.env.CI;
+  try {
+    const polluted = await loadBuiltinProviderConfig({ env: { ...HOST_INJECTED } });
+    const clean = await loadBuiltinProviderConfig({ env: { PATH: "/usr/bin" } });
+    assert.equal(polluted.environment, clean.environment);
+    assert.notEqual(polluted.environment, "production", "宿主注入的 ZCODE_ENV 不得翻转构建环境");
+  } finally {
+    if (savedCi !== undefined) process.env.CI = savedCi;
+  }
 });
 
 test("scripts 侧原语就地剥离：污染键消失、非污染键保留", () => {
