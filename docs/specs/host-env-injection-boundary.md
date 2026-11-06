@@ -211,8 +211,10 @@ YAZCODE_REMOTE_ASSET_CDN_BASE_URL
 
 ### 3. 运行时早期剥离
 
-- 桌面 main **打包态最早可用点**（`app.whenReady` 前）一次性剔除非白名单注入变量：
-  后续全部 spawn/消费继承已洗涤环境。
+- 桌面 main **打包态最早可用点**（`index.ts` 首部 import，早于任何 spawn/消费——
+  ESM import 求值顺序保证它先于其它副作用执行）一次性剔除非白名单注入变量：
+  后续全部 spawn/消费继承已洗涤环境。打包态才剥离（dev 态的显式调试配置由 dev
+  启动器自行处理，且 dev 启动器是唯一可显式开启「仅 dev 可信族」的可信上下文）。
 - R2 的 initMessage 传递链已覆盖 agent 子进程；本批确认**无旁路 spawn 点**：所有
   `env: {...process.env}` 的 spawn 点（归类二 R7）在 main 早期剥离后自动获得已洗涤环境。
 - 运行时消费点若确需某注入变量，必须走「白名单 + 本 spec 登记」，不允许裸读
