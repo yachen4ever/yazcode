@@ -31,7 +31,7 @@ if (requestedEnv === "test" && !legacyDataBaseDirSet) {
 // 漏掉改名后的新名（YAZCODE_BUILTIN_PROVIDER_*）与 ZCODIUM_ legacy 名。dev 启动
 // 脚本是三者中防护最弱的一处，现统一到原语。dev 通道集（数据目录/桌面隔离/
 // E2E 等）保留——它们是开发者显式配置，不是宿主注入。
-stripHostInjectedEnvInPlace(process.env);
+stripHostInjectedEnvInPlace(process.env, { allowDevRuntimeKeys: true });
 console.log(
   `[dev] ZCODE_ENV=${requestedEnv} 数据目录: ${
     process.env.ZCODE_DATA_BASE_DIR?.trim() || "(未注入 — 将使用真实 HOME，dogfood 模式)"

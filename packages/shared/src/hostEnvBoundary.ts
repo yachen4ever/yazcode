@@ -33,19 +33,13 @@ export const PUBLISH_INJECTION_ENV_ALLOWLIST = [
  */
 export const DEV_CHANNEL_ENV_ALLOWLIST = [
   // 环境身份与数据根隔离
-  "ZCODE_ENV",
   "ZCODE_DATA_BASE_DIR",
   "YAZCODE_DATA_BASE_DIR",
   "ZCODIUM_DATA_BASE_DIR",
   "ZCODE_STORAGE_DIR",
   "YAZCODE_STORAGE_DIR",
   "ZCODIUM_STORAGE_DIR",
-  // 桌面应用身份与隔离目录
-  "ZCODE_DESKTOP_APPLICATION_NAME",
-  "ZCODE_DESKTOP_HOME_DIR",
-  "ZCODE_DESKTOP_USER_DATA_DIR",
-  "ZCODE_DESKTOP_SESSION_DATA_DIR",
-  "ZCODE_DESKTOP_USE_ELECTRON_DEFAULT_USER_DATA",
+  // 构建期键（打包态无害——构建期不读它们）
   "ZCODE_DESKTOP_DIST_DIR",
   "ZCODE_DESKTOP_AGENT_BYTECODE",
   "ZCODE_DESKTOP_AGENT_BUILD_MODE",
@@ -74,8 +68,28 @@ export const DEV_CHANNEL_ENV_ALLOWLIST = [
   "ZCODE_E2E_KEEP_BUILD_CACHE",
   "ZCODE_E2E_ASK_USER_QUESTION_CLOCK_SCALE",
   "ZCODE_E2E_FS_FAULTS",
+] as const;
+
+/**
+ * 仅 dev 态可信的运行时键（桌面数据隔离目录族）。
+ *
+ * dev 态必须存活——e2e 与并行 dev 实例靠它们隔离数据目录与应用身份；打包态必须
+ * 剔除——宿主可借此顶替用户数据落盘位置、Electron 单实例锁身份与工作区根
+ * （总账 R2 组）。故与「构建期无害」的 dev 通道键分开管理。
+ */
+export const DEV_RUNTIME_ONLY_ENV_ALLOWLIST = [
+  "ZCODE_DESKTOP_APPLICATION_NAME",
+  "ZCODE_DESKTOP_HOME_DIR",
+  "ZCODE_DESKTOP_USER_DATA_DIR",
+  "ZCODE_DESKTOP_SESSION_DATA_DIR",
+  "ZCODE_DESKTOP_USE_ELECTRON_DEFAULT_USER_DATA",
+  // E2E 故障注入门控（打包态剔除——宿主注入即可在生产打开 FS 故障注入，总账 R6）
   "ZCODE_E2E_FS_FAULTS_ALLOW",
-  // 端点与资源源（构建期烤入产物的显式开发者配置）
+  // 环境身份（dev 态合法——启动脚本选 test/production；打包态不可信——宿主注入即
+  // 翻转构建环境与运行模式；CI 发布态由发布注入集提供）
+  "ZCODE_ENV",
+  // 端点与资源源（打包态剔除——宿主顶替即改道 API 流量或把攻击者源烤进产物，
+  // 总账 R3/R8 组；dev 态则必须存活以支持指向自建网关/本地 CDN）
   "ZCODE_BASE_URL",
   "YAZCODE_BASE_URL",
   "ZCODE_ENDPOINT_ORIGIN",
@@ -87,6 +101,7 @@ export const DEV_CHANNEL_ENV_ALLOWLIST = [
   "ZCODIUM_REMOTE_ASSET_CDN_BASE_URL",
 ] as const;
 
+const DEV_RUNTIME_ONLY_SET = new Set<string>(DEV_RUNTIME_ONLY_ENV_ALLOWLIST);
 const DEV_CHANNEL_SET = new Set<string>(DEV_CHANNEL_ENV_ALLOWLIST);
 const PUBLISH_INJECTION_SET = new Set<string>(PUBLISH_INJECTION_ENV_ALLOWLIST);
 
@@ -96,6 +111,13 @@ export interface HostEnvStripOptions {
    * 仅 CI 发布链构建脚本置 true；本地构建保持 false——宿主可能注入同名旧版本号。
    */
   readonly allowPublishInjection?: boolean;
+  /**
+   * 是否信任仅 dev 态可信的运行时键（桌面数据隔离目录族、环境身份、端点与
+   * 资源源、FS 故障注入门控）。
+   * 默认 false（deny-by-default）——只在 dev 启动器（scripts/dev-desktop-env.mjs）
+   * 这一个可信上下文显式开启；构建期与打包态运行时一律剔除。
+   */
+  readonly allowDevRuntimeKeys?: boolean;
   /** 额外信任的键（按需追加，如某个测试专用的显式注入）。 */
   readonly extraAllowlist?: readonly string[];
 }
@@ -103,6 +125,12 @@ export interface HostEnvStripOptions {
 /** 某次剥离的白名单集合。 */
 export function resolveHostEnvAllowlist(options?: HostEnvStripOptions): ReadonlySet<string> {
   const allowlist = new Set<string>(DEV_CHANNEL_SET);
+  // dev-runtime-only 族默认不信任（deny-by-default）：它们只在 dev 启动器这一处
+  // 是可信的开发者配置；其余上下文（构建期、打包态运行时）都由宿主注入面覆盖，
+  // 放行即改写构建环境 / 用户数据落盘位置。
+  if (options?.allowDevRuntimeKeys === true) {
+    for (const key of DEV_RUNTIME_ONLY_SET) allowlist.add(key);
+  }
   if (options?.allowPublishInjection) {
     for (const key of PUBLISH_INJECTION_SET) allowlist.add(key);
   }

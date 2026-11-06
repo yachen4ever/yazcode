@@ -1,5 +1,8 @@
 import { installOfficialPlatformNetworkPolicy } from "./desktopOfficialPlatformPolicy.js";
 /* eslint-disable max-lines */
+// 宿主注入面剥离必须是 main 最早的副作用之一：任何 spawn/读取 process.env 之前
+// 先剥（spec：docs/specs/host-env-injection-boundary.md 契约 3）。
+import "./desktopEarlyHostEnvBootstrap.js";
 import "./desktopEarlyDataBaseDirBootstrap.js";
 import "./desktopEarlyChromiumHardwareAccelerationBootstrap.js";
 import { powerSaveBlocker } from "electron";
