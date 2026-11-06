@@ -98,3 +98,23 @@ test("builtin provider 配置的构建期 decode 校验对宿主副本同样生�
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test("构建链 spawn 点继承已洗涤环境（无旁路：整包 process.env 传递点在剥离之后）", () => {
+  // 契约 3「无旁路 spawn 点」的机械化断言：构建脚本把整包 process.env 传给子进程
+  // （prepare-runtime-assets / prepare-agent-node-bundle / bundle.mjs），只要剥离在
+  // 打包进程顶层先执行，子进程继承的就是已洗涤环境。此处验证原语对整包传递语义
+  // 成立——剥离后的 env 不含任何白名单外的前缀键。
+  const env = { ...HOST_INJECTED };
+  stripHostInjectedEnvInPlace(env, {
+    allowPublishInjection: false,
+    allowDevRuntimeKeys: false,
+  });
+  const forwarded = { ...env };
+  for (const key of Object.keys(forwarded)) {
+    assert.equal(
+      /^(ZCODE_|YAZCODE_|ZCODIUM_)/.test(key),
+      false,
+      `传递给子进程的 env 不得含污染前缀键: ${key}`,
+    );
+  }
+});

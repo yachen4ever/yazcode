@@ -45,6 +45,9 @@ export function stripHostInjectedEnvInPlace(env = process.env, options = {}) {
   if (!boundary) return;
   boundary.stripHostInjectedEnvInPlace(env, {
     allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    ...(options.allowDevRuntimeKeys === undefined
+      ? {}
+      : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
     ...(options.extraAllowlist ? { extraAllowlist: options.extraAllowlist } : {}),
   });
 }
@@ -58,6 +61,9 @@ export function stripHostInjectedEnv(env, options = {}) {
   if (!boundary) return { ...env };
   return boundary.stripHostInjectedEnv(env, {
     allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    ...(options.allowDevRuntimeKeys === undefined
+      ? {}
+      : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
     ...(options.extraAllowlist ? { extraAllowlist: options.extraAllowlist } : {}),
   });
 }

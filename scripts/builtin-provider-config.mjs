@@ -23,6 +23,9 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
 export function stripHostInjectedBuiltinProviderEnv(env = process.env, options = {}) {
   return stripHostInjectedEnv(env, {
     allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    ...(options.allowDevRuntimeKeys === undefined
+      ? {}
+      : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
   });
 }
 

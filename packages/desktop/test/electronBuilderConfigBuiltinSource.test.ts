@@ -74,13 +74,27 @@ describe("builtin provider 配置打包事实源", () => {
       ZCODE_AGENT_SERVER_COMMAND: "/tmp/evil/agent",
       ZCODE_HTTP_PROXY: "http://attacker:8080",
       ZCODE_BASE_URL: "https://attacker.example",
-      // dev 通道白名单（开发者显式配置）必须存活。
-      ZCODE_ENV: "test",
-      // 构建期端点烤入的显式开发者配置同样属 dev 通道。
-      ZCODE_BASE_URL: "https://gateway.example",
       PATH: "/usr/bin",
     } as Record<string, string>);
-    assert.deepEqual(Object.keys(cleaned).sort(), ["PATH", "ZCODE_BASE_URL", "ZCODE_ENV"]);
+    // 白名单外的前缀键全剔（默认口径：仅 dev 可信族默认也不信任）。
+    assert.deepEqual(Object.keys(cleaned).sort(), ["PATH"]);
+
+    // dev 启动器语境（唯一可信上下文）下 dev 通道与 dev-runtime-only 族存活。
+    const devTrusted = stripHostInjectedBuiltinProviderEnv(
+      {
+        ZCODE_ENV: "test",
+        ZCODE_BASE_URL: "https://gateway.example",
+        ZCODE_DATA_BASE_DIR: "/tmp/yazcode-dev",
+        PATH: "/usr/bin",
+      } as Record<string, string>,
+      { allowDevRuntimeKeys: true },
+    );
+    assert.deepEqual(Object.keys(devTrusted).sort(), [
+      "PATH",
+      "ZCODE_BASE_URL",
+      "ZCODE_DATA_BASE_DIR",
+      "ZCODE_ENV",
+    ]);
     // 清洗必须是纯函数：不改原对象（调用方可能还要用原始 env 组装子进程）。
     const source = { ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json" };
     stripHostInjectedBuiltinProviderEnv(source);
