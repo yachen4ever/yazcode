@@ -85,6 +85,7 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 | --- | --- |
 | `docs/specs/p0-user-facing-naming.md` | P0 用户可见命名统一（zcode → yazcode） |
 | `docs/specs/p1a-external-env-renames.md` | 对外环境变量改名 `ZCODE_` → `YAZCODE_`（旧名兼容一版） |
+| `docs/specs/host-env-injection-boundary.md` | 宿主环境注入面边界：注入面总账 + deny-by-default 统一原语 + 运行时早期剥离 + 门禁固化 |
 | `docs/specs/zcodium-data-root.md` | 数据根目录更名 `.zcode` → `.yazcode` 与一次性迁移 |
 | `docs/specs/flatten-provider-zones.md` | 移除智谱套餐体系，Provider 拉平为普通预设 |
 | `docs/specs/memory-provider-selection.md` | 记忆提供方三态（disable / local / openviking）与无回落语义 |
