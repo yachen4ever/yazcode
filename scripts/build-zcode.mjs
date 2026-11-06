@@ -11,19 +11,15 @@ import {
   stageTuiRuntime,
 } from "./zcode-distribution/assets.mjs";
 import { installScriptSource } from "./zcode-distribution/installer.mjs";
+import { stripHostInjectedEnvInPlace } from "./host-env-boundary.mjs";
 
-// 前缀级环境洗涤（P2 任务书主题二）：宿主 ZCode 注入的 ZCODE_* 变量随继承环境
-// 污染分发构建（三类已发事故：staged 配置 schema 拒绝、版本烤入宿主版本号、构建
-// 环境翻转）。必须在本模块读取 ZCODE_DIST_BASE_URL 之前执行——loadEndpointEnv 以
-// process.env 覆盖 .env 解析值，先洗后读时开发者的 .env / --base-url 显式传参仍存活。
-// CI 豁免：GitHub Actions 注入 CI=true，release.yml 合法注入的
-// ZCODE_APP_VERSION / ZCODE_ENV 保留；后续 spawnSync 的子构建继承已洗涤的环境。
-if (!process.env.CI) {
-  for (const key of Object.keys(process.env)) {
-    if (key.startsWith("ZCODE_")) delete process.env[key];
-  }
-}
-
+// 宿主注入面剥离（deny-by-default，spec：docs/specs/host-env-injection-boundary.md）：
+// 宿主 ZCode 注入的 ZCODE_/YAZCODE_/ZCODIUM_ 变量随继承环境污染分发构建（三类已发
+// 事故：staged 配置 schema 拒绝、版本烤入宿主版本号、构建环境翻转）。必须在本模块读取
+// ZCODE_DIST_BASE_URL 之前执行——loadEndpointEnv 以 process.env 覆盖 .env 解析值，
+// 先洗后读时开发者的 .env / --base-url 显式传参仍存活（白名单保留发布注入集与 dev
+// 通道集）。CI 不再豁免：release.yml 合法注入的四个变量本身在白名单内。
+stripHostInjectedEnvInPlace(process.env);
 const root = resolve(import.meta.dirname, "..");
 const defaultOutDir = resolve(root, "dist", "zcode");
 const defaultBaseUrl = (await loadEndpointEnv()).ZCODE_DIST_BASE_URL?.trim() || "";
