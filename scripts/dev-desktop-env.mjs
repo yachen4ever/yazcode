@@ -5,6 +5,7 @@ import { homedir } from "node:os";
 
 import { withPinnedNodePath } from "./mise-toolchain-env.mjs";
 import { quoteArgsForWindowsShell } from "./spawn-command.mjs";
+import { stripHostInjectedEnvInPlace } from "./host-env-boundary.mjs";
 
 const requestedEnv = process.argv[2]?.trim().toLowerCase();
 const agentBytecode = process.argv.slice(3).includes("--agent-bytecode");
@@ -25,9 +26,12 @@ if (requestedEnv === "test" && !legacyDataBaseDirSet) {
   process.env.YAZCODE_DATA_BASE_DIR = DEFAULT_ISOLATED_DATA_BASE_DIR;
   process.env.ZCODE_DATA_BASE_DIR = DEFAULT_ISOLATED_DATA_BASE_DIR;
 }
-// 同上：剔除宿主 CLI 泄漏的 builtin 配置路径，Host env 解析不得命中宿主运行时副本。
-delete process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE;
-delete process.env.ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE;
+// 宿主注入面剥离（deny-by-default，spec：docs/specs/host-env-injection-boundary.md）：
+// 剔除宿主 CLI 泄漏的 builtin 配置路径等注入变量——原实现只点名删两个旧名键，
+// 漏掉改名后的新名（YAZCODE_BUILTIN_PROVIDER_*）与 ZCODIUM_ legacy 名。dev 启动
+// 脚本是三者中防护最弱的一处，现统一到原语。dev 通道集（数据目录/桌面隔离/
+// E2E 等）保留——它们是开发者显式配置，不是宿主注入。
+stripHostInjectedEnvInPlace(process.env, { allowDevRuntimeKeys: true });
 console.log(
   `[dev] ZCODE_ENV=${requestedEnv} 数据目录: ${
     process.env.ZCODE_DATA_BASE_DIR?.trim() || "(未注入 — 将使用真实 HOME，dogfood 模式)"

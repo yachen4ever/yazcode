@@ -57,7 +57,9 @@ describe("builtin provider 配置打包事实源", () => {
     injectedEnvKeys.length = 0;
   });
 
-  it("stripHostInjectedBuiltinProviderEnv 剔除新旧前缀宿主注入变量，保留合法构建变量", async () => {
+  it("统一原语（deny-by-default）剔除宿主注入变量，保留 dev 通道与合法构建变量", async () => {
+    // R2 语义升级为统一原语（spec：docs/specs/host-env-injection-boundary.md）：
+    // 三前缀（ZCODE_/YAZCODE_/ZCODIUM_）全剔，白名单例外。
     const { stripHostInjectedBuiltinProviderEnv } = await import(
       "../../../scripts/builtin-provider-config.mjs"
     );
@@ -66,16 +68,53 @@ describe("builtin provider 配置打包事实源", () => {
       YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json",
       ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE: "/tmp/host/bundled.json",
       YAZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE: "/tmp/host/bundled.json",
-      // release.yml 合法注入的变量必须保留，不得被前缀清洗误伤。
-      ZCODE_APP_VERSION: "26.5.2",
-      ZCODE_ENV: "test",
+      // 官方 legacy 前缀同样在注入面内。
+      ZCODIUM_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json",
+      // 历轮出过事的其它注入形态（总账 R1/R3/R5 组）。
+      ZCODE_AGENT_SERVER_COMMAND: "/tmp/evil/agent",
+      ZCODE_HTTP_PROXY: "http://attacker:8080",
+      ZCODE_BASE_URL: "https://attacker.example",
       PATH: "/usr/bin",
     } as Record<string, string>);
-    assert.deepEqual(Object.keys(cleaned).sort(), ["PATH", "ZCODE_APP_VERSION", "ZCODE_ENV"]);
+    // 白名单外的前缀键全剔（默认口径：仅 dev 可信族默认也不信任）。
+    assert.deepEqual(Object.keys(cleaned).sort(), ["PATH"]);
+
+    // dev 启动器语境（唯一可信上下文）下 dev 通道与 dev-runtime-only 族存活。
+    const devTrusted = stripHostInjectedBuiltinProviderEnv(
+      {
+        ZCODE_ENV: "test",
+        ZCODE_BASE_URL: "https://gateway.example",
+        ZCODE_DATA_BASE_DIR: "/tmp/yazcode-dev",
+        PATH: "/usr/bin",
+      } as Record<string, string>,
+      { allowDevRuntimeKeys: true },
+    );
+    assert.deepEqual(Object.keys(devTrusted).sort(), [
+      "PATH",
+      "ZCODE_BASE_URL",
+      "ZCODE_DATA_BASE_DIR",
+      "ZCODE_ENV",
+    ]);
     // 清洗必须是纯函数：不改原对象（调用方可能还要用原始 env 组装子进程）。
     const source = { ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json" };
     stripHostInjectedBuiltinProviderEnv(source);
     assert.equal(source.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE, "/tmp/host/active.json");
+  });
+
+  it("发布注入集仅在 CI 语境可信：本地构建不信任同名注入（版本烤入事故防线）", async () => {
+    const { stripHostInjectedBuiltinProviderEnv } = await import(
+      "../../../scripts/builtin-provider-config.mjs"
+    );
+    const injected = {
+      ZCODE_APP_VERSION: "3.17.2",
+      ZCODE_DIST_BASE_URL: "https://attacker.example/releases/",
+    } as Record<string, string>;
+    // 非 CI（本地构建）：发布注入集不被信任——宿主可能注入同名旧版本号。
+    const local = stripHostInjectedBuiltinProviderEnv(injected);
+    assert.deepEqual(Object.keys(local).sort(), []);
+    // CI（发布链）：release.yml 合法注入的变量保留。
+    const ci = stripHostInjectedBuiltinProviderEnv(injected, { allowPublishInjection: true });
+    assert.deepEqual(Object.keys(ci).sort(), ["ZCODE_APP_VERSION", "ZCODE_DIST_BASE_URL"]);
   });
 
   it("宿主注入不兼容 fixture 时，extraResources 事实源仍锁定仓库文件（清洗生效）", async () => {

@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { stripHostInjectedEnvInPlace } from "../../../scripts/host-env-boundary.mjs";
 
 const require = createRequire(import.meta.url);
 const moduleDir = import.meta.dirname;
@@ -80,19 +81,17 @@ function resolveCommitId() {
 }
 
 export function collectBuildMetadata() {
-  // 前缀级环境洗涤（P2 任务书主题二）：宿主 ZCode 注入的 ZCODE_* 变量随继承环境
-  // 污染构建，ZCODE_APP_VERSION 已发「版本元数据烤入宿主版本号」事故——本地构建
-  // 必须回退 package.json 版本；ZCODE_COMMIT 同前缀一并洗涤（宿主注入的 commit
-  // 同样不可信）。CI 豁免：GitHub Actions 注入 CI=true，release.yml 合法注入的
-  // ZCODE_APP_VERSION 必须保留。常规桌面构建管线中本脚本以 prepare:build-meta
-  // 独立进程先于 tsup/vite/electron-builder 执行，此处的 process.env 洗涤不波及
-  // 后续构建进程；若 build-meta.json 缺席而由 vite/tsup 配置内联触发 collect，
-  // 洗涤同样让宿主注入值不进构建，方向一致。
-  if (!process.env.CI) {
-    for (const key of Object.keys(process.env)) {
-      if (key.startsWith("ZCODE_")) delete process.env[key];
-    }
-  }
+  // 宿主注入面剥离（deny-by-default，spec：docs/specs/host-env-injection-boundary.md）：
+  // 宿主 ZCode 注入的 ZCODE_/YAZCODE_/ZCODIUM_ 变量随继承环境污染构建，
+  // ZCODE_APP_VERSION 已发「版本元数据烤入宿主版本号」事故——本地构建必须回退
+  // package.json 版本；ZCODE_COMMIT 同前缀一并剥离（宿主注入的 commit 同样不可信）。
+  // CI 发布链的白名单（release.yml 注入的 ZCODE_APP_VERSION 等）由原语按
+  // allowPublishInjection 保留——不再靠「CI 下整体不洗」这种粗粒度豁免。
+  // 常规桌面构建管线中本脚本以 prepare:build-meta 独立进程先于
+  // tsup/vite/electron-builder 执行，此处的剥离不波及后续构建进程；若
+  // build-meta.json 缺席而由 vite/tsup 配置内联触发 collect，剥离同样让宿主注入值
+  // 不进构建，方向一致。
+  stripHostInjectedEnvInPlace(process.env);
   const rootPackageJson = readJson(resolve(workspaceDir, "package.json"));
   const desktopPackageJson = readJson(resolve(desktopDir, "package.json"));
 

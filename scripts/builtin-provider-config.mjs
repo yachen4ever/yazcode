@@ -4,36 +4,29 @@ import { resolve } from "node:path";
 import { parseEnv } from "node:util";
 import { pathToFileURL } from "node:url";
 import { tsImport } from "tsx/esm/api";
+import { isPublishInjectionTrusted, stripHostInjectedEnv } from "./host-env-boundary.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "..");
 
 /**
- * 剔除宿主 CLI 注入的 builtin 配置源环境变量（新旧前缀全量点名）。
+ * 剔除宿主注入的 builtin 配置源环境变量。
  *
- * 在 ZCode 宿主会话内构建时，宿主运行时会向子进程注入
- * ZCODE_BUILTIN_PROVIDER_CONFIG_FILE / YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE（及
- * _BUNDLED_CONFIG_FILE 变体）指向宿主 runtime 数据副本，其 schema 可能比仓库解析器
- * 新。构建链若直接继承该环境，staging / extraResources 会静默改用宿主副本，打出
- * 「宿主 schema 内容 + 仓库旧解析器」的包，运行时解码 ZodError，表现为
- * 「Bundled 与 Active ZCode Built-in Release 均不可用」（mint 双盲 F1，
- * spec 见 docs/specs/builtin-provider-config-packaging.md）。
- *
- * 与 scripts/build-desktop-agent-cli.mjs 的前缀口径一致：点名
- * ZCODE_BUILTIN_PROVIDER / YAZCODE_BUILTIN_PROVIDER 前缀（开放集合整体剔除，不做
- * 点名单删补丁），不触碰 release.yml 合法注入的 ZCODE_APP_VERSION / ZCODE_ENV。
- * 开发者经 .env 文件的显式覆盖走 loadEndpointEnv 合并，不受本函数影响。
+ * 历史：R1 曾以「点名 ZCODE_BUILTIN_PROVIDER / YAZCODE_BUILTIN_PROVIDER 前缀」实现
+ * （开放集合上的补丁），R2 收敛到统一原语——本函数保留为薄包装以兼容既有调用方，
+ * 语义事实源在 packages/shared/src/hostEnvBoundary.ts（deny-by-default 全前缀
+ * 剥离 + 白名单，spec：docs/specs/host-env-injection-boundary.md）。
  *
  * @param {Record<string, string | undefined>} env 待清洗的环境（默认 process.env 的浅拷贝）
+ * @param {{allowPublishInjection?: boolean}} [options] 发布注入集是否可信（CI 发布链）
  * @returns {Record<string, string | undefined>} 剔除宿主注入变量后的新对象，不改原对象
  */
-export function stripHostInjectedBuiltinProviderEnv(env = process.env) {
-  const cleaned = { ...env };
-  for (const key of Object.keys(cleaned)) {
-    if (key.startsWith("ZCODE_BUILTIN_PROVIDER") || key.startsWith("YAZCODE_BUILTIN_PROVIDER")) {
-      delete cleaned[key];
-    }
-  }
-  return cleaned;
+export function stripHostInjectedBuiltinProviderEnv(env = process.env, options = {}) {
+  return stripHostInjectedEnv(env, {
+    allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    ...(options.allowDevRuntimeKeys === undefined
+      ? {}
+      : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
+  });
 }
 
 /** @param {{root?: string, env?: Record<string, string | undefined>}} options */
@@ -70,13 +63,13 @@ export async function resolveBuiltinProviderBuildEnvironment({
 
 /** @param {{root?: string, env?: Record<string, string | undefined>}} options */
 export async function loadBuiltinProviderConfig({ root = repositoryRoot, env = process.env } = {}) {
-  // 宿主注入单点防御（R2 修复，spec：docs/specs/builtin-provider-config-packaging.md）：
+  // 宿主注入面剥离（deny-by-default，spec：docs/specs/host-env-injection-boundary.md）：
   // y430p 本机实证——zcode 宿主会话内构建时 prepare-prebuilds/SEA 等链路经本函数
   // 直吃 process.env 的 ZCODE_BUILTIN_PROVIDER_CONFIG_FILE（GLM runtime 副本），
   // 构建即炸 Invalid Built-in Provider config。剔除在事实源读取前统一执行，
   // 覆盖所有消费链，不再依赖各链自行清洗；.env 显式覆盖（loadEndpointEnv 合并）
   // 不受影响。对显式传入的 env 同样幂等生效。
-  env = stripHostInjectedBuiltinProviderEnv(env);
+  env = stripHostInjectedEnv(env, { allowPublishInjection: isPublishInjectionTrusted() });
   env = await loadEndpointEnv({ root, env });
   const environment = await resolveBuiltinProviderBuildEnvironment({ root, env });
   const sourcePath = resolve(
