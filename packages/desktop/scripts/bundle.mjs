@@ -5,6 +5,7 @@
 // 先保留集中实现，后续再按“参数解析/构建执行/产物校验”拆分模块。
 
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readdirSync, statSync } from "node:fs";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -651,6 +652,20 @@ function verifyPackagedRuntimeDependencies(os, arch) {
     throw new Error(`打包产物内 builtin Provider 配置不是合法 JSON: ${builtinConfigPath}`, {
       cause: error,
     });
+  }
+
+  // glm bundle 内嵌副本与主进程副本必须同源（spec：docs/specs/builtin-provider-config-packaging.md
+  // 契约 3「包内副本全量校验」）：任何一份漂移（宿主注入/旧缓存）都会让对应运行时
+  // 面解码失败。这里做 sha256 一致性断言——仓库事实源即构建期已 decode 校验的内容。
+  const glmConfigPath = resolve(resourcesRoot, "glm", "provider", "zcode-builtin.json");
+  if (!existsSync(glmConfigPath)) {
+    throw new Error(`打包产物缺少 glm bundle 内嵌 builtin Provider 配置: ${glmConfigPath}`);
+  }
+  if (createHash("sha256").update(readFileSync(glmConfigPath)).digest("hex") !==
+      createHash("sha256").update(readFileSync(builtinConfigPath)).digest("hex")) {
+    throw new Error(
+      `打包产物内 glm 副本与主进程副本不一致（非同一仓库事实源）: ${glmConfigPath}`,
+    );
   }
 
   // pnpm hoisted 依赖布局下，electron-builder 可能把运行时代码本体装进 app.asar，

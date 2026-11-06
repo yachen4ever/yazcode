@@ -65,19 +65,30 @@ for (const [network, prefix] of [
 }
 
 /**
- * 198.18.0.0/15（RFC 2544 基准保留段）单独拆出、不参与硬拒（mint 双盲 F2，
+ * 198.18.0.0/15（RFC 2544 基准保留段）单独拆出（R1 b394a80f 引入，R2 重设计其语义，
  * spec 见 docs/specs/iab-userscripts.md 实现边界 4b）。
  *
- * mihomo fake-ip 模式把真公网域名的系统 DNS 解析结果映射到该段，逐 DNS 预检的
- * 公网闸门曾把真公网域名误判为非公网，fake-ip 代理环境（TUN 常见配置）下
- * 「从 URL 安装」整体不可用。选型依据：
- * - fake-ip 环境下该段是 TUN 虚拟映射，钉扎连接实际由代理按域名转发到真公网目标；
- * - 非 fake-ip 环境下连接该段会超时失败（download_failed，fail-closed），
- *   不产生内容泄露面；
- * - 回环/私网/链路本地/CGNAT/TEST-NET/组播等硬拒完整保留，SSRF 主防线不削弱。
+ * fake-ip 模式把所有域名的系统 DNS 解析结果映射到该段：R1 的「命中即放行」救活了
+ * 真公网域名，但也把「域名伪装的内网/回环目标」（127-0-0-1.sslip.io 等）放行至
+ * 下载层——fake-ip 下本地解析对公网/内网零区分度。R2 语义：命中该段触发 DoH
+ * 独立解析复核，按真实 IP 执行黑名单判定；复核失败 fail-closed。
  */
 export const proxyTunnelFakeIpAddresses = new BlockList();
 proxyTunnelFakeIpAddresses.addSubnet("198.18.0.0", 15, "ipv4");
+
+/** DoH JSON API 端点（RFC 8484 之外的 Cloudflare/Google 兼容 JSON 形态，443/TLS）。 */
+export const DEFAULT_DOH_ENDPOINT = "https://cloudflare-dns.com/dns-query";
+const DOH_TIMEOUT_MS = 3_000;
+const DNS_TYPE_A = 1;
+const DNS_TYPE_AAAA = 28;
+
+interface DohJsonResponse {
+  Status?: number;
+  Answer?: Array<{ type?: number; data?: string }>;
+}
+
+/** DoH JSON 查询的注入面：给定完整请求 URL，返回解析后的 JSON 体。 */
+export type RemoteDohJsonImpl = (url: string) => Promise<unknown>;
 
 export type RemoteLookupAddress = Awaited<ReturnType<typeof lookup>>;
 
@@ -94,6 +105,8 @@ export interface RemoteFetchGuardOptions {
   fetchImpl?: RemoteFetchImpl;
   /** 测试注入；缺省 dns.promises.lookup。 */
   lookupImpl?: RemoteLookupImpl;
+  /** 测试注入；缺省 DoH JSON API（DEFAULT_DOH_ENDPOINT）。 */
+  dohJsonImpl?: RemoteDohJsonImpl;
 }
 
 export interface RemoteFetchGuardResult {
@@ -111,13 +124,15 @@ export interface RemoteFetchGuardResult {
 /**
  * 解析公网地址：localhost（含子域）直接拒绝；DNS 查询异常归 download_failed；
  * 任一解析结果落在黑名单内即拒绝（some 语义：存在私网解析就整体拒绝，
- * 不给「多 A 记录里挑一个公网」的绕过面）。解析结果落在 fake-ip 段
- * （proxyTunnelFakeIpAddresses）不算命中黑名单——该段是 TUN 代理的虚拟映射，
- * 由钉扎连接交给代理转发；命中黑名单段与 fake-ip 段混合时仍整体拒绝。
+ * 不给「多 A 记录里挑一个公网」的绕过面）。解析结果落入 fake-ip 段
+ * （proxyTunnelFakeIpAddresses）时触发 DoH 独立解析复核——fake-ip 环境下本地
+ * 解析对公网/内网零区分度，按 DoH 真实 IP 执行同一黑名单判定，复核失败
+ * fail-closed（R2 重设计，spec 见 docs/specs/iab-userscripts.md 实现边界 4b）。
  */
 export async function resolvePublicAddresses(
   url: URL,
   lookupImpl: RemoteLookupImpl = lookup,
+  dohJsonImpl: RemoteDohJsonImpl = defaultDohJson,
 ): Promise<RemoteLookupAddress> {
   const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
   if (hostname === "localhost" || hostname.endsWith(".localhost")) {
@@ -137,7 +152,72 @@ export async function resolvePublicAddresses(
   ) {
     throw new RemoteFetchError("remote_address_not_allowed");
   }
+  const hitsFakeIp = addresses.some(({ address, family }) =>
+    proxyTunnelFakeIpAddresses.check(address, family === 6 ? "ipv6" : "ipv4"),
+  );
+  if (hitsFakeIp) {
+    // fake-ip 环境：本地解析无区分度，用独立 DNS 通道拿真实解析结果再判。
+    const verified = await resolveDohAddresses(hostname, dohJsonImpl);
+    if (
+      !verified ||
+      verified.length === 0 ||
+      verified.some(({ address, family }) =>
+        blockedRemoteAddresses.check(address, family === 6 ? "ipv6" : "ipv4"),
+      )
+    ) {
+      throw new RemoteFetchError("remote_address_not_allowed");
+    }
+  }
   return addresses;
+}
+
+/** 缺省 DoH JSON 查询：A/AAAA 并发，3s 超时；任何失败由调用方按 fail-closed 处理。 */
+async function defaultDohJson(url: string): Promise<unknown> {
+  const response = await undiciFetch(url, {
+    headers: { accept: "application/dns-json" },
+    signal: AbortSignal.timeout(DOH_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    throw new Error(`DoH ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
+ * DoH 独立解析：并发查 A + AAAA，只保留 A/AAAA Answer 的 data（CNAME 等中间记录
+ * 忽略）。Status 非 0（NXDOMAIN 等）、无 Answer、网络失败一律返回 null——调用方
+ * 按「无法证明是公网」拒绝，不做 fail-open。
+ */
+async function resolveDohAddresses(
+  hostname: string,
+  dohJsonImpl: RemoteDohJsonImpl,
+): Promise<RemoteLookupAddress[] | null> {
+  const query = (type: number) =>
+    dohJsonImpl(`${DEFAULT_DOH_ENDPOINT}?name=${encodeURIComponent(hostname)}&type=${type}`);
+  let answers: Array<{ type?: number; data?: string }>;
+  try {
+    const [a, aaaa] = await Promise.all([query(DNS_TYPE_A), query(DNS_TYPE_AAAA)]);
+    for (const response of [a, aaaa]) {
+      const status = (response as DohJsonResponse)?.Status;
+      if (typeof status === "number" && status !== 0) return null;
+    }
+    answers = [
+      ...((a as DohJsonResponse)?.Answer ?? []),
+      ...((aaaa as DohJsonResponse)?.Answer ?? []),
+    ];
+  } catch {
+    return null;
+  }
+  const resolved: RemoteLookupAddress[] = [];
+  for (const { type, data } of answers) {
+    if (!data || (type !== DNS_TYPE_A && type !== DNS_TYPE_AAAA)) continue;
+    const family = type === DNS_TYPE_A ? 4 : 6;
+    // Answer.data 必须是可被 BlockList 校验的地址形态；畸形记录按无此记录处理。
+    if (family === 4 && !/^\d{1,3}(?:\.\d{1,3}){3}$/.test(data)) continue;
+    if (family === 6 && !data.includes(":")) continue;
+    resolved.push({ address: data, family });
+  }
+  return resolved;
 }
 
 function assertAllowedProtocol(url: URL, allowedProtocols: readonly string[]): void {
@@ -168,6 +248,7 @@ export async function fetchRemoteWithGuard(
     timeoutMs,
     fetchImpl = undiciFetch,
     lookupImpl = lookup,
+    dohJsonImpl = defaultDohJson,
   } = options;
 
   assertAllowedProtocol(initialUrl, allowedProtocols);
@@ -183,7 +264,7 @@ export async function fetchRemoteWithGuard(
     // 与 desktopSaveFile 原实现同构：初始 + maxRedirects 跳重定向，共 maxRedirects+1 次请求。
     for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
       assertAllowedProtocol(currentUrl, allowedProtocols);
-      const addresses = await resolvePublicAddresses(currentUrl, lookupImpl);
+      const addresses = await resolvePublicAddresses(currentUrl, lookupImpl, dohJsonImpl);
       const pinnedLookup: LookupFunction = (_hostname, lookupOptions, callback) => {
         if (lookupOptions.all) {
           callback(null, addresses);
