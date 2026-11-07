@@ -56,15 +56,19 @@ export function useModelProviders(target: {
   const [refreshing, setRefreshing] = useState(false);
   const latestRefreshTokenRef = useRef(0);
 
-  const refresh = useCallback(async () => {
+  // 刷新结果以布尔返回（26.5.4 增补批 ③a）：内部仍吞错保 logger（后台流不打扰），
+  // 手动刷新入口据此呈现失败 toast；既有调用方忽略返回值不受影响。
+  const refresh = useCallback(async (): Promise<boolean> => {
     const refreshToken = latestRefreshTokenRef.current + 1;
     latestRefreshTokenRef.current = refreshToken;
     setRefreshing(true);
     try {
       const view = await providerSettingsService.refresh("settings-manual");
       commitProviderSettingsView(view);
+      return true;
     } catch (err) {
       logger.error("[useModelProviders] 加载模型供应商失败", err);
+      return false;
     } finally {
       // 用户连续触发刷新时，旧请求可能先返回。
       // 若不做 token 守卫，旧请求 finally 会把 refreshing 提前置 false，导致标题 loading 提示闪灭。

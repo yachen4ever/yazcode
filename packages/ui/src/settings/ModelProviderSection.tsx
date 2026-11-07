@@ -22,6 +22,7 @@ import {
 } from "@zcode/shared";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { Button } from "@/components/ui/button.js";
+import { toast } from "@/components/ui/toast.js";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog.js";
 import { useModelProviders } from "@/hooks/useModelProviders.js";
 import { resolveEntitledAccountProviderAccess } from "@/lib/accountProviderAccess.js";
@@ -1054,12 +1055,19 @@ export function ModelProviderSection({
       presetLoading={presetLoading}
       customLoading={customLoading}
       onRefresh={() => {
+        // 手动刷新失败须可见（26.5.4 增补批 ③a，spec docs/specs/model-provider-section-a11y.md）：
+        // 成功静默（列表变化即反馈），失败 toast；后台流维持 logger 不打扰。
         void refreshModelProviderSection({
           refresh,
           // 手动刷新设置页时也要同时刷新 Z.ai / BigModel Team Plan 快照；
           // 原来只刷新 BigModel，Z.ai Team Plan 购买或订阅变化后会继续显示旧项目。
           refreshTeamPlanProducts: refreshAuthenticatedEnterpriseProducts,
-        });
+        })
+          .then((ok) => {
+            if (!ok) {
+              toast(intl.formatMessage({ id: "settings.modelProvider.refreshFailed" }));
+            }
+          });
         refreshCodingPlanEntitlements();
       }}
       addProviderLabel={intl.formatMessage({ id: "settings.modelProvider.addProviderAction" })}

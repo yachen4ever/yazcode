@@ -55,12 +55,22 @@ export async function refreshModelProviderSection({
   refresh,
   refreshTeamPlanProducts,
 }: {
-  refresh: () => Promise<void>;
+  /** 返回本次 provider list 刷新是否成功（失败已在 hook 内吞错保 logger）。 */
+  refresh: () => Promise<boolean>;
   refreshTeamPlanProducts?: () => Promise<void>;
-}) {
+}): Promise<boolean> {
   // Model Provider 顶部刷新是账号权益刷新入口。
   // Team Plan 连接方式来自企业 pricing/customerInfo，不会被普通 provider list refresh 更新。
-  await Promise.all([refresh(), refreshTeamPlanProducts?.()]);
+  // 聚合成败（26.5.4 增补批 ③a）：任一失败（含拒绝）= false，调用方呈现失败反馈；
+  // 成功保持静默（列表变化即反馈）。teamPlan 缺席 = 仅看 provider refresh。
+  try {
+    const results = await Promise.all([refresh(), refreshTeamPlanProducts?.()]);
+    return results.every((value) => value !== false);
+  } catch {
+    // teamPlan 刷新拒绝（Promise.all 快速失败）：provider list 可能仍已成功，
+    // 但手动刷新入口按「有失败须可见」口径统一呈现失败反馈。
+    return false;
+  }
 }
 
 export async function refreshProviderPanelAfterAuthChange({
@@ -71,7 +81,9 @@ export async function refreshProviderPanelAfterAuthChange({
   refreshPurchaseTokenState,
   refreshPlanSnapshots = true,
 }: {
-  refreshModelProviders: () => Promise<void>;
+  // refresh 返回值放宽为 boolean | void（26.5.4 ③a）：refresh 现在回报成败供手动
+  // 刷新入口呈现失败反馈；后台流（本函数）忽略返回值，语义不变。
+  refreshModelProviders: () => Promise<boolean | void>;
   refreshCodingPlanEntitlements: () => Promise<void>;
   refreshTeamPlanProducts: (options?: { force?: boolean }) => Promise<void>;
   refreshCodingPlanProducts: () => void;

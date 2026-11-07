@@ -3174,6 +3174,8 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.readyStatus": "Ready",
   "settings.modelProvider.enableProvider": "Enable provider",
   "settings.modelProvider.disableProvider": "Disable provider",
+  "settings.modelProvider.providerToggleAria": "Enable switch for {name}",
+  "settings.modelProvider.refreshFailed": "Failed to refresh model providers. Please try again.",
   "settings.modelProvider.renameProvider": "Rename",
   "settings.modelProvider.enableCurrentPlan": "Enable current plan",
   "settings.modelProvider.enableAction": "Enable",

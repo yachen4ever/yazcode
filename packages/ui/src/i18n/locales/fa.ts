@@ -3136,6 +3136,8 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.readyStatus": "آماده",
   "settings.modelProvider.enableProvider": "فعال‌سازی فراهم‌کننده",
   "settings.modelProvider.disableProvider": "غیرفعال‌سازی فراهم‌کننده",
+  "settings.modelProvider.providerToggleAria": "کلید فعال‌سازی {name}",
+  "settings.modelProvider.refreshFailed": "به‌روزرسانی فراهم‌کننده‌های مدل ناموفق بود، بعداً دوباره تلاش کنید",
   "settings.modelProvider.renameProvider": "تغییر نام",
   "settings.modelProvider.enableCurrentPlan": "فعال‌سازی طرح فعلی",
   "settings.modelProvider.enableAction": "فعال‌سازی",
