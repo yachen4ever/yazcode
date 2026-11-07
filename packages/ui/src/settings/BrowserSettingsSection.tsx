@@ -236,7 +236,18 @@ export function BrowserSettingsSection({
             detail={
               pluginError ? (
                 <div className="text-ui-base text-destructive">{pluginError}</div>
-              ) : undefined
+              ) : // 禁用必须可解释（26.5.5 发现 3，spec docs/specs/browser-control-toggle-availability.md）：
+                // loading（清单初始化中）与插件缺失两种禁用原因分别给状态说明；
+                // pluginError 场景维持既有红色错误呈现，不叠加新说明。
+                loading ? (
+                  <div className="text-ui-base text-foreground-subtle">
+                    {intl.formatMessage({ id: "settings.browser.control.loadingHint" })}
+                  </div>
+                ) : !browserUsePlugin ? (
+                  <div className="text-ui-base text-foreground-subtle">
+                    {intl.formatMessage({ id: "settings.browser.control.unavailableHint" })}
+                  </div>
+                ) : undefined
             }
           />
           {/* 导入登录状态是“开启内置浏览器控制”之后的配套动作，与开关同卡片表达先后关系；
