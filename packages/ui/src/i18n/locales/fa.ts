@@ -2473,6 +2473,9 @@ const faIR: Record<string, string> = {
     "افزونه Browser Use را فعال کنید تا نشست‌های جدید بتوانند به صفحات وب در مرورگر داخلی دسترسی داشته باشند و آن‌ها را کنترل کنند.",
   "settings.browser.control.enabledToast": "کنترل مرورگر داخلی فعال شد",
   "settings.browser.control.disabledToast": "کنترل مرورگر داخلی غیرفعال شد",
+  "settings.browser.control.loadingHint": "وضعیت کنترل مرورگر در حال بارگذاری است…",
+  "settings.browser.control.unavailableHint":
+    "افزونه کنترل مرورگر آماده نیست؛ بعداً دوباره تلاش کنید یا برنامه را بازراه‌اندازی کرده و دوباره به این صفحه بیایید",
   "settings.browser.security.section": "امنیت",
   "settings.embeddedBrowserAllowInsecureCertificates": "نادیده گرفتن خطاهای گواهی",
   "settings.embeddedBrowserAllowInsecureCertificatesDescription":
@@ -3140,6 +3143,9 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.providerToggleAria": "کلید فعال‌سازی {name}",
   "settings.modelProvider.modelToggleAria": "کلید فعال‌سازی {name}",
   "settings.modelProvider.refreshFailed": "به‌روزرسانی فراهم‌کننده‌های مدل ناموفق بود، بعداً دوباره تلاش کنید",
+  // 26.5.6 修复项 3 同类清扫：a50897f 引入时 fa 漏定义（zh/en 均有）。
+  "settings.modelProvider.detectModels": "تشخیص مدل‌های در دسترس",
+  "settings.modelProvider.detectModelsEmpty": "هیچ مدلی در دسترس شناسایی نشد",
   "settings.modelProvider.connectivityCheckFailed":
     "اتصال برخی فراهم‌کننده‌ها ناموفق بود؛ پیکربندی نقطه اتصال و شبکه را بررسی کنید",
   "settings.modelProvider.renameProvider": "تغییر نام",

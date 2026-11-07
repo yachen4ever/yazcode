@@ -2352,6 +2352,10 @@ const zhCN: Record<string, string> = {
     "启用 Browser Use 插件，让新会话可以通过内置浏览器访问和操作网页。",
   "settings.browser.control.enabledToast": "已开启内置浏览器控制",
   "settings.browser.control.disabledToast": "已关闭内置浏览器控制",
+  // 26.5.6 修复项 3：26.5.5 分态说明上线时漏提交三语定义，任何 locale 都渲染出原始 key。
+  "settings.browser.control.loadingHint": "浏览器控制状态加载中…",
+  "settings.browser.control.unavailableHint":
+    "浏览器控制插件未就绪，可稍后重试或重启应用后重进本页",
   "settings.browser.security.section": "安全",
   "settings.embeddedBrowserAllowInsecureCertificates": "忽略证书校验",
   "settings.embeddedBrowserAllowInsecureCertificatesDescription":
