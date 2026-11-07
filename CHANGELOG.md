@@ -11,10 +11,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.4 (2026-11-07，未发布——内容随 26.5.5 交付)
-
-> 未发布说明（spec 行为规则 4）：26.5.4 draft 产物经 minttest 五轮双盲验证（S1 修复确认）后，
-> 用户决定跳过 workwin 部署与正式发布，draft 已撤；本节全部内容随 26.5.5 一并交付。
+## 26.5.5 (2026-11-08)
 
 - **S1（严重）用户脚本「服务中」假成功消灭**（minttest 四轮双盲发现）：脚本缺省
   `@run-at document-start` 时 DOM 未就绪，无守卫脚本的 DOM 操作抛 TypeError 被
@@ -32,6 +29,16 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   承接）。修复「@match 带端口 → 解析失败锁死、用户自行推断原因」。
 - **N1 模板注记补强**：@include 不被解析需改写 @match（迁移指引）；document-start 时
   DOM 未就绪需等待（S1 根因进模板，防再犯）。
+- **发现 1（一般）模型设置页「刷新」连通性复核**（26.5.4 五轮双盲发现，修正增补批 3a 的
+  归因）：3a 的聚合本就在顶部按钮——真因是**刷新语义**（refresh 重读本地设置视图、从不
+  产生网络失败，Base URL 不可达刷新依然「成功」，loading 因本地重读过快结束）。修法：
+  手动刷新并发连通探测（enabled∧executable+首个可用模型门控、**10s 超时兜底黑洞**、
+  timer 清理）→ 失败 toast（三语）+ 绿点 `unreachable` 新态（纯内存随下次刷新重置）。
+- **发现 2 模型行开关 aria 稳定化**（3b 漏网面）：模型行开关对齐接入端点模式（aria 固定
+  「{name} 启用开关」+ `aria-checked` 承载状态），两个死 key 三语移除。
+- **发现 3 浏览器控制主开关禁用态分态说明**：根因为 disabled 判定含 loading（「创建首个
+  脚本后自动变开启」系相关性误读）——loading/插件缺失分态文案三语，保持禁用不放开
+  （防陈旧状态操作）。新 spec `docs/specs/browser-control-toggle-availability.md`。
 - **门禁 autocrlf 归一化**：`.gitattributes` catch-all `* text=auto eol=lf`（选型 A，
   存量影响面实证 0——全仓仅 4 文件含 CR 且全在 `-text` 字节保护内）+ 显式二进制兜底；
   Windows autocrlf checkout 的行尾伪影不再进入 fmt:check / licensing 台账等行尾敏感
@@ -40,14 +47,15 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **宿主注入语境判定显式参数化**：`isPublishInjectionTrusted(ciContext)` 显式钉死语境
   （缺省回落 `process.env.CI`，生产调用点行为不变）——两例 CI 语境测试失败的根源修复，
   测试内不再操作环境标志。
-- **模型页 UX 两项**：手动刷新失败可见（聚合成败 toast，成功静默/后台流不打扰）；接入
-  端点开关 aria 稳定化（aria 固定「{name} 启用开关」+ `aria-checked` 承载状态，修正
-  aria 随状态翻转的快照误判）。新 spec `docs/specs/model-provider-section-a11y.md`。
+- **接入端点开关 aria 稳定化**（3b）：aria 固定「{name} 启用开关」+ `aria-checked` 承载
+  状态，修正 aria 随状态翻转的快照误判。新 spec `docs/specs/model-provider-section-a11y.md`。
 - **修复内置远程资源默认源死注入**：release.yml 注入 `ZCODIUM_` 名而消费端读 `YAZCODE_`
   名——注入名对齐消费端（安装版开箱即可连接 WSL/SSH 的自有发布源生效），白名单同步。
 - **仓库与发版架构**：主仓迁内网 Gitea `yaclab/yazcode`（真相源，fork+PR 模型——开发机
   read、leader write、`close #N` 自动闭环），GitHub 降级为发版镜像（发版前 push main+tag
   触发 Actions）；发版顺序 spec 同步。
+- **版本号说明**：26.5.4 号段空缺——draft 构建并经 minttest 五轮双盲（S1 修复确认）后，
+  用户决定跳过部署与发布，draft 撤销，全部内容随本版交付（spec 行为规则 4）。
 
 ## 26.5.3 (2026-11-06)
 
