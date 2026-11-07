@@ -1,4 +1,18 @@
+# 全仓文本文件入库归一 LF、检出恒 LF：Windows autocrlf checkout 的行尾伪影
+# 不再进入 fmt:check / licensing 台账等行尾敏感门禁（26.5.4 增补批 ①，选型论证
+# 见 docs/specs/crlf-gate-normalization.md）。text=auto 对真二进制自动豁免。
+* text=auto eol=lf
+
+# 显式二进制兜底：防 text=auto 的 NUL 启发式误判把二进制当文本归一。
+*.png   binary
+*.icns  binary
+*.ico   binary
+*.zip   binary
+*.gz    binary
+*.woff2 binary
+
 # 保持脚本文件 LF 换行，避免 Windows CRLF 导致 shebang 解析失败
+# （catch-all 已覆盖，显式保留为可读锚点）
 *.mjs text eol=lf
 *.sh  text eol=lf
 

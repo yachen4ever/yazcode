@@ -17,12 +17,13 @@ const repositoryRoot = resolve(import.meta.dirname, "..");
  * 剥离 + 白名单，spec：docs/specs/host-env-injection-boundary.md）。
  *
  * @param {Record<string, string | undefined>} env 待清洗的环境（默认 process.env 的浅拷贝）
- * @param {{allowPublishInjection?: boolean}} [options] 发布注入集是否可信（CI 发布链）
+ * @param {{allowPublishInjection?: boolean, ciContext?: boolean}} [options] 发布注入集是否可信（CI 发布链）
  * @returns {Record<string, string | undefined>} 剔除宿主注入变量后的新对象，不改原对象
  */
 export function stripHostInjectedBuiltinProviderEnv(env = process.env, options = {}) {
   return stripHostInjectedEnv(env, {
-    allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    allowPublishInjection:
+      options.allowPublishInjection ?? isPublishInjectionTrusted(options.ciContext),
     ...(options.allowDevRuntimeKeys === undefined
       ? {}
       : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
@@ -61,15 +62,23 @@ export async function resolveBuiltinProviderBuildEnvironment({
   return normalized;
 }
 
-/** @param {{root?: string, env?: Record<string, string | undefined>}} options */
-export async function loadBuiltinProviderConfig({ root = repositoryRoot, env = process.env } = {}) {
+/** @param {{root?: string, env?: Record<string, string | undefined>, ciContext?: boolean}} options */
+export async function loadBuiltinProviderConfig({
+  root = repositoryRoot,
+  env = process.env,
+  ciContext,
+} = {}) {
   // 宿主注入面剥离（deny-by-default，spec：docs/specs/host-env-injection-boundary.md）：
   // y430p 本机实证——zcode 宿主会话内构建时 prepare-prebuilds/SEA 等链路经本函数
   // 直吃 process.env 的 ZCODE_BUILTIN_PROVIDER_CONFIG_FILE（GLM runtime 副本），
   // 构建即炸 Invalid Built-in Provider config。剔除在事实源读取前统一执行，
   // 覆盖所有消费链，不再依赖各链自行清洗；.env 显式覆盖（loadEndpointEnv 合并）
   // 不受影响。对显式传入的 env 同样幂等生效。
-  env = stripHostInjectedEnv(env, { allowPublishInjection: isPublishInjectionTrusted() });
+  // ciContext：语境显式参数（26.5.4 增补批 ②）；缺省回落 process.env.CI，
+  // 生产调用点行为不变，测试显式传参不再操作环境。
+  env = stripHostInjectedEnv(env, {
+    allowPublishInjection: isPublishInjectionTrusted(ciContext),
+  });
   env = await loadEndpointEnv({ root, env });
   const environment = await resolveBuiltinProviderBuildEnvironment({ root, env });
   const sourcePath = resolve(

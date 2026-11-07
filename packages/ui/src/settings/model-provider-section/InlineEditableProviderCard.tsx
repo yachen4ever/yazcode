@@ -824,11 +824,15 @@ export function InlineEditableProviderCard({
                     // 共享开关左右各扩展 12px，会覆盖相邻菜单；本标题栏仅保留 4px 横向热区。
                     className="after:-inset-x-1"
                     data-testid="model-provider-enabled-switch"
-                    aria-label={intl.formatMessage({
-                      id: provider.enabled
-                        ? "settings.modelProvider.disableProvider"
-                        : "settings.modelProvider.enableProvider",
-                    })}
+                    // aria 名称必须稳定（ARIA switch 模式）：name 是控件主体、状态由
+                    // aria-checked 表达。此前 name 随状态在「启用/禁用接入端点」间翻转，
+                    // 读屏输出自相矛盾，a11y 快照也把一颗开关呈现为两个（minttest 四轮
+                    // UX 实测）；语义定案见 docs/specs/model-provider-section-a11y.md。
+                    // 视觉 tooltip 保留动作文案：对看得见的用户「点击将发生什么」是有效预告。
+                    aria-label={intl.formatMessage(
+                      { id: "settings.modelProvider.providerToggleAria" },
+                      { name: headerProviderName },
+                    )}
                     checked={provider.enabled}
                     disabled={savingEnabled}
                     onCheckedChange={(enabled) => {
