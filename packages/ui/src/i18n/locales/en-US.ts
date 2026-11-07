@@ -2587,6 +2587,15 @@ const enUS: Record<string, string> = {
     "Use a bare host in @match (no port), e.g. https://example.com/*; patterns with a port fail to compile.",
   "settings.userscripts.hints.frame":
     "Scripts are injected per frame: the main frame and every matching subframe run it once.",
+  "settings.userscripts.validate.metadataMissing": "Missing ==UserScript== metadata block (start/end markers).",
+  "settings.userscripts.validate.matchMissing": "At least one @match declaration is required.",
+  "settings.userscripts.validate.portHost":
+    "Ports are not supported in @match: rewrite as {suggestion} (non-standard local ports cannot be injected yet).",
+  "settings.userscripts.validate.invalidFormat":
+    "Invalid @match format: {pattern} (expected scheme://host/path).",
+  "settings.userscripts.validate.badWildcard": "Misplaced wildcard in @match: {pattern}.",
+  "settings.userscripts.validate.tooManyWildcards":
+    "Too many path wildcards in @match (limit {limit}): {pattern}.",
   "settings.userscripts.template.name": "New script",
   "settings.userscripts.url.title": "Install user script from URL",
   "settings.userscripts.url.inputLabel": "Script URL",

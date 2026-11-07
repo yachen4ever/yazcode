@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { IabUserscriptWriteResult } from "@zcode/shared";
 import { USER_SCRIPT_MAX_SOURCE_BYTES } from "@zcode/shared";
+import {
+  validateUserscriptHeaderDraft,
+  type UserscriptDraftProblem,
+} from "@zcode/shared/userscriptRules";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -53,6 +57,48 @@ export function IabUserscriptEditor({
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [draftProblems, setDraftProblems] = useState<UserscriptDraftProblem[]>([]);
+
+  // @match 输入时即时校验（26.5.4 S2，spec P4 行为规则 5b）：与 main 扫描同源的
+  // shared 规则纯函数，防抖 250ms；只提示不阻断——保存后仍由扫描 fail-closed 承接。
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDraftProblems(content.trim().length > 0 ? validateUserscriptHeaderDraft(content) : []);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [content]);
+
+  function describeDraftProblem(problem: UserscriptDraftProblem): string {
+    switch (problem.kind) {
+      case "metadata_missing":
+        return intl.formatMessage({ id: "settings.userscripts.validate.metadataMissing" });
+      case "match_missing":
+        return intl.formatMessage({ id: "settings.userscripts.validate.matchMissing" });
+      case "pattern":
+        switch (problem.problem.kind) {
+          case "port_host":
+            return intl.formatMessage(
+              { id: "settings.userscripts.validate.portHost" },
+              { suggestion: problem.problem.suggestion },
+            );
+          case "invalid_format":
+            return intl.formatMessage(
+              { id: "settings.userscripts.validate.invalidFormat" },
+              { pattern: problem.pattern },
+            );
+          case "bad_wildcard":
+            return intl.formatMessage(
+              { id: "settings.userscripts.validate.badWildcard" },
+              { pattern: problem.pattern },
+            );
+          case "too_many_path_wildcards":
+            return intl.formatMessage(
+              { id: "settings.userscripts.validate.tooManyWildcards" },
+              { pattern: problem.pattern, limit: problem.problem.limit },
+            );
+        }
+    }
+  }
 
   function mapWriteError(error: WriteError): string {
     switch (error) {
@@ -189,6 +235,15 @@ export function IabUserscriptEditor({
         <span className="text-ui-xs text-foreground-subtlest">
           {intl.formatMessage({ id: "settings.userscripts.hints.frame" })}
         </span>
+        {draftProblems.length > 0 ? (
+          <div className="flex flex-col gap-1" role="status">
+            {draftProblems.map((problem, index) => (
+              <span key={index} className="text-ui-xs text-destructive">
+                {describeDraftProblem(problem)}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </label>
       {conflict ? (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-ui-sm text-foreground">
