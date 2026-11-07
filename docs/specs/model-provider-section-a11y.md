@@ -60,3 +60,51 @@ minttest 四轮实测：「模型页有『刷新』按钮但无任何反馈（�
 2. 正常网络点「刷新」→ 无成功 toast，列表内容更新；
 3. `refreshModelProviderSection` 聚合语义可直测：双成功 = true、任一失败 = false、
    teamPlan 缺席 = 仅看 provider refresh。
+
+## 3. 手动刷新的连通性复核（26.5.5 发现 1）
+
+### 背景（26.5.4 五轮实测 + 根因修正）
+
+minttest 五轮：把 MiniMax Base URL 改为不可达地址后点顶部「刷新」，四时点均无
+loading/失败 toast。**26.5.4 增补批 3a 的聚合与失败 toast 已在顶部按钮生效**（任务书
+「顶部按钮未覆盖」的定位不成立——`ModelProviderSection.onRefresh` 即聚合入口）；现象的
+真实根因是**刷新语义**：`refresh()` 重读本地设置视图，从不产生网络失败，toast 永远
+没有失败源；导航绿点（`ProviderStatusIndicator`）是「配置就绪」指示
+（enabled ∧ executable），与连通性无关，端点不可达后依旧绿色。
+
+### 行为规则
+
+1. **连通性探测**：手动刷新（且仅手动刷新）时，对每个 `enabled ∧ executable` 且存在
+   首个可用模型（`config.enabled !== false ∧ executable`）的 provider，经既有
+   `testModelConnectivity` 通道探测该模型（产品既定连接语义，无 API 格式假设）。
+   单探测 10s 超时兜底（黑洞挂起不得把刷新拖过 10s）；各 provider 并发。
+2. **聚合成败**：探测返回 `success !== true`、抛错或超时 → 该 provider 计入失败集；
+   失败集非空 → 失败 toast（`connectivityCheckFailed`，三语）；全部成功 → 静默
+   （列表内容变化即反馈）。
+3. **绿点如实标注**：探测失败的 provider 在导航圆点呈 warning「最近连接失败」
+   （新状态 `unreachable`，优先级 disabled > unreachable > ready/unavailable）。
+   探测结果是纯内存观测事实（随下一次手动刷新整体重置），不写 provider 配置——
+   「配置就绪」与「连接可用」两个维度保持正交，不互相污染。
+4. **无可用模型的 provider 不探测**：没有可发起调用的模型，探测无从谈起，
+   也不产生失败。
+
+### 验收
+
+1. 连接拒绝（如 `127.0.0.1:9`）→ 刷新后失败 toast + 该端点导航点「最近连接失败」；
+2. 黑洞挂起（如 `10.255.255.1`）→ ≤10s 刷新结束并呈现失败（loading 期间即有反馈）；
+3. 正常端点 → 静默 + 圆点维持；
+4. `probeProviderConnectivity` 聚合可直测：成功/失败/超时/跳过禁用与无可用模型。
+
+## 4. 模型行启用开关的 aria 语义（26.5.5 发现 2）
+
+26.5.4 五轮实测：启用中的模型行开关 aria=「禁用」而 checked=true——与 §1 同根：
+`ModelRowInput` 的 Switch accessible name 随状态在 `enableAction`/`disableAction`
+动作文案间翻转，读屏语义与真实状态相反。按 §1 同一 ARIA switch 模式修正：
+
+- aria 固定为「{name} 启用开关」（name = modelId，`modelToggleAria`，三语），
+  状态由 `aria-checked` 承载；
+- `enableAction` / `disableAction` 两个 key 随之成为死键，**一并移除**（不留第二种
+  翻转文案的复活入口）。
+
+验收：行开关 aria 与 §1 的端点开关同一模式（name 稳定、状态在 aria-checked）；
+源级断言不再出现状态翻转的三元文案。

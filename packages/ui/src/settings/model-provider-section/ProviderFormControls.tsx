@@ -337,12 +337,14 @@ export function ModelRowInput({
           <Switch
             size="sm"
             checked={model.config.enabled !== false}
-            aria-label={intl.formatMessage({
-              id:
-                model.config.enabled === false
-                  ? "settings.modelProvider.enableAction"
-                  : "settings.modelProvider.disableAction",
-            })}
+            // aria 名称稳定（ARIA switch 模式，同端点级开关 3b 修正）：name 是控件
+            // 主体（modelId），状态由 aria-checked 表达。此前 name 随状态在
+            // 启用/禁用动作文案间翻转，读屏语义与真实状态相反（26.5.5 发现 2，
+            // spec model-provider-section-a11y.md §4）。
+            aria-label={intl.formatMessage(
+              { id: "settings.modelProvider.modelToggleAria" },
+              { name: model.modelId },
+            )}
             onCheckedChange={onEnabledChange}
           />
         ) : null}

@@ -73,6 +73,52 @@ export async function refreshModelProviderSection({
   }
 }
 
+/**
+ * 手动刷新的连通性复核（26.5.5 发现 1，spec model-provider-section-a11y.md §3）：
+ * 对 enabled ∧ executable 且存在首个可用模型的 provider 并发探测（经既有
+ * testModelConnectivity 通道）。单探测 10s 超时兜底（黑洞挂起不得把刷新拖过 10s）；
+ * 返回失败 providerId 集合（成功返回空集），调用方据此呈现失败 toast 与绿点标注。
+ * 无可用模型的 provider 不探测也不计失败——没有可发起调用的模型，探测无从谈起。
+ */
+export async function probeProviderConnectivity({
+  providers,
+  probe,
+  timeoutMs = 10_000,
+}: {
+  providers: readonly ProviderSettingsFormProvider[];
+  probe: (providerId: string, modelId: string) => Promise<{ success?: boolean }>;
+  timeoutMs?: number;
+}): Promise<ReadonlySet<string>> {
+  const failed = new Set<string>();
+  await Promise.all(
+    providers.map(async (provider) => {
+      if (!provider.enabled || !provider.executable) return;
+      const model = provider.models.find(
+        (item) => item.config.enabled !== false && item.executable,
+      );
+      if (!model) return;
+      // 超时与 rejection 同归失败集；timer 必须清理（连续刷新不泄漏）。
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const result = await Promise.race([
+          probe(provider.providerId, model.modelId),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error("connectivity probe timeout")), timeoutMs);
+          }),
+        ]);
+        if (result?.success !== true) {
+          failed.add(provider.providerId);
+        }
+      } catch {
+        failed.add(provider.providerId);
+      } finally {
+        clearTimeout(timer);
+      }
+    }),
+  );
+  return failed;
+}
+
 export async function refreshProviderPanelAfterAuthChange({
   refreshModelProviders,
   refreshCodingPlanEntitlements,
