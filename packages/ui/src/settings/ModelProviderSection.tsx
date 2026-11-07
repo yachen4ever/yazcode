@@ -49,6 +49,7 @@ import {
 } from "./model-provider-section/utils.js";
 import {
   confirmAndDeleteModelProvider,
+  probeProviderConnectivity,
   refreshModelProviderSection,
   refreshProviderPanelAfterAuthChange as refreshModelProviderPanelAfterAuthChange,
 } from "./model-provider-section/modelProviderActions.js";
@@ -306,6 +307,14 @@ export function ModelProviderSection({
     useState<BuiltinModelProviderId | null>(null);
   const [codingPlanDisconnectProviderId, setCodingPlanDisconnectProviderId] =
     useState<BuiltinModelProviderId | null>(null);
+  // 连通性复核失败集（26.5.5 发现 1）：最近一次手动刷新探测失败的 providerId，
+  // 经 Context 驱动导航绿点「最近连接失败」标注；纯内存，随下次手动刷新整体重置。
+  const [connectivityFailedProviderIds, setConnectivityFailedProviderIds] = useState<
+    ReadonlySet<string>
+  >(new Set());
+  // 探测读的是点击时刻的列表：经 ref 取当前值，避免 onRefresh 闭包捕获旧列表。
+  const modelProvidersRef = useRef(modelProviders);
+  modelProvidersRef.current = modelProviders;
   // 死代码清理：refreshToken 只被已下线的原生购买面板消费，这里仅保留 setter 供
   // 登录/解绑后的 refreshCodingPlanProducts 契约调用（保持共享 helper 签名不变）。
   const [, setCodingPlanProductsRefreshToken] = useState(0);
@@ -1055,7 +1064,7 @@ export function ModelProviderSection({
       presetLoading={presetLoading}
       customLoading={customLoading}
       onRefresh={() => {
-        // 手动刷新失败须可见（26.5.4 增补批 ③a，spec docs/specs/model-provider-section-a11y.md）：
+        // 手动刷新失败须可见（26.5.4 增补批 ③a，spec docs/specs/model-provider-section-a11y.md §2）：
         // 成功静默（列表变化即反馈），失败 toast；后台流维持 logger 不打扰。
         void refreshModelProviderSection({
           refresh,
@@ -1068,8 +1077,29 @@ export function ModelProviderSection({
               toast(intl.formatMessage({ id: "settings.modelProvider.refreshFailed" }));
             }
           });
+        // 连通性复核（26.5.5 发现 1，spec §3）：refresh 只重读本地设置视图、
+        // 从不产生网络失败——「刷新=重测端点连接」的用户预期由探测承接。
+        // 失败集驱动绿点「最近连接失败」标注 + 失败 toast；全部成功静默。
+        void probeProviderConnectivity({
+          providers: modelProvidersRef.current,
+          probe: testModelConnectivity,
+        })
+          .then((failedProviderIds) => {
+            setConnectivityFailedProviderIds(failedProviderIds);
+            if (failedProviderIds.size > 0) {
+              toast(
+                intl.formatMessage({ id: "settings.modelProvider.connectivityCheckFailed" }),
+              );
+            }
+          })
+          .catch((error) => {
+            logger.error("[ModelProviderSection] 连通性复核编排失败", {
+              error: error instanceof Error ? error.message : String(error),
+            });
+          });
         refreshCodingPlanEntitlements();
       }}
+      unreachableProviderIds={connectivityFailedProviderIds}
       addProviderLabel={intl.formatMessage({ id: "settings.modelProvider.addProviderAction" })}
       onAddProvider={() => setTemplatePickerOpen(true)}
       navigationGroups={navigationGroups}
