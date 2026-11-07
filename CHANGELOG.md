@@ -11,6 +11,41 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.4 (2026-11-07)
+
+- **S1（严重）用户脚本「服务中」假成功消灭**（minttest 四轮双盲发现）：脚本缺省
+  `@run-at document-start` 时 DOM 未就绪，无守卫脚本的 DOM 操作抛 TypeError 被
+  `executeScript` try/catch 吞成 console.warn，而 `lastInjectedAt` 在 match 回包即写——
+  UI 呈「服务中 + 最后注入」但页面无任何注入产物。**根因修正此前「Linux AppImage 特有」
+  的归属判断**：win 包「正常」与 Linux「失败」是验收脚本守卫差异造成的假象（B6 脚本自带
+  DOMContentLoaded 守卫、四轮验证脚本无守卫），平台与形态均非变量。修法：guest 第 4 通道
+  `zcode:userscripts:report`（fire-and-forget 逐脚本回执 executed/failed）→ main
+  `lastExecution` 内存表（与 lastInjectedAt 同构：last-write-wins/扫描裁剪/重启清零/
+  契约解析+scriptId 合法性门）→ 设置卡失败行呈现「执行失败：<原因>」destructive 徽标。
+  边界：异步错误/卸载后错误不回执（spec 登记）。
+- **S2 @match 输入时即时校验**：规则纯函数单一实现迁 `@zcode/shared/userscriptRules` +
+  `explainMatchPatternProblem`（端口 pattern → 裸 host 改写建议等成因化提示），编辑器
+  （新建/导入/编辑共用）250ms 防抖即时诊断；保存不阻断（落盘≠批准，fail-closed 由扫描
+  承接）。修复「@match 带端口 → 解析失败锁死、用户自行推断原因」。
+- **N1 模板注记补强**：@include 不被解析需改写 @match（迁移指引）；document-start 时
+  DOM 未就绪需等待（S1 根因进模板，防再犯）。
+- **门禁 autocrlf 归一化**：`.gitattributes` catch-all `* text=auto eol=lf`（选型 A，
+  存量影响面实证 0——全仓仅 4 文件含 CR 且全在 `-text` 字节保护内）+ 显式二进制兜底；
+  Windows autocrlf checkout 的行尾伪影不再进入 fmt:check / licensing 台账等行尾敏感
+  门禁（三次实踩：r9000x 26.5.2 回执、26.5.3 验收节提交、licensing 误报）。新 spec
+  `docs/specs/crlf-gate-normalization.md`。
+- **宿主注入语境判定显式参数化**：`isPublishInjectionTrusted(ciContext)` 显式钉死语境
+  （缺省回落 `process.env.CI`，生产调用点行为不变）——两例 CI 语境测试失败的根源修复，
+  测试内不再操作环境标志。
+- **模型页 UX 两项**：手动刷新失败可见（聚合成败 toast，成功静默/后台流不打扰）；接入
+  端点开关 aria 稳定化（aria 固定「{name} 启用开关」+ `aria-checked` 承载状态，修正
+  aria 随状态翻转的快照误判）。新 spec `docs/specs/model-provider-section-a11y.md`。
+- **修复内置远程资源默认源死注入**：release.yml 注入 `ZCODIUM_` 名而消费端读 `YAZCODE_`
+  名——注入名对齐消费端（安装版开箱即可连接 WSL/SSH 的自有发布源生效），白名单同步。
+- **仓库与发版架构**：主仓迁内网 Gitea `yaclab/yazcode`（真相源，fork+PR 模型——开发机
+  read、leader write、`close #N` 自动闭环），GitHub 降级为发版镜像（发版前 push main+tag
+  触发 Actions）；发版顺序 spec 同步。
+
 ## 26.5.3 (2026-11-06)
 
 - **mint 二轮双盲修复批（F1–F7）**：
@@ -222,7 +257,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   复核三路攻击验证）；用户批准经浏览器设置区新设置卡（approve-once-per-content，批准钉住
   用户所见 sha256——P2 复核 M1 修复，关闭「批准→首扫」窗口）；GM 存储健康徽标与
   hash_mismatch/pendingApproval 状态呈现；manifest schema 强制 `pendingApproval ⇒
-  enabled=false`（M4）。手机 Web 远控降级可用（远端 SettingService 信任路径）。
+enabled=false`（M4）。手机 Web 远控降级可用（远端 SettingService 信任路径）。
 - **多目录项目 P3：UI 期**（`docs/specs/multi-root-projects.md` P3a-P3d）：项目状态底座
   （workspace→project 纯函数派生 + 读模型缓存，唯一持久所有者仍为 ProjectRepository）；
   项目编辑器对话框（新建/编辑/删除、epoch/alive 迟到防护，参考 ZCodium ProjectEditor 模式
@@ -230,7 +265,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   workspaceKey=primary root 不另起炉灶）；文件提及跨 roots（@-mention 并发扇出附加目录）；
   草稿按 projectId 隔离。已知边界：桌面 v4 草稿首发的项目归属固化（G1）待协议通道补齐，
   已登记 spec；远端项目编辑入口待 P4。
-- **构建入口 ZCODE_* 前缀级环境洗涤**：三个构建入口（buildCli/build-metadata/build-zcode）
+- **构建入口 ZCODE\_\* 前缀级环境洗涤**：三个构建入口（buildCli/build-metadata/build-zcode）
   对宿主注入的全部 `ZCODE_*` 变量按前缀洗涤（CI 豁免保发布注入），构建输入确定性化——
   终结宿主运行时环境与仓库构建的三类冲突（staged 配置 schema 拒绝、版本烤入宿主版本号、
   构建环境翻转）。
@@ -274,7 +309,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **IAB 内置用户脚本（monkey 类）P1**（`docs/specs/iab-userscripts.md`）：分区级
   session preload（Electron 41 `registerPreloadScript`，单一 runtime、内容全走 IPC），
   `~/.yazcode/userscripts/*.user.js` 按 `==UserScript==` 元数据与 @match 注入；
-  GM_* 最小集（GM_info/addStyle/getValue/setValue/deleteValue/listValues，同步语义）；
+  GM\_\* 最小集（GM_info/addStyle/getValue/setValue/deleteValue/listValues，同步语义）；
   信任门：发现≠启用、首扫 sha256 锚定、内容变更即失活、grant fail-closed、存储仅主
   frame 可用（对齐 Tampermonkey 的全 frame 注入语义，存储面收紧）。实测：真实侧栏
   全链路 PASS，快照 8160→4944 字节（-39.4%）、动作元素 16→8（-50%），硬刷新免疫
@@ -284,7 +319,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   CLI 白名单接线——只进 skills/commands/subagents 发现（namespace=basename）与
   env-info 展示，配置装配零流动（审计测试含流动级断言与 18 引用点集合相等）；
   L1 收敛：executionDirectories 空数组=固化显式空，与「无固化值」区分，冷恢复不回落。
-- **services 根 barrel browser-safe 修复**：三个带 node:* 顶层依赖的值导出移出根
+- **services 根 barrel browser-safe 修复**：三个带 node:\* 顶层依赖的值导出移出根
   barrel（dev renderer 黑屏回归，其中 openvikingService 自 26.0.0 起即带伤）；新增
   browser-safe 静态守卫（services+shared 双 barrel，覆盖动态 import() 与单双引号）。
 - **CLI 构建对宿主运行时环境免疫**：buildCli 剔除宿主注入的 builtin 配置路径变量，
@@ -307,9 +342,9 @@ linux-x86_64 `b45feccd…5283`、linux-arm64 `5a52923e…95fc`。A/B/C 三项全
 - **B IAB 用户脚本实战 PASS**：目标为真实工作门户（安徽电信 EDA，
   `https://nlkf-eda.anhuitelecom.com:11050`，自签证书经「设置 → 浏览器 → 安全」放行）。
   发现≠启用（fail-closed）、首扫 sha256 锚定由 app 写回、真实页 document-start 注入
-  （落盘 readyState=loading）、主世界 GM_* 六函数全隔离、GM 存储往返落盘、硬刷新免疫
+  （落盘 readyState=loading）、主世界 GM\__ 六函数全隔离、GM 存储往返落盘、硬刷新免疫
   （Page.reload 后 preload 自动重跑，bootCount 递增为证）、快照瘦身 -19.1% 字节 /
-  -43% 动作元素；隐藏选择器 `.assistant-iframe, iframe[src*="ai-copilot"]` 取自门户
+  -43% 动作元素；隐藏选择器 `.assistant-iframe, iframe[src_="ai-copilot"]` 取自门户
   真实 bundle 渲染函数。注记：门户票据过期，登录态面板本体未活体验证，隐藏有效性以
   真实页注入 + 合成面板节点 + 快照差分证实（详见验收记录）。
 - **C 多目录白名单 PASS**：手驱 app-server `session/create` 携 `additionalDirectories`

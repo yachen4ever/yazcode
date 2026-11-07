@@ -44,6 +44,17 @@
 - `pnpm typecheck:cli` 需在 CLI 依赖包构建之后执行（`build:zcode` → `typecheck:cli`），
   与 release.yml 的 job 顺序一致；冷检出直接跑会因缺 `dist` 报模块找不到。
 
+## 仓库拓扑与发版推送（2026-11-07 双轨定案）
+
+- **主仓/真相源** = 内网 Gitea `yaclab/yazcode`（日常 pull/push、任务书 issue、fork+PR
+  闭环）；**GitHub `yachen4ever/yazcode` = 发版镜像**——仅在发版时由 leader 推送
+  main + tag，用于触发 Actions 构建（`workflow_dispatch`）与承载 release 资产。
+- 发版推送顺序：内网 main 合入全部批次 → `git push github main --follow-tags` →
+  `gh workflow run release.yml -f version=<x> -f keep_draft=true`（双盲测试期产物
+  不公开）→ 双盲+实机验收全 PASS 后转 official。
+- `upstream-audit.yml` 定时审计与 release 下载仍留在 GitHub，审计信号随发版 push
+  刷新（频次语义变化已接受：审计按轮次人工调研为主，30 分钟 issue 为辅助）。
+
 ## 验收场景
 
 1. 需要实机验收的版本：验收未通过 → 不得推送 tag、不得触发 release。

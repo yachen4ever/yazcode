@@ -345,7 +345,7 @@ jobs:
           ZCODE_APP_VERSION: ${{ needs.release.outputs.version }}
           # 内置远程资源默认源：指向本仓库该 tag 的 GitHub Release 资产（zz- 布局）。
           # 安装后的客户端开箱即可连接 WSL/SSH，不再要求用户配置环境变量。
-          ZCODIUM_REMOTE_ASSET_CDN_BASE_URL: https://github.com/${{ github.repository }}/releases/download/${{ needs.release.outputs.tag }}
+          YAZCODE_REMOTE_ASSET_CDN_BASE_URL: https://github.com/${{ github.repository }}/releases/download/${{ needs.release.outputs.tag }}
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: pnpm bundle:desktop -- --os ${{ matrix.target }} --arch ${{ matrix.arch }}
 
