@@ -3138,6 +3138,7 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.enableProvider": "فعال‌سازی فراهم‌کننده",
   "settings.modelProvider.disableProvider": "غیرفعال‌سازی فراهم‌کننده",
   "settings.modelProvider.providerToggleAria": "کلید فعال‌سازی {name}",
+  "settings.modelProvider.modelToggleAria": "کلید فعال‌سازی {name}",
   "settings.modelProvider.refreshFailed": "به‌روزرسانی فراهم‌کننده‌های مدل ناموفق بود، بعداً دوباره تلاش کنید",
   "settings.modelProvider.connectivityCheckFailed":
     "اتصال برخی فراهم‌کننده‌ها ناموفق بود؛ پیکربندی نقطه اتصال و شبکه را بررسی کنید",

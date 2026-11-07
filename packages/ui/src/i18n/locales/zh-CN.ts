@@ -2979,6 +2979,7 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.enableProvider": "启用接入端点",
   "settings.modelProvider.disableProvider": "禁用接入端点",
   "settings.modelProvider.providerToggleAria": "{name} 启用开关",
+  "settings.modelProvider.modelToggleAria": "{name} 启用开关",
   "settings.modelProvider.refreshFailed": "刷新模型供应商失败，请稍后重试",
   "settings.modelProvider.connectivityCheckFailed": "部分接入端点连接失败，请检查端点配置与网络",
   "settings.modelProvider.renameProvider": "重命名",
