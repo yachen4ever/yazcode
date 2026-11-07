@@ -418,3 +418,66 @@ describe("P4 行字段 hasStorageFile（删除流第二个确认框依据）", (
     assert.equal(rows[0]?.hasStorageFile, false);
   });
 });
+
+describe("lastExecution（26.5.4 S1 执行回执）投影", () => {
+  it("执行失败 → execution_failed destructive 徽标 + lastExecution 透传", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "boom",
+          status: "serving",
+          lastInjectedAt: 1_700_000_000_000,
+          lastExecution: { at: 1_700_000_000_001, ok: false, message: "body is null" },
+        }),
+      ],
+      manifest: {},
+    });
+    const row = rows[0];
+    assert.ok(row);
+    assert.deepEqual(row.badges, ["serving", "execution_failed"]);
+    assert.equal(badgeTone("execution_failed"), "destructive");
+    assert.equal(row.lastExecution?.ok, false);
+    assert.equal(row.lastExecution?.message, "body is null");
+    // serving 行可同时带执行失败徽标：执行失败与 trust 状态正交。
+    assert.equal(row.switchChecked, true);
+  });
+
+  it("执行成功回执不产生徽标；无回执 lastExecution 为 null", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "ok",
+          status: "serving",
+          lastExecution: { at: 1, ok: true },
+        }),
+        statusItem({ scriptId: "silent", status: "serving" }),
+      ],
+      manifest: {},
+    });
+    const okRow = rows.find((row) => row.scriptId === "ok");
+    const silentRow = rows.find((row) => row.scriptId === "silent");
+    assert.deepEqual(okRow?.badges, ["serving"]);
+    assert.equal(okRow?.lastExecution?.ok, true);
+    assert.equal(silentRow?.lastExecution, null);
+  });
+
+  it("异常形状（at 缺失）归一 null，降级模式恒 null", () => {
+    const live = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "weird",
+          status: "serving",
+          // @ts-expect-error 防御性形状（wire 层被 main 校验，投影层不信任）
+          lastExecution: { ok: false, message: "x" },
+        }),
+      ],
+      manifest: {},
+    });
+    assert.equal(live[0]?.lastExecution, null);
+    const degraded = buildIabUserscriptRows({
+      liveStatus: null,
+      manifest: { one: { enabled: true, sha256: "a1b2c3d4e5f6" } },
+    });
+    assert.equal(degraded[0]?.lastExecution, null);
+  });
+});

@@ -445,6 +445,13 @@ export interface BrowserUserscriptStatusItem {
    * 纯内存运行时事实，main 进程重启清零；字段缺席表示「尚未注入」。
    */
   lastInjectedAt?: number;
+  /**
+   * 最近一次同步执行结果（26.5.4 S1 执行回执）；与
+   * packages/shared 的 IabUserscriptStatusItem.lastExecution 同源镜像。
+   * 纯内存运行时事实（last-write-wins、重启清零）；缺席 = 尚无回执。
+   * ok=false 表示脚本同步执行抛错——match 回包成功 ≠ 执行成功。
+   */
+  lastExecution?: { at: number; ok: boolean; message?: string };
 }
 
 /** userscript_set_enabled 的返回：操作后的该脚本状态；changed=false 为幂等 no-op。 */

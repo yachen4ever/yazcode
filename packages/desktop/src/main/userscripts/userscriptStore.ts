@@ -73,6 +73,13 @@ export interface UserScriptStatusItem {
    * 记录点是回包而非执行完成：document-end/idle 脚本该值早于实际执行。
    */
   lastInjectedAt?: number;
+  /**
+   * 最近一次同步执行结果（26.5.4 S1 执行回执）。
+   * 与 lastInjectedAt 同构：归属 main userscriptService 内存表（report 回执路径），
+   * 纯内存、last-write-wins、随扫描集合裁剪、进程重启清零；缺席 = 尚无回执。
+   * 回包成功 ≠ 执行成功：ok=false 时 UI 以「执行失败」呈现（spec 行为规则 9）。
+   */
+  lastExecution?: { at: number; ok: boolean; message?: string };
 }
 
 export interface UserscriptStoreOptions {

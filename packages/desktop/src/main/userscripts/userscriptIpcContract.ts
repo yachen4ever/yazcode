@@ -2,10 +2,12 @@
  * 用户脚本 IPC 契约：channel 名与 wire 类型，main 侧 handler 与 guest 侧
  * preload runtime 共用（纯模块，无 IO / 无 electron）。
  *
- * 恰好 3 个 channel（契约约束，禁止扩张面）：
+ * 恰好 4 个 channel（契约约束，禁止进一步扩张；26.5.4 S1 起含执行回执，见 spec
+ * docs/specs/iab-userscripts.md 行为规则 6/9）：
  * - match（invoke）：按 URL 拉取当前可注入脚本；
  * - get（sendSync）：GM_getValue / GM_listValues；
- * - set（sendSync）：GM_setValue / GM_deleteValue。
+ * - set（sendSync）：GM_setValue / GM_deleteValue；
+ * - report（send，fire-and-forget）：runtime 逐脚本回执同步执行结果（executed/failed）。
  * get/set 走 sendSync 是为了保持 Tampermonkey 的同步语义与 set→get 顺序。
  * 回包永远不包含脚本文件路径。
  */
@@ -14,6 +16,7 @@ export const USERSCRIPT_IPC_CHANNELS = {
   match: "zcode:userscripts:match",
   get: "zcode:userscripts:get",
   set: "zcode:userscripts:set",
+  report: "zcode:userscripts:report",
 } as const;
 
 export interface UserScriptMatchRequest {
@@ -41,6 +44,31 @@ export type UserScriptStorageGetRequest =
 export type UserScriptStorageSetRequest =
   | { kind: "put"; scriptId: string; key: string; value: unknown }
   | { kind: "delete"; scriptId: string; key: string };
+
+/**
+ * 执行回执（26.5.4 S1，report channel）：runtime 对每只脚本同步执行完成后回执。
+ * failed 携带错误摘要（runtime 侧已截断）；成功不携带 message。
+ */
+export type UserScriptExecutionReport =
+  | { kind: "executed"; scriptId: string }
+  | { kind: "failed"; scriptId: string; message: string };
+
+/** 回执 message 上限：异常脚本不得用超长错误刷内存表（超出截断，不拒绝）。 */
+export const USER_SCRIPT_REPORT_MESSAGE_MAX_LENGTH = 500;
+
+/** report 入参守卫：形状或 scriptId 非法返回 null（main 侧忽略不记）。 */
+export function parseExecutionReport(payload: unknown): UserScriptExecutionReport | null {
+  if (!isPlainRecord(payload)) return null;
+  const scriptId = payload.scriptId;
+  if (typeof scriptId !== "string" || scriptId.length === 0) return null;
+  const truncate = (value: unknown): string =>
+    String(value).slice(0, USER_SCRIPT_REPORT_MESSAGE_MAX_LENGTH);
+  if (payload.kind === "executed") return { kind: "executed", scriptId };
+  if (payload.kind === "failed" && typeof payload.message === "string") {
+    return { kind: "failed", scriptId, message: truncate(payload.message) };
+  }
+  return null;
+}
 
 export interface UserScriptStorageResult {
   ok: boolean;

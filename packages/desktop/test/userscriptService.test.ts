@@ -538,3 +538,89 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
     }
   });
 });
+
+describe("userscriptService.recordExecutionReport（26.5.4 S1 执行回执）", () => {
+  it("match 命中后回执 executed → listStatus/statusOverview 带 lastExecution ok", async () => {
+    const ctx = await makeService({ svc: { enabled: true } });
+    try {
+      await ctx.service.match({ url: "https://svc.test/page" }, mainFrameContext);
+      ctx.service.recordExecutionReport({ kind: "executed", scriptId: "svc" });
+      const row = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.ok(row?.lastExecution);
+      assert.equal(row.lastExecution.ok, true);
+      assert.equal("message" in row.lastExecution, false);
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("回执 failed 携带 message；成功回执后写覆盖失败（last-write-wins）", async () => {
+    const ctx = await makeService({ svc: { enabled: true } });
+    try {
+      ctx.service.recordExecutionReport({
+        kind: "failed",
+        scriptId: "svc",
+        message: "Cannot read properties of null (reading 'appendChild')",
+      });
+      const failed = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.equal(failed?.lastExecution?.ok, false);
+      assert.equal(failed.lastExecution?.message, "Cannot read properties of null (reading 'appendChild')");
+
+      ctx.service.recordExecutionReport({ kind: "executed", scriptId: "svc" });
+      const recovered = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.equal(recovered?.lastExecution?.ok, true);
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("非法回执忽略不记：缺 scriptId / 非法 id / 未知 kind / message 非字符串", async () => {
+    const ctx = await makeService({ svc: { enabled: true } });
+    try {
+      ctx.service.recordExecutionReport({ kind: "executed" });
+      ctx.service.recordExecutionReport({ kind: "executed", scriptId: "../evil" });
+      ctx.service.recordExecutionReport({ kind: "unknown", scriptId: "svc" });
+      ctx.service.recordExecutionReport({ kind: "failed", scriptId: "svc" });
+      ctx.service.recordExecutionReport(null);
+      const row = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.equal("lastExecution" in (row ?? {}), false);
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("failed message 超长截断（内存表有界）", async () => {
+    const ctx = await makeService({ svc: { enabled: true } });
+    try {
+      ctx.service.recordExecutionReport({
+        kind: "failed",
+        scriptId: "svc",
+        message: "x".repeat(10_000),
+      });
+      const row = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
+      assert.ok(row?.lastExecution?.message);
+      assert.ok(row.lastExecution.message.length <= 500);
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+
+  it("新建 service 实例（模拟进程重启）后 lastExecution 全部缺席", async () => {
+    const ctx = await makeService({ svc: { enabled: true } });
+    try {
+      ctx.service.recordExecutionReport({ kind: "executed", scriptId: "svc" });
+      assert.ok(
+        (await ctx.service.listStatus()).some((item) => "lastExecution" in item),
+      );
+      const fresh = await makeService({ svc: { enabled: true } });
+      try {
+        const rows = await fresh.service.listStatus();
+        assert.ok(rows.every((item) => !("lastExecution" in item)));
+      } finally {
+        await fresh.cleanup();
+      }
+    } finally {
+      await ctx.cleanup();
+    }
+  });
+});
