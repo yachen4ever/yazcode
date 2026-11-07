@@ -30,21 +30,28 @@ function loadBoundary() {
 /**
  * CI 发布链是否可信发布注入集（release.yml 的四个变量）。
  * 本地构建不信任——宿主可能注入同名旧版本号（mint 双盲 F1 的版本烤入事故）。
+ *
+ * 语境显式参数化（26.5.4 增补批 ②）：调用方可传 `ciContext` 显式钉死语境，
+ * 缺省回落 `process.env.CI`（生产调用点行为不变）。显式传入的意义：测试不再
+ * 操作 process.env.CI（CI runner 上跑用例时默认值翻转会让断言失去语境，
+ * 2026-11-06 CI 实证两例），语境成为参数事实而非环境副作用。
+ * @param {boolean | undefined} [ciContext] 显式 CI 语境；缺省读 process.env.CI
  */
-export function isPublishInjectionTrusted() {
-  return Boolean(process.env.CI);
+export function isPublishInjectionTrusted(ciContext) {
+  return Boolean(ciContext ?? process.env.CI);
 }
 
 /**
  * 就地剥离宿主注入变量（deny-by-default）。加载失败时告警并保持环境不变。
  * @param {Record<string, string | undefined>} env
- * @param {{allowPublishInjection?: boolean, extraAllowlist?: readonly string[]}} [options]
+ * @param {{allowPublishInjection?: boolean, ciContext?: boolean, extraAllowlist?: readonly string[]}} [options]
  */
 export function stripHostInjectedEnvInPlace(env = process.env, options = {}) {
   const boundary = loadBoundary();
   if (!boundary) return;
   boundary.stripHostInjectedEnvInPlace(env, {
-    allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    allowPublishInjection:
+      options.allowPublishInjection ?? isPublishInjectionTrusted(options.ciContext),
     ...(options.allowDevRuntimeKeys === undefined
       ? {}
       : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
@@ -55,12 +62,14 @@ export function stripHostInjectedEnvInPlace(env = process.env, options = {}) {
 /**
  * 返回剥离后的新 env 对象（不改入参）。
  * @param {Record<string, string | undefined>} env
+ * @param {{allowPublishInjection?: boolean, ciContext?: boolean, extraAllowlist?: readonly string[]}} [options]
  */
 export function stripHostInjectedEnv(env, options = {}) {
   const boundary = loadBoundary();
   if (!boundary) return { ...env };
   return boundary.stripHostInjectedEnv(env, {
-    allowPublishInjection: options.allowPublishInjection ?? isPublishInjectionTrusted(),
+    allowPublishInjection:
+      options.allowPublishInjection ?? isPublishInjectionTrusted(options.ciContext),
     ...(options.allowDevRuntimeKeys === undefined
       ? {}
       : { allowDevRuntimeKeys: options.allowDevRuntimeKeys }),
