@@ -46,6 +46,22 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **工程**：发版顺序 spec 固化 mint 双盲环节——构建 draft → 双盲测试 → 实机部署验收 → 转正
   （`docs/specs/release-acceptance-order.md`，26.5.2 轮实际顺序回填）。
 
+### 验收结论（2026-11-07，mint 四轮双盲 + workwin 实机 26.5.2 → 26.5.3）
+
+- 四轮双盲（minttest，R2 重建版 AppImage）：**F1 修复确认**——原炸场景（zcode 宿主会话内启动）
+  模型页完整渲染、浏览器控制默认开、`access.mode` 枚举报错归零；会话真实跑通、内置浏览器可用；
+  **F2 负向矩阵四项全部闸门层拒绝**（域名伪装内网两项恢复拒绝，DoH 复核生效）；F2 正面防回退 ✓；
+  F6 原症状不复现；F3/状态机/删除防回归 ✓。
+- workwin 实机（26.5.2 → 26.5.3，保留基线全绿：hide-ai-copilot 哈希互证、GM 存储/
+  insecureCerts/locale 保留、setting.json 与备份逐字节相同）：A 基线模型配置可用；B 验收
+  新建→待批准→批准→服务中、**B6 注入实效 DOM 标记实证**（`win-ok`）+ lastInjectedAt 写读链 ✓；
+  测试脚本清理 ✓。
+- **S1 裁决（四轮新发现）**：Linux AppImage 用户脚本「服务中」但页面无注入产物（假成功）——
+  workwin win 包注入实测正常，**归属 = Linux AppImage 特有**（Linux 侧注入实效自 26.5.0 起从未
+  被验证，历轮均被 F1 阻断），转 26.5.4 修复批；26.5.3 Windows 主环境功能完整，照常转正。
+- 遗留转 26.5.4：S1（Linux AppImage 注入链）、S2（@match 带端口锁死缺即时校验）、N1（@include
+  无安装路径）、UX 池（模型双开关/刷新反馈/解析失败引导）。
+
 ## 26.5.2 (2026-10-30)
 
 - **S1 修复（阻断级）：ZCode 宿主机上 yazcode 首装启动失败**（mint 双盲测试发现，
