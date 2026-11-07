@@ -11,7 +11,10 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.4 (2026-11-07)
+## 26.5.4 (2026-11-07，未发布——内容随 26.5.5 交付)
+
+> 未发布说明（spec 行为规则 4）：26.5.4 draft 产物经 minttest 五轮双盲验证（S1 修复确认）后，
+> 用户决定跳过 workwin 部署与正式发布，draft 已撤；本节全部内容随 26.5.5 一并交付。
 
 - **S1（严重）用户脚本「服务中」假成功消灭**（minttest 四轮双盲发现）：脚本缺省
   `@run-at document-start` 时 DOM 未就绪，无守卫脚本的 DOM 操作抛 TypeError 被
