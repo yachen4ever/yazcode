@@ -2493,6 +2493,7 @@ const faIR: Record<string, string> = {
   "settings.userscripts.othersSection": "همه اسکریپت‌ها",
   "settings.userscripts.lastInjected": "آخرین تزریق {time}",
   "settings.userscripts.neverInjected": "هنوز تزریق نشده",
+  "settings.userscripts.executionFailed": "اجرا ناموفق: {message}",
   "settings.userscripts.savedToast": "تنظیمات اسکریپت کاربر ذخیره شد",
   "settings.userscripts.failedToast": "ذخیره تنظیمات اسکریپت کاربر ناموفق بود",
   "settings.userscripts.toggleLabel": "فعال‌سازی {name}",
@@ -2503,6 +2504,7 @@ const faIR: Record<string, string> = {
   "settings.userscripts.status.parseFailed": "تجزیه ناموفق",
   "settings.userscripts.status.grantRejected": "دسترسی رد شد",
   "settings.userscripts.status.storageCorrupt": "خرابی ذخیره‌سازی",
+  "settings.userscripts.status.executionFailed": "اجرا ناموفق",
   "settings.userscripts.status.disabled": "غیرفعال",
   "settings.userscripts.tools.new": "اسکریپت جدید",
   "settings.userscripts.tools.import": "ورود فایل",
@@ -2553,6 +2555,19 @@ const faIR: Record<string, string> = {
     "در @match از host بدون پورت استفاده کنید، مانند https://example.com/*؛ الگوهای دارای پورت تجزیه نمی‌شوند.",
   "settings.userscripts.hints.frame":
     "اسکریپت‌ها به تفکیک frame تزریق می‌شوند: frame اصلی و هر زیرفریم منطبق یک بار اجرا می‌کنند.",
+  "settings.userscripts.hints.runAtDom":
+    "با @run-at پیش‌فرض document-start هنوز DOM آماده نیست: پیش از کار با DOM منتظر body/DOMContentLoaded بمانید (یا @run-at document-end اعلام کنید).",
+  "settings.userscripts.hints.include":
+    "دستور @include اسکریپت‌های قدیمی تجزیه نمی‌شود؛ آن را به @match بازنویسی کنید.",
+  "settings.userscripts.validate.metadataMissing": "بلوک فراداده ==UserScript== (نشانگرهای آغاز/پایان) یافت نشد.",
+  "settings.userscripts.validate.matchMissing": "حداقل یک اعلان @match لازم است.",
+  "settings.userscripts.validate.portHost":
+    "پورت در @match پشتیبانی نمی‌شود: به شکل {suggestion} بازنویسی کنید (تزریق پورت‌های غیراستاندارد محلی فعلاً پشتیبانی نمی‌شود).",
+  "settings.userscripts.validate.invalidFormat":
+    "قالب @match نامعتبر است: {pattern} (منتظر scheme://host/path).",
+  "settings.userscripts.validate.badWildcard": "جای نویسه عام * در @match نامعتبر است: {pattern}.",
+  "settings.userscripts.validate.tooManyWildcards":
+    "نویسه‌های عام path در @match بیش از حد مجاز است (سقف {limit}): {pattern}.",
   "settings.userscripts.template.name": "اسکریپت جدید",
   "settings.userscripts.url.title": "نصب اسکریپت کاربر از URL",
   "settings.userscripts.url.inputLabel": "نشانی اسکریپت",

@@ -130,6 +130,13 @@ export function installIabUserscripts(options: InstallIabUserscriptsOptions): vo
     async (event: IpcMainInvokeEvent, payload: unknown): Promise<UserScriptMatchResponse> =>
       service.match(payload, requestContext(event)),
   );
+  // 执行回执（26.5.4 S1，fire-and-forget）：runtime 逐脚本回执同步执行结果。
+  // sender session 归属校验与 match 同款（防宿主面伪造执行事实）；非法 payload 在
+  // service.recordExecutionReport 内忽略不记。回执失败不得影响页面——send 无回包。
+  ipcMain.on(USERSCRIPT_IPC_CHANNELS.report, (event: IpcMainEvent, payload: unknown) => {
+    if (readSenderSession(event) !== iabSession) return;
+    service.recordExecutionReport(payload);
+  });
   // get/set 走 sendSync：保持 GM_getValue 的 Tampermonkey 同步语义与 set→get 顺序；
   // handler 异步完成后回填 returnValue，renderer 在此期间保持阻塞。
   ipcMain.on(USERSCRIPT_IPC_CHANNELS.get, (event: IpcMainEvent, payload: unknown) => {

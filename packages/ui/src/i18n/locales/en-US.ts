@@ -2525,6 +2525,7 @@ const enUS: Record<string, string> = {
   "settings.userscripts.othersSection": "All scripts",
   "settings.userscripts.lastInjected": "Last injected {time}",
   "settings.userscripts.neverInjected": "Not injected yet",
+  "settings.userscripts.executionFailed": "Execution failed: {message}",
   "settings.userscripts.savedToast": "User script settings saved",
   "settings.userscripts.failedToast": "Failed to save user script settings",
   "settings.userscripts.toggleLabel": "Enable {name}",
@@ -2535,6 +2536,7 @@ const enUS: Record<string, string> = {
   "settings.userscripts.status.parseFailed": "Parse failed",
   "settings.userscripts.status.grantRejected": "Grant rejected",
   "settings.userscripts.status.storageCorrupt": "Storage corrupt",
+  "settings.userscripts.status.executionFailed": "Execution failed",
   "settings.userscripts.status.disabled": "Disabled",
   "settings.userscripts.tools.new": "New script",
   "settings.userscripts.tools.import": "Import file",
@@ -2585,6 +2587,19 @@ const enUS: Record<string, string> = {
     "Use a bare host in @match (no port), e.g. https://example.com/*; patterns with a port fail to compile.",
   "settings.userscripts.hints.frame":
     "Scripts are injected per frame: the main frame and every matching subframe run it once.",
+  "settings.userscripts.hints.runAtDom":
+    "With the default @run-at document-start the DOM is not ready: wait for body/DOMContentLoaded before touching the DOM (or declare @run-at document-end).",
+  "settings.userscripts.hints.include":
+    "Legacy @include directives are not parsed; rewrite them as @match.",
+  "settings.userscripts.validate.metadataMissing": "Missing ==UserScript== metadata block (start/end markers).",
+  "settings.userscripts.validate.matchMissing": "At least one @match declaration is required.",
+  "settings.userscripts.validate.portHost":
+    "Ports are not supported in @match: rewrite as {suggestion} (non-standard local ports cannot be injected yet).",
+  "settings.userscripts.validate.invalidFormat":
+    "Invalid @match format: {pattern} (expected scheme://host/path).",
+  "settings.userscripts.validate.badWildcard": "Misplaced wildcard in @match: {pattern}.",
+  "settings.userscripts.validate.tooManyWildcards":
+    "Too many path wildcards in @match (limit {limit}): {pattern}.",
   "settings.userscripts.template.name": "New script",
   "settings.userscripts.url.title": "Install user script from URL",
   "settings.userscripts.url.inputLabel": "Script URL",

@@ -17,6 +17,7 @@ export type IabUserscriptBadgeKind =
   | "parse_failed"
   | "grant_rejected"
   | "storage_corrupt"
+  | "execution_failed"
   | "disabled";
 
 /** 徽标语义色（DESIGN.md 语义 token）：只在投影层映射，组件只查表。 */
@@ -29,6 +30,9 @@ const BADGE_TONES: Record<IabUserscriptBadgeKind, IabUserscriptBadgeTone> = {
   parse_failed: "destructive",
   grant_rejected: "destructive",
   storage_corrupt: "destructive",
+  // 执行失败是运行时事实（26.5.4 S1 执行回执），与脚本 trust 状态正交：
+  // serving 行可以同时带执行失败徽标——回包成功 ≠ 执行成功。
+  execution_failed: "destructive",
   // 灰色只用于「无活动状态」：enabled 是待扫描的已批准态，disabled 是明确的停用。
   enabled: "neutral",
   disabled: "neutral",
@@ -62,6 +66,12 @@ export interface IabUserscriptViewRow {
   detail: string | null;
   /** 最近一次实际注入时刻（epoch ms）；无记录为 null（「尚未注入」）。 */
   lastInjectedAt: number | null;
+  /**
+   * 最近一次同步执行结果（26.5.4 S1 执行回执）；无回执为 null。
+   * ok=false 时行呈现「执行失败：<message>」（替代「最后注入」的成功暗示），
+   * 并叠加 execution_failed 徽标；成功回执覆盖后恢复常规呈现。
+   */
+  lastExecution: { at: number; ok: boolean; message?: string } | null;
   /**
    * 是否存在 GM 存储文件（P4 删除流的第二个确认框据此出现）。
    * 数据来源 statusOverview 的 storageHealth 字段（缺席 = 无存储文件）；
@@ -148,6 +158,12 @@ export function buildIabUserscriptRows(input: {
       if (item.storageHealth === "corrupt") {
         badges.push("storage_corrupt");
       }
+      const lastExecution =
+        item.lastExecution && typeof item.lastExecution.at === "number" ? item.lastExecution : null;
+      if (lastExecution && lastExecution.ok === false) {
+        // 执行失败（S1）：destructive 徽标叠加在状态徽标之后；serving 行同样可见。
+        badges.push("execution_failed");
+      }
       return {
         scriptId: item.scriptId,
         name: item.name || item.scriptId,
@@ -162,6 +178,7 @@ export function buildIabUserscriptRows(input: {
         matchDomains: toMatchDomains(item.match),
         detail: toDetailOrNull(item.detail),
         lastInjectedAt: typeof item.lastInjectedAt === "number" ? item.lastInjectedAt : null,
+        lastExecution,
         hasStorageFile: item.storageHealth !== undefined,
       };
     });
@@ -184,6 +201,7 @@ export function buildIabUserscriptRows(input: {
       matchDomains: [],
       detail: null,
       lastInjectedAt: null,
+      lastExecution: null,
       hasStorageFile: false,
     };
   });
@@ -253,13 +271,18 @@ export interface IabUserscriptTemplateHints {
   matchHint: string;
   /** 实战要点二：脚本按 frame 注入。 */
   frameHint: string;
+  /** 实战要点三（26.5.4 S1）：缺省 document-start 时 DOM 未就绪。 */
+  runAtHint: string;
+  /** N1 迁移指引：@include 不被解析，需改写为 @match。 */
+  includeHint: string;
 }
 
 /**
- * 新建脚本的初始模板（P4 行为规则 5）：结构行固定，name 与两条实战要点由调用方
+ * 新建脚本的初始模板（P4 行为规则 5）：结构行固定，name 与实战要点由调用方
  * 传入本地化文案。@match 示例刻意用裸 host（`https://example.com/*`）——
  * 带端口的 pattern 会在编译期解析失败（compileMatchPattern 拒绝带端口 host），
- * 这是 P3 实战踩坑的第一来源。
+ * 这是 P3 实战踩坑的第一来源；第三条要点对应 26.5.4 S1 根因（document-start
+ * 时 document.body 为 null，无守卫 DOM 操作会被静默吞掉）。
  */
 export function buildNewScriptTemplate(hints: IabUserscriptTemplateHints): string {
   return [
@@ -271,6 +294,8 @@ export function buildNewScriptTemplate(hints: IabUserscriptTemplateHints): strin
     "",
     `// ${hints.matchHint}`,
     `// ${hints.frameHint}`,
+    `// ${hints.runAtHint}`,
+    `// ${hints.includeHint}`,
     "",
     "void 0;",
     "",

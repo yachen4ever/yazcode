@@ -2372,6 +2372,7 @@ const zhCN: Record<string, string> = {
   "settings.userscripts.othersSection": "全部脚本",
   "settings.userscripts.lastInjected": "最后注入 {time}",
   "settings.userscripts.neverInjected": "尚未注入",
+  "settings.userscripts.executionFailed": "执行失败：{message}",
   "settings.userscripts.savedToast": "用户脚本设置已保存",
   "settings.userscripts.failedToast": "保存用户脚本设置失败",
   "settings.userscripts.toggleLabel": "启用 {name}",
@@ -2382,6 +2383,7 @@ const zhCN: Record<string, string> = {
   "settings.userscripts.status.parseFailed": "解析失败",
   "settings.userscripts.status.grantRejected": "权限被拒",
   "settings.userscripts.status.storageCorrupt": "存储损坏",
+  "settings.userscripts.status.executionFailed": "执行失败",
   "settings.userscripts.status.disabled": "已禁用",
   "settings.userscripts.tools.new": "新建脚本",
   "settings.userscripts.tools.import": "导入文件",
@@ -2432,6 +2434,19 @@ const zhCN: Record<string, string> = {
     "@match 的 host 写裸域名（不带端口），如 https://example.com/*；带端口会解析失败。",
   "settings.userscripts.hints.frame":
     "脚本按 frame 注入：主 frame 与命中规则的子 frame 各执行一次。",
+  "settings.userscripts.hints.runAtDom":
+    "缺省 @run-at document-start 时 DOM 未就绪：脚本里操作 DOM 前先等 body/DOMContentLoaded（或声明 @run-at document-end）。",
+  "settings.userscripts.hints.include":
+    "老脚本的 @include 不被解析，请改写为 @match。",
+  "settings.userscripts.validate.metadataMissing": "缺少 ==UserScript== 元数据块（起止标记）。",
+  "settings.userscripts.validate.matchMissing": "至少需要一条 @match 声明。",
+  "settings.userscripts.validate.portHost":
+    "@match 不支持端口：请改写为 {suggestion}（本机非标准端口暂不支持注入）。",
+  "settings.userscripts.validate.invalidFormat":
+    "@match 格式非法：{pattern}（应为 scheme://host/path）。",
+  "settings.userscripts.validate.badWildcard": "@match 通配符位置非法：{pattern}。",
+  "settings.userscripts.validate.tooManyWildcards":
+    "@match path 通配符过多（上限 {limit}）：{pattern}。",
   "settings.userscripts.template.name": "新脚本",
   "settings.userscripts.url.title": "从 URL 安装用户脚本",
   "settings.userscripts.url.inputLabel": "脚本地址",

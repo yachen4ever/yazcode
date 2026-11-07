@@ -87,7 +87,7 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      renderer 传参。
    - **非 http(s) scheme（chrome-error、about:blank、devtools 等）上 runtime 直接 no-op**。
 
-6. **IPC 面（恰好 3 个 channel，参数校验在 main）**：
+6. **IPC 面（恰好 4 个 channel，参数校验在 main；26.5.4 S1 起含执行回执）**：
    - `zcode:userscripts:match`（invoke）：入参 `{ url }`；main 校验 url 为合法 http(s) URL，
      扫描目录并计算当前服务集，返回
      `[{ scriptId, name, version, namespace, runAt, grants, code, info }]`——
@@ -96,6 +96,13 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
      Tampermonkey 同步语义与 set→get 顺序）：get 入参 `{ scriptId, key }`，set 入参
      `{ scriptId, key, value }`；main 校验 scriptId 在当前服务集内、key 为非空字符串
      （≤512 字符）、value JSON 可序列化；拒绝时返回明确失败结果（不抛裸异常给隔离世界）。
+   - `zcode:userscripts:report`（send，fire-and-forget；26.5.4 S1 新增）：runtime 在
+     `executeScript` 完成后逐脚本回执 `{ kind: "executed" | "failed", scriptId, message? }`
+     （失败时 message 为错误摘要并截断）。这是第 4 个 guest channel——P2 时代「恰好 3 个、
+     禁止扩张」的约束为此显式修订：26.5.3 实测（mint 四轮 + workwin B6）证明 match 回包
+     成功 ≠ 脚本执行成功，回执缺失使执行失败呈现为「服务中 + 最后注入」的假成功（S1）。
+     main 校验 payload 形状与 scriptId 合法性（`isValidUserScriptId`），并以 sender session
+     归属（IAB 分区）做纵深防御；非法回执忽略不记。
    - GM 存储所有者在 main：每脚本一个 JSON 文件（`{数据根}/.yazcode/userscript-storage/<scriptId>.json`），
      main 内按 scriptId 串行化读改写（并发 frame 不丢更新），单脚本存储上限 2 MB，超限拒绝。
      存储文件损坏（JSON 解析失败 / 顶层形状非法）显式回 `storage_corrupt`，损坏文件
@@ -119,6 +126,38 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
    - 实测同时覆盖：挂起/恢复（销毁/重建 guest）后 preload 仍自动生效；`new Function`
      执行脚本不受页面 CSP 影响（内网门户场景验证一次）。
 
+9. **执行回执与失败呈现（26.5.4 S1，注入失败不得呈现假成功）**：
+   - **背景根因（2026-11-07 定位，本地 Electron harness 复现）**：26.5.3 mint 四轮的
+     「Linux AppImage 服务中但无产物」并非平台注入链失效——session preload、match IPC、
+     隔离世界执行链均正常（workwin B6 与本地 harness 变体对照实证）。真实机制：脚本以
+     缺省 `document-start` 执行时 `document.body` 尚为 null，脚本内无守卫的 DOM 操作抛
+     TypeError，被 `executeScript` 的 try/catch 吞成 guest console.warn；而 `lastInjectedAt`
+     在 match 回包时已写（值语义 =「最近一次开始服务」，P3 规则 6），UI 遂呈现假成功。
+     「Linux AppImage 特有」是**脚本差异造成的归属假象**（win B6 使用另一只脚本）；
+     AppImage 上的最终确认以 26.5.4 的回执呈现（minttest 五轮复测）为准。
+   - **回执写路径唯一**：runtime `executeScript` 对每只脚本同步执行完成后 send
+     `report`（成功 `executed`；失败 `failed` + 错误摘要）。main 侧 service 内存表
+     `lastExecution: Map<scriptId, { at, ok, message? }>` 接收，last-write-wins；
+     同一脚本多 frame 回执后写覆盖（值语义 = 最近一次执行结果）。
+   - **所有者与生命周期**：与 `lastInjectedAt` 同构——纯内存、进程重启清零、
+     `inspect` 系列出口按当前扫描集合裁剪、不落盘（运行时观测事实，不是脚本文件事实
+     也不是用户决策）。
+   - **读路径**：`listStatus()` / `statusOverview()` / `reload()` / `setAgentEnabled()`
+     回包在状态项上合并 `lastExecution?: { at: number; ok: boolean; message?: string }`
+     （无记录则字段缺席）。类型镜像链与 `lastInjectedAt` 同路：shared
+     `IabUserscriptStatusItem` → contracts `BrowserUserscriptStatusItem`（agent 侧可见）。
+   - **UI 呈现语义**：`lastExecution.ok === false` 的行以「执行失败：<错误摘要>」替代
+     「最后注入 <时间>」的成功暗示（destructive 语义色徽标 + 失败原因呈现）；执行成功
+     回执覆盖后恢复常规呈现。徽标与脚本的 trust 状态正交：执行失败不改变
+     serving/manifest 状态（信任门是文件事实，执行失败是运行时事实）。
+   - **边界（诚实登记）**：回执只覆盖**同步执行结果**——脚本内 `setTimeout`/事件回调等
+     异步错误、页面卸载后的错误不产生回执；match 请求失败（invoke 抛错）无脚本行可挂，
+     runtime 静默退出 + main 侧日志承接（该场景 `lastInjectedAt` 缺席 → UI 显示
+     「尚未注入」，本就不构成假成功）。文档等待/轮询型脚本以成功回执为准。
+   - **验收**：document-start 无守卫 DOM 操作的脚本 → 状态卡显示「执行失败」与原因
+     （不再显示「最后注入」）；守卫脚本 → 正常执行且回执 executed；成功回执覆盖先前
+     失败；非法 report payload（缺 scriptId / 非法 id / 超长 message）忽略不记。
+
 ## 状态所有者
 
 | 状态                       | 所有者                                                                 | 说明                                                                                                                                                                                                                                                                                                       |
@@ -127,6 +166,7 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
 | 脚本文件                   | 用户（`~/.yazcode/userscripts/`）                                      | store 只读扫描，永不写脚本文件；用户级资产，跨 workspace 同源，站内作用域用 `@match` 表达。                                                                                                                                                                                                                |
 | GM 运行时数据              | main 侧 userscriptStorage（per-scriptId JSON 文件）                    | 唯一写者是 main 的 IPC handler；preload 只经 IPC 读写。与 manifest 分离：前者是脚本运行时数据（跟随数据根），后者是用户决策（跟随设置）。                                                                                                                                                                  |
 | runtime 本体               | app bundle（tsup preload entry → `out/preload/userscriptRuntime.cjs`） | 可信应用代码；路径解析与既有 preload 一致（dev/打包同构），不做数据目录写入。                                                                                                                                                                                                                              |
+| 执行结果（`lastExecution`） | main `userscriptService` 内存表（26.5.4 S1 新增）                   | 唯一写者是 `zcode:userscripts:report` 回执路径（行为规则 9）；读出口与 `lastInjectedAt` 同构。纯内存、重启清零、不落盘。                                                                                                                                                                                     |
 | 扫描缓存                   | 无                                                                     | store 每次匹配请求全量重扫（目录规模为个位数文件、KB 级，重扫同时天然完成 hash 一致性复核）；不做 TTL/事件订阅缓存，避免第二个状态所有者。                                                                                                                                                                 |
 
 事件顺序（注入时序）：
@@ -144,6 +184,8 @@ app ready（main）
      →（首个 enabled 无 sha 的条目在此锚定并持久化）→ 返回脚本列表（无文件路径）
   5. runtime 按 runAt 等待，逐脚本 new Function 注入 GM_* 参数后执行；
      脚本内 GM 存储读写经 sendSync 落 main（main 按 scriptId 串行化）
+  6. runtime 逐脚本 send("zcode:userscripts:report", { kind, scriptId, message? })
+     （26.5.4 S1）：同步执行完成即回执，main 记入 lastExecution 内存表
 ```
 
 已知代价：document_start 与 match 返回之间一跳 IPC 延迟（内网门户毫秒级，表现为样式应用
@@ -158,9 +200,15 @@ app ready（main）
 - **IPC**（channel 名与 wire 类型定义在 `userscriptIpcContract.ts`，main 与 preload 共用）：
   - `zcode:userscripts:match`（invoke）→ `UserScriptMatchResponse`
   - `zcode:userscripts:get` / `zcode:userscripts:set`（sendSync）→ `UserScriptStorageResult`
+  - `zcode:userscripts:report`（send，26.5.4 S1）→ `UserScriptExecutionReport`（fire-and-forget）
 - **store**：`userscriptStore.ts` 的 `createUserscriptStore({ scriptsDir, manifestPort })`，
   `scanServeableScripts()` 返回服务集（含解析失败/拒载原因的日志记录）。
 - **storage**：`userscriptStorage.ts` 的 `createUserscriptStorage({ rootDir })`。
+- **规则纯函数（26.5.4 S2 起单一实现在 shared）**：`parseUserScriptHeader` /
+  `compileMatchPattern` / `explainMatchPatternProblem`（端口等非法 pattern 的可执行诊断）
+  落 `packages/shared`（`userscriptRules` 模块），desktop 的 `userscriptRules.ts` 改为
+  re-export 保持既有引用不变——UI 编辑器的输入时即时校验（P4 行为规则 5b）与 main/preload
+  的扫描/注入判定同源，不复制规则。
 - **tsup**：`packages/desktop/tsup.config.ts` preload 配置新增
   `"preload/userscriptRuntime": "src/preload/userscriptRuntime.ts"`。
 - **shared**：`packages/shared/src/validationAppSettings.ts` 新增
@@ -358,8 +406,8 @@ F3 起两入口拉平）｜`parse_failed` / `grant_rejected`（静态校验拒�
 
 - 不给 agent 任何「批准」能力（pendingApproval 只能由用户在设置卡转正）。
 - 不做脚本安装/下载/编辑 UI（脚本文件仍由用户手工放入 `~/.yazcode/userscripts`）。
-- 不做 guest IPC 面扩张（仍是恰好 3 个 channel）；preload 的 `console.warn` 经 IPC
-  转发 main 日志（m2-3）涉及第 4 个 channel 的契约修订，留待后续。
+- guest IPC 面 26.5.4 起为恰好 4 个 channel（S1 执行回执 `report`，见 P1 行为规则 6/9）；
+  除回执外的进一步扩张（如 preload `console.warn` 全量转发 main 日志，m2-3）仍不做。
 - 不做 fs.watch / 缓存（reload 命令的存在不改变「每次请求全量重扫」的 P1 架构）。
 
 ## P3：管理界面（实战反馈驱动）
@@ -450,7 +498,9 @@ guest frame 导航 → runtime invoke(match)
 
 注意：记录点是**回包**而非脚本执行完成——`document-end` / `document-idle` 脚本的
 回包先于实际执行，因此该值是「最近一次开始服务」的时刻，不是「执行完成」时刻
-（语义边界写入类型注释）。
+（语义边界写入类型注释）。26.5.4 S1 起补齐另一半事实：脚本同步执行结果经
+`zcode:userscripts:report` 回执为 `lastExecution`（P1 行为规则 9），执行失败在
+设置卡以失败呈现，消除「回包成功 = 注入成功」的假成功窗口。
 
 ### 验收场景（P3）
 
@@ -606,13 +656,27 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
      编辑/保存流程。
    - URL 安装：三段式对话框（输入 URL → 拉取并展示元数据 + 源码预览 → 安装）。
    - 三语文案（zh-CN / en-US / fa）齐备。
-   - 新建模板注释里写明合法 `@match` 示例（裸 host，不带端口）与「脚本按 frame 注入」
-     两个实战要点。
+   - 新建模板注释写明三条实战要点（26.5.4 起第三条随 S1 根因补充）：合法 `@match`
+     示例（裸 host，不带端口）、「脚本按 frame 注入」、「缺省 `@run-at document-start`
+     时 `document.body` 尚未就绪，DOM 操作需等待 body/DOMContentLoaded（或改用
+     `@run-at document-end`）」；并注明老脚本的 `@include` 不被解析（N1 处置：迁移
+     指引——需改写为 `@match`），避免「装了不跑」的静默陷阱。
 
 6. **agent 面刻意不扩**：P4 不新增 BrowserCommand，agent 仍只有 P2 的
    `userscript_list / reload / set_enabled`（观察 + 请求批准）。写文件、装 URL、删脚本
    只能由用户在界面操作——这与「agent 不得造成未确认内容被执行」同源：也不让 agent
    造成未确认内容被写入。
+
+5b. **@match 输入时即时校验（26.5.4 S2）**：新建 / 导入 / URL 安装预览 / 编辑四条
+   写入路径共用同一编辑器，编辑内容变化（防抖）时用与 main 同源的规则纯函数
+   （shared `userscriptRules`，见接口节）解析元数据块并逐条诊断 `@match`：
+   - 失败给**可执行提示**：端口 host（`http://localhost:8899/*`）→ 建议改写为裸 host
+     （`http://localhost/*`，本机非标准端口暂不支持注入）；缺元数据块 / 缺 `@match` /
+     path 通配超限 / 其它非法 pattern → 显示对应原因；
+   - **保存不阻断**：即时校验是提示不是闸门——落盘 ≠ 批准（红线 1）语义不变，保存后
+     仍由扫描 fail-closed 承接（`parse_failed` 徽标 + `detail`）。校验的价值是把
+     「保存后锁死再自行推断」提前为「输入时看见原因与改法」；
+   - 校验是纯函数派生（同一实现），不引入第二份规则事实，也不产生额外状态。
 
 ### 状态所有者（P4 增量）
 
@@ -672,9 +736,15 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 11. **删除顺序**：manifest 移除失败时中止、文件保留（测试用抛错的 manifest patch 模拟）。
 12. **无宿主降级**：`getIabUserscriptStatus` 缺席（Web）时三个工具按钮不渲染，卡片行为
     与 P3 一致。
-13. **guest 面不变**：`USERSCRIPT_IPC_CHANNELS` 仍恰好 3 个；新增的都是
-    `PlatformChannels` 宿主通道。
+13. **guest 面不变**：`USERSCRIPT_IPC_CHANNELS` 仍恰好 4 个（match/get/set +
+    26.5.4 S1 的 `report`）；新增的都是 `PlatformChannels` 宿主通道。
 14. **三语齐备**：新增文案在 zh-CN / en-US / fa 三份 locale 同时存在，key 集合一致。
+15. **@match 即时校验（S2）**：编辑器输入 `http://localhost:8899/*` → 防抖后出现端口
+    提示并建议 `http://localhost/*`；合法 pattern 无提示；无元数据块 / 缺 `@match` 即时
+    提示原因；提示不阻断保存（保存后行为与现状一致：`parse_failed` 徽标 + detail）。
+16. **执行回执呈现（S1）**：document-start 无守卫 DOM 操作的脚本执行后，状态行以
+    「执行失败：<原因>」替代「最后注入」呈现（destructive 徽标），不再假成功；
+    守卫脚本正常执行；成功回执覆盖先前失败（last-write-wins）。
 
 ### P4 明确不做
 
@@ -682,5 +752,7 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
 - 语法高亮编辑器 / 引入 CodeMirror、Monaco 等新依赖（`Textarea` + mono 兜底，
   记为后续增强）。
 - `GM_xmlhttpRequest`、子 frame 存储（维持 P1 边界）。
+- `@include` 解析（N1 处置定为迁移指引文案，见行为规则 5 模板注记；完整解析如需求
+  成立另立单，不随 26.5.4）。
 - agent 的写/删命令（写文件只走用户界面，见行为规则 6）。
 - saved-workflow/G1 相关文件、`browserGuestManager.ts`、`third-party/`、根 `package.json`。

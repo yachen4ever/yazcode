@@ -419,6 +419,14 @@ export interface IabUserscriptStatusItem {
    * UI 显示「尚未注入」占位而不是 1970 年时间。
    */
   lastInjectedAt?: number;
+  /**
+   * 最近一次同步执行结果（26.5.4 S1 执行回执）。
+   * 纯内存运行时事实（与 lastInjectedAt 同构：重启清零、last-write-wins、
+   * 随扫描集合裁剪）；字段缺席表示「本进程尚无回执」。
+   * ok=false 表示脚本同步执行抛错（如 document-start 时 DOM 未就绪）——UI 以
+   * 「执行失败：<message>」呈现，替代「最后注入」的成功暗示；回包成功 ≠ 执行成功。
+   */
+  lastExecution?: { at: number; ok: boolean; message?: string };
 }
 
 export interface IabUserscriptStatusResponse {

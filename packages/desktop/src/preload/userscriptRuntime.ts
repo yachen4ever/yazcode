@@ -15,7 +15,9 @@ import { isInjectableUrlProtocol, normalizeRunAt } from "../main/userscripts/use
  *   GM_* 以脚本函数参数注入而非 window 全局，runtime 也拿不到页面 JS 变量（仅共享 DOM）；
  * - 非 http(s) scheme（chrome-error、about:blank 等）直接 no-op；
  * - 脚本内容一律经 match IPC 从 main 拉取（enabled ∧ sha256 一致的脚本），
- *   preload 本体不含任何用户脚本；GM 存储仅主 frame 可用（main 以 senderFrame 复核）。
+ *   preload 本体不含任何用户脚本；GM 存储仅主 frame 可用（main 以 senderFrame 复核）；
+ * - 每只脚本同步执行完成后经 report 回执结果（executed/failed，26.5.4 S1）：
+ *   match 回包成功 ≠ 执行成功，执行失败必须可呈现（不得假成功）。
  * electron-free 的判定逻辑与 main 共用同一模块（userscriptRules/userscriptIpcContract）。
  */
 
@@ -139,8 +141,25 @@ function executeScript(item: UserScriptMatchItem, isMainFrame: boolean): void {
       item.code,
     );
     run(...buildGmArgs(item, isMainFrame));
+    reportExecution({ kind: "executed", scriptId: item.scriptId });
   } catch (error) {
+    // 执行失败必须回到 main（lastExecution → 状态卡呈现），不能只留在 guest console：
+    // 26.5.3 S1 假成功的根因就是失败被吞在这里（document-start 时 document.body 为 null）。
     console.warn(`[userscript] ${item.scriptId} 执行失败:`, error);
+    reportExecution({
+      kind: "failed",
+      scriptId: item.scriptId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/** 执行回执（fire-and-forget）：send 失败静默忽略，绝不影响页面本身。 */
+function reportExecution(report: { kind: "executed" | "failed"; scriptId: string; message?: string }): void {
+  try {
+    ipcRenderer.send(USERSCRIPT_IPC_CHANNELS.report, report);
+  } catch {
+    // main 不可用等场景：回执丢弃即可，不改变注入语义。
   }
 }
 

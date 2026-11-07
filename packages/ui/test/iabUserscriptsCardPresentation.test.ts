@@ -354,6 +354,8 @@ describe("buildNewScriptTemplate（P4 模板）", () => {
     name: "新脚本",
     matchHint: "MATCH-HINT 裸 host 不带端口",
     frameHint: "FRAME-HINT 按 frame 注入",
+    runAtHint: "RUNAT-HINT document-start 时 DOM 未就绪",
+    includeHint: "INCLUDE-HINT @include 需改写为 @match",
   };
 
   it("结构完整：元数据块起止、@match 裸 host 示例、@grant none", () => {
@@ -367,10 +369,14 @@ describe("buildNewScriptTemplate（P4 模板）", () => {
     assert.match(template, /@name 新脚本/);
   });
 
-  it("两个实战要点作为注释写入模板（i18n 文案由调用方传入）", () => {
+  it("实战要点作为注释写入模板（i18n 文案由调用方传入；26.5.4 起四条）", () => {
     const template = buildNewScriptTemplate(hints);
     assert.match(template, /\/\/ MATCH-HINT 裸 host 不带端口/);
     assert.match(template, /\/\/ FRAME-HINT 按 frame 注入/);
+    // S1 根因要点：document-start 时 document.body 尚未就绪。
+    assert.match(template, /\/\/ RUNAT-HINT document-start 时 DOM 未就绪/);
+    // N1 迁移指引：老脚本 @include 需改写为 @match。
+    assert.match(template, /\/\/ INCLUDE-HINT @include 需改写为 @match/);
   });
 });
 
@@ -416,5 +422,68 @@ describe("P4 行字段 hasStorageFile（删除流第二个确认框依据）", (
       manifest: { one: { enabled: true, sha256: "a1b2c3d4e5f6" } },
     });
     assert.equal(rows[0]?.hasStorageFile, false);
+  });
+});
+
+describe("lastExecution（26.5.4 S1 执行回执）投影", () => {
+  it("执行失败 → execution_failed destructive 徽标 + lastExecution 透传", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "boom",
+          status: "serving",
+          lastInjectedAt: 1_700_000_000_000,
+          lastExecution: { at: 1_700_000_000_001, ok: false, message: "body is null" },
+        }),
+      ],
+      manifest: {},
+    });
+    const row = rows[0];
+    assert.ok(row);
+    assert.deepEqual(row.badges, ["serving", "execution_failed"]);
+    assert.equal(badgeTone("execution_failed"), "destructive");
+    assert.equal(row.lastExecution?.ok, false);
+    assert.equal(row.lastExecution?.message, "body is null");
+    // serving 行可同时带执行失败徽标：执行失败与 trust 状态正交。
+    assert.equal(row.switchChecked, true);
+  });
+
+  it("执行成功回执不产生徽标；无回执 lastExecution 为 null", () => {
+    const rows = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "ok",
+          status: "serving",
+          lastExecution: { at: 1, ok: true },
+        }),
+        statusItem({ scriptId: "silent", status: "serving" }),
+      ],
+      manifest: {},
+    });
+    const okRow = rows.find((row) => row.scriptId === "ok");
+    const silentRow = rows.find((row) => row.scriptId === "silent");
+    assert.deepEqual(okRow?.badges, ["serving"]);
+    assert.equal(okRow?.lastExecution?.ok, true);
+    assert.equal(silentRow?.lastExecution, null);
+  });
+
+  it("异常形状（at 缺失）归一 null，降级模式恒 null", () => {
+    const live = buildIabUserscriptRows({
+      liveStatus: [
+        statusItem({
+          scriptId: "weird",
+          status: "serving",
+          // @ts-expect-error 防御性形状（wire 层被 main 校验，投影层不信任）
+          lastExecution: { ok: false, message: "x" },
+        }),
+      ],
+      manifest: {},
+    });
+    assert.equal(live[0]?.lastExecution, null);
+    const degraded = buildIabUserscriptRows({
+      liveStatus: null,
+      manifest: { one: { enabled: true, sha256: "a1b2c3d4e5f6" } },
+    });
+    assert.equal(degraded[0]?.lastExecution, null);
   });
 });

@@ -69,5 +69,16 @@ describe("userscriptRuntime 静态契约", () => {
     assert.equal(USERSCRIPT_IPC_CHANNELS.match, "zcode:userscripts:match");
     assert.equal(USERSCRIPT_IPC_CHANNELS.get, "zcode:userscripts:get");
     assert.equal(USERSCRIPT_IPC_CHANNELS.set, "zcode:userscripts:set");
+    assert.equal(USERSCRIPT_IPC_CHANNELS.report, "zcode:userscripts:report");
+  });
+
+  it("执行回执（26.5.4 S1）：executeScript 成功/失败都经 report channel 回执 main", () => {
+    // 失败回执是 S1 假成功的修复核心：失败不能只留在 guest console。
+    assert.ok(runtimeSource.includes("USERSCRIPT_IPC_CHANNELS.report"), "report channel");
+    assert.ok(runtimeSource.includes('kind: "executed"'), "成功回执");
+    assert.ok(runtimeSource.includes('kind: "failed"'), "失败回执");
+    // 回执 fire-and-forget：send 不得 await/阻塞注入链，且自身失败被吞（不影响页面）。
+    assert.ok(runtimeSource.includes("ipcRenderer.send(USERSCRIPT_IPC_CHANNELS.report"));
+    assert.ok(/function reportExecution[\s\S]*?catch \{/.test(runtimeSource), "回执失败静默忽略");
   });
 });

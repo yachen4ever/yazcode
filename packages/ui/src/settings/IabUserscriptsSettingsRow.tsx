@@ -25,6 +25,7 @@ const BADGE_MESSAGE_IDS: Record<IabUserscriptBadgeKind, string> = {
   parse_failed: "settings.userscripts.status.parseFailed",
   grant_rejected: "settings.userscripts.status.grantRejected",
   storage_corrupt: "settings.userscripts.status.storageCorrupt",
+  execution_failed: "settings.userscripts.status.executionFailed",
   disabled: "settings.userscripts.status.disabled",
 };
 
@@ -60,14 +61,21 @@ export function IabUserscriptsSettingsRow({
     { id: "settings.userscripts.toggleLabel" },
     { name: row.name },
   );
+  // 执行失败（26.5.4 S1）优先于「最后注入」呈现：回包成功 ≠ 执行成功，
+  // 失败时行尾显示失败原因，不再以注入时间暗示成功（spec P1 行为规则 9）。
   const lastInjectedLabel =
-    row.lastInjectedAt === null
-      ? intl.formatMessage({ id: "settings.userscripts.neverInjected" })
-      : intl.formatMessage(
-          { id: "settings.userscripts.lastInjected" },
-          // 时间格式跟随应用语言（fa-IR 的日期形态与 en/zh 不同），不落系统默认。
-          { time: new Date(row.lastInjectedAt).toLocaleString(locale) },
-        );
+    row.lastExecution && row.lastExecution.ok === false
+      ? intl.formatMessage(
+          { id: "settings.userscripts.executionFailed" },
+          { message: row.lastExecution.message ?? "" },
+        )
+      : row.lastInjectedAt === null
+        ? intl.formatMessage({ id: "settings.userscripts.neverInjected" })
+        : intl.formatMessage(
+            { id: "settings.userscripts.lastInjected" },
+            // 时间格式跟随应用语言（fa-IR 的日期形态与 en/zh 不同），不落系统默认。
+            { time: new Date(row.lastInjectedAt).toLocaleString(locale) },
+          );
 
   const expandable = onToggleExpand !== undefined;
   const Chevron = expanded ? ChevronDown : ChevronRight;

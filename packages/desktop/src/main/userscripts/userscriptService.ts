@@ -1,13 +1,15 @@
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron";
 import {
+  parseExecutionReport,
   parseMatchRequestUrl,
   parseStorageGetRequest,
   parseStorageSetRequest,
+  type UserScriptExecutionReport,
   type UserScriptMatchItem,
   type UserScriptMatchResponse,
   type UserScriptStorageResult,
 } from "./userscriptIpcContract.js";
-import { isValidStorageKey, urlMatchesAnyPattern } from "./userscriptRules.js";
+import { isValidStorageKey, isValidUserScriptId, urlMatchesAnyPattern } from "./userscriptRules.js";
 import {
   createUserscriptStore,
   type UserscriptManifestPort,
@@ -88,6 +90,17 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
   const lastInjectedAt = new Map<string, number>();
 
   /**
+   * 最近执行结果（26.5.4 S1 执行回执）：scriptId → { at, ok, message? }。
+   * 唯一写者是 report 回执路径（bootstrap 的 zcode:userscripts:report handler）。
+   * 与 lastInjectedAt 同构：纯内存、last-write-wins（多 frame 后写覆盖）、
+   * inspect 系列出口按当前扫描集合裁剪、进程重启即清零。
+   * 为什么需要它：match 回包成功 ≠ 脚本执行成功（mint 四轮 S1 假成功实测）——
+   * document-start 时 document.body 为 null 之类的脚本错误被 executeScript 吞成
+   * console.warn，UI 只剩「服务中 + 最后注入」。执行失败必须可呈现。
+   */
+  const lastExecution = new Map<string, { at: number; ok: boolean; message?: string }>();
+
+  /**
    * 合并注入时刻，并按当前扫描集合裁剪内存表：已删除脚本不留残留条目，
    * 否则内存表会随删除/改名无限增长（同一 scriptId 重新落盘会「复活」旧时刻）。
    */
@@ -96,17 +109,41 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     for (const scriptId of lastInjectedAt.keys()) {
       if (!scanned.has(scriptId)) lastInjectedAt.delete(scriptId);
     }
+    for (const scriptId of lastExecution.keys()) {
+      if (!scanned.has(scriptId)) lastExecution.delete(scriptId);
+    }
     return states.map(mergeLastInjected);
   }
 
   /** 单条合并（不裁剪）：命令回包与状态列表返回同一形状，调用方无需区分来源。 */
   function mergeLastInjected(item: UserScriptStatusItem): UserScriptStatusItem {
     const injectedAt = lastInjectedAt.get(item.scriptId);
+    const execution = lastExecution.get(item.scriptId);
     // 无记录时字段缺席（不写 null/0），避免 UI 呈现伪造的注入时间。
-    return injectedAt === undefined ? item : { ...item, lastInjectedAt: injectedAt };
+    return {
+      ...item,
+      ...(injectedAt === undefined ? {} : { lastInjectedAt: injectedAt }),
+      ...(execution === undefined ? {} : { lastExecution: execution }),
+    };
   }
 
   return {
+    /**
+     * report 回执入口（bootstrap 的 report handler 调用）：payload 由契约解析，
+     * 非法形状忽略不记；scriptId 额外过合法性门（与文件名规则同源），防异常回执
+     * 写入永远无法被扫描集合裁剪的键（合法 id 才可能对应真实脚本）。
+     */
+    recordExecutionReport(payload: unknown): void {
+      const report: UserScriptExecutionReport | null = parseExecutionReport(payload);
+      if (!report || !isValidUserScriptId(report.scriptId)) return;
+      lastExecution.set(
+        report.scriptId,
+        report.kind === "executed"
+          ? { at: Date.now(), ok: true }
+          : { at: Date.now(), ok: false, message: report.message },
+      );
+    },
+
     /**
      * userscript_list：只读状态投影（不做锚定写）。agent 观察面，
      * 回包不含脚本代码与文件路径。
