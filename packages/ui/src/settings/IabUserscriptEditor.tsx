@@ -235,6 +235,12 @@ export function IabUserscriptEditor({
         <span className="text-ui-xs text-foreground-subtlest">
           {intl.formatMessage({ id: "settings.userscripts.hints.frame" })}
         </span>
+        <span className="text-ui-xs text-foreground-subtlest">
+          {intl.formatMessage({ id: "settings.userscripts.hints.runAtDom" })}
+        </span>
+        <span className="text-ui-xs text-foreground-subtlest">
+          {intl.formatMessage({ id: "settings.userscripts.hints.include" })}
+        </span>
         {draftProblems.length > 0 ? (
           <div className="flex flex-col gap-1" role="status">
             {draftProblems.map((problem, index) => (

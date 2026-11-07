@@ -271,13 +271,18 @@ export interface IabUserscriptTemplateHints {
   matchHint: string;
   /** 实战要点二：脚本按 frame 注入。 */
   frameHint: string;
+  /** 实战要点三（26.5.4 S1）：缺省 document-start 时 DOM 未就绪。 */
+  runAtHint: string;
+  /** N1 迁移指引：@include 不被解析，需改写为 @match。 */
+  includeHint: string;
 }
 
 /**
- * 新建脚本的初始模板（P4 行为规则 5）：结构行固定，name 与两条实战要点由调用方
+ * 新建脚本的初始模板（P4 行为规则 5）：结构行固定，name 与实战要点由调用方
  * 传入本地化文案。@match 示例刻意用裸 host（`https://example.com/*`）——
  * 带端口的 pattern 会在编译期解析失败（compileMatchPattern 拒绝带端口 host），
- * 这是 P3 实战踩坑的第一来源。
+ * 这是 P3 实战踩坑的第一来源；第三条要点对应 26.5.4 S1 根因（document-start
+ * 时 document.body 为 null，无守卫 DOM 操作会被静默吞掉）。
  */
 export function buildNewScriptTemplate(hints: IabUserscriptTemplateHints): string {
   return [
@@ -289,6 +294,8 @@ export function buildNewScriptTemplate(hints: IabUserscriptTemplateHints): strin
     "",
     `// ${hints.matchHint}`,
     `// ${hints.frameHint}`,
+    `// ${hints.runAtHint}`,
+    `// ${hints.includeHint}`,
     "",
     "void 0;",
     "",

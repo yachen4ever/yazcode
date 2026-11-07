@@ -354,6 +354,8 @@ describe("buildNewScriptTemplate（P4 模板）", () => {
     name: "新脚本",
     matchHint: "MATCH-HINT 裸 host 不带端口",
     frameHint: "FRAME-HINT 按 frame 注入",
+    runAtHint: "RUNAT-HINT document-start 时 DOM 未就绪",
+    includeHint: "INCLUDE-HINT @include 需改写为 @match",
   };
 
   it("结构完整：元数据块起止、@match 裸 host 示例、@grant none", () => {
@@ -367,10 +369,14 @@ describe("buildNewScriptTemplate（P4 模板）", () => {
     assert.match(template, /@name 新脚本/);
   });
 
-  it("两个实战要点作为注释写入模板（i18n 文案由调用方传入）", () => {
+  it("实战要点作为注释写入模板（i18n 文案由调用方传入；26.5.4 起四条）", () => {
     const template = buildNewScriptTemplate(hints);
     assert.match(template, /\/\/ MATCH-HINT 裸 host 不带端口/);
     assert.match(template, /\/\/ FRAME-HINT 按 frame 注入/);
+    // S1 根因要点：document-start 时 document.body 尚未就绪。
+    assert.match(template, /\/\/ RUNAT-HINT document-start 时 DOM 未就绪/);
+    // N1 迁移指引：老脚本 @include 需改写为 @match。
+    assert.match(template, /\/\/ INCLUDE-HINT @include 需改写为 @match/);
   });
 });
 

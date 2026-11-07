@@ -2555,6 +2555,10 @@ const faIR: Record<string, string> = {
     "در @match از host بدون پورت استفاده کنید، مانند https://example.com/*؛ الگوهای دارای پورت تجزیه نمی‌شوند.",
   "settings.userscripts.hints.frame":
     "اسکریپت‌ها به تفکیک frame تزریق می‌شوند: frame اصلی و هر زیرفریم منطبق یک بار اجرا می‌کنند.",
+  "settings.userscripts.hints.runAtDom":
+    "با @run-at پیش‌فرض document-start هنوز DOM آماده نیست: پیش از کار با DOM منتظر body/DOMContentLoaded بمانید (یا @run-at document-end اعلام کنید).",
+  "settings.userscripts.hints.include":
+    "دستور @include اسکریپت‌های قدیمی تجزیه نمی‌شود؛ آن را به @match بازنویسی کنید.",
   "settings.userscripts.validate.metadataMissing": "بلوک فراداده ==UserScript== (نشانگرهای آغاز/پایان) یافت نشد.",
   "settings.userscripts.validate.matchMissing": "حداقل یک اعلان @match لازم است.",
   "settings.userscripts.validate.portHost":

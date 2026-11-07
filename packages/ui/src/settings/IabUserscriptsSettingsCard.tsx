@@ -141,6 +141,8 @@ export function IabUserscriptsSettingsCard() {
         name: intl.formatMessage({ id: "settings.userscripts.template.name" }),
         matchHint: intl.formatMessage({ id: "settings.userscripts.hints.matchHost" }),
         frameHint: intl.formatMessage({ id: "settings.userscripts.hints.frame" }),
+        runAtHint: intl.formatMessage({ id: "settings.userscripts.hints.runAtDom" }),
+        includeHint: intl.formatMessage({ id: "settings.userscripts.hints.include" }),
       }),
     });
   }, [intl]);

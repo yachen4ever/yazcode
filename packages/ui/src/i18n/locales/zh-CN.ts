@@ -2434,6 +2434,10 @@ const zhCN: Record<string, string> = {
     "@match 的 host 写裸域名（不带端口），如 https://example.com/*；带端口会解析失败。",
   "settings.userscripts.hints.frame":
     "脚本按 frame 注入：主 frame 与命中规则的子 frame 各执行一次。",
+  "settings.userscripts.hints.runAtDom":
+    "缺省 @run-at document-start 时 DOM 未就绪：脚本里操作 DOM 前先等 body/DOMContentLoaded（或声明 @run-at document-end）。",
+  "settings.userscripts.hints.include":
+    "老脚本的 @include 不被解析，请改写为 @match。",
   "settings.userscripts.validate.metadataMissing": "缺少 ==UserScript== 元数据块（起止标记）。",
   "settings.userscripts.validate.matchMissing": "至少需要一条 @match 声明。",
   "settings.userscripts.validate.portHost":

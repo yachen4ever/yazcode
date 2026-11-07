@@ -2587,6 +2587,10 @@ const enUS: Record<string, string> = {
     "Use a bare host in @match (no port), e.g. https://example.com/*; patterns with a port fail to compile.",
   "settings.userscripts.hints.frame":
     "Scripts are injected per frame: the main frame and every matching subframe run it once.",
+  "settings.userscripts.hints.runAtDom":
+    "With the default @run-at document-start the DOM is not ready: wait for body/DOMContentLoaded before touching the DOM (or declare @run-at document-end).",
+  "settings.userscripts.hints.include":
+    "Legacy @include directives are not parsed; rewrite them as @match.",
   "settings.userscripts.validate.metadataMissing": "Missing ==UserScript== metadata block (start/end markers).",
   "settings.userscripts.validate.matchMissing": "At least one @match declaration is required.",
   "settings.userscripts.validate.portHost":
