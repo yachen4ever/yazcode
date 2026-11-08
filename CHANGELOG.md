@@ -73,6 +73,45 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **遗留转 26.5.6 修复批**（issue #10，已派 mintdev）：刷新失败 toast 缺失/黑洞超时
   反馈缺失/状态点回绿 + i18n key 泄露（`settings.browser.control.loadingHint`）。
 
+## 26.5.7 (2026-11-08)
+
+- **全局 toast 反馈零 rAF 依赖**（26.5.6 批，issue #10）：`components/ui/toast.tsx`（全仓约 69 处消费）
+  在**投递**（容器未挂载时 rAF 循环重试）与**可见性**（rAF 翻 visible）两处依赖
+  `requestAnimationFrame`——被遮挡/后台的 Electron 窗口 rAF 停摆（实测约 0.2 帧/秒甚至
+  暂停）致 toast 延迟数秒或永久丢失；而同一链路走 React Scheduler（MessageChannel）的
+  状态渲染不受影响——这正是「状态点转失败正常、toast 全程不见」的断点，也解释了
+  26.5.4/26.5.5 两轮「刷新失败 toast 不可见」的同一根因。修法：投递改
+  `toastDelivery.ts` 控制器（未挂载→缓冲、挂载同步排空，预挂载 update/dismiss 语义
+  保持）+ 可见性改 CSS keyframes（motion-safe），并加**源级零 rAF 断言**防回归。
+  新 spec `docs/specs/toast-visibility-throttling.md`。
+- **分态文案 i18n key 三语补齐**（26.5.6 批）：26.5.5 上线浏览器控制开关分态说明时漏提交
+  locale 定义（`settings.browser.control.loadingHint` / `unavailableHint` 三语全缺 →
+  IntlProvider 缺 key 回退渲染 id 本身，任何 locale 下用户都看到 key）——三语补齐，并清扫
+  同类遗漏（`detectModels` / `detectModelsEmpty` 的 fa 缺定义）。
+- **连通性探针重试预算 Single 档 + 探测专属 10s 上限**（issue #12）：连接拒绝被
+  `isNetworkFailure` 归 retryable，runner 重试环按默认预算（11 次尝试、2s→60s 指数
+  退避）把毫秒级失败拖满 40s+（**10s 只是 UI race 观感，60s abort 才是真实上限**）。
+  修法：`ModelRetryBudget.Single`（总尝试数 1，真发请求不变、fail-closed 不变）+
+  探测专属 10s abort + 修「调用级预算被 taskType 缺省压掉」的隐藏前提。实测：连接拒绝
+  >40s → **15ms**，黑洞 5.0s。
+- **SSH 主机密钥 TOFU 校验**（issue #16，移植 axiom-desu/ZCodium@1575a769，Apache-2.0）：
+  本仓 `buildSSHConnectConfig` 原无 `hostVerifier`/`hostKeys`/`known_hosts`——ssh2 默认接受
+  任意主机密钥，MITM 可冒充目标主机骗取密码/私钥（远端 Agent 部署链路会执行任意命令，
+  风险更高）。修法：TOFU 存储与校验（`packages/server/src/remote/sshKnownHosts.ts`）+
+  唯一生产建连路径注入 verifier；fail-closed 三方判定（首连落库/匹配放行/变更拒绝不覆盖，
+  读取失败·schema 不兼容·首连写入失败一律拒绝）；known_hosts 只存 sha256 指纹+时间戳，
+  凭据不入盘不入日志；损坏→拒绝并提示清理路径，不静默重建；**无逃生开关**；拒绝原因
+  可区分（密钥变更=安全事件 / 存储故障=环境故障）。新 spec
+  `docs/specs/ssh-remote-hardening.md`。
+- **版本号说明**：26.5.4 与 26.5.6 号段空缺——26.5.4 draft 经 minttest 五轮双盲后用户
+  决定跳过发布（draft 撤销），26.5.6 为其修复批（未单独出包）；两段内容均随本版交付
+  （spec 行为规则 4）。
+
+### 验收结论（2026-11-08，minttest 七轮双盲 + workwin 实机）
+
+- 待 minttest 七轮复测（toast 实效 / 状态点回绿 / i18n key 消失 + 三档探针时延复核），
+  结论回填本节。
+
 ## 26.5.3 (2026-11-06)
 
 - **mint 二轮双盲修复批（F1–F7）**：
