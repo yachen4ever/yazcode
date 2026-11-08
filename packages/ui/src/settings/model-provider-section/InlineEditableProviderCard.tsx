@@ -248,7 +248,8 @@ export function InlineEditableProviderCard({
     nameValue: getProviderFormLabel(provider),
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
-    allowInsecureTlsValue: provider.config.api?.allowInsecureTls === true && !provider.config.api?.tlsCaPath,
+    allowInsecureTlsValue:
+      provider.config.api?.allowInsecureTls === true && !provider.config.api?.tlsCaPath,
     tlsCaPathValue: provider.config.api?.tlsCaPath ?? "",
     apiKeyValue: getProviderFormApiKey(provider),
   });

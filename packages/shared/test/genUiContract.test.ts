@@ -59,11 +59,7 @@ describe("buildGenUiScopeKey", () => {
       buildGenUiScopeKey({ workspacePath, workspaceIdentity: "   ", sessionId: "s1" }),
       buildGenUiScopeKey({ workspacePath, sessionId: "s1" }),
     );
-    assert.equal(
-      byIdentity,
-      JSON.stringify(["remote-1", "s1"]),
-      "键格式稳定，身份先行、会话在后",
-    );
+    assert.equal(byIdentity, JSON.stringify(["remote-1", "s1"]), "键格式稳定，身份先行、会话在后");
   });
 
   it("scope schema 是 strict：未知键拒绝", () => {

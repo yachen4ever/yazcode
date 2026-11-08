@@ -5,9 +5,7 @@ import type {
   ModelProviderNavItem,
 } from "@/settings/model-provider-section/constants.js";
 import { ModelProviderSectionNavigation } from "@/settings/model-provider-section/Navigation.js";
-import {
-  ProviderConnectivityStatusContext,
-} from "@/settings/model-provider-section/ProviderStatusIndicator.js";
+import { ProviderConnectivityStatusContext } from "@/settings/model-provider-section/ProviderStatusIndicator.js";
 import { ProviderDetailFeedbackBoundary } from "@/settings/model-provider-section/ProviderDetailFeedback.js";
 import { SettingsResourceHeaderActions } from "@/settings/SettingsResourceHeaderActions.js";
 

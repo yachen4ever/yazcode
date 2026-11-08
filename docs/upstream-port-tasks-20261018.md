@@ -10,19 +10,19 @@
 
 ## 已核实「无需引入」清单（存档理由，后续会话不必重查）
 
-| 上游项 | 判定 | 依据 |
-| --- | --- | --- |
-| #29 插件：Codex 根 hooks.json 兼容 + zip 内存解压防挂起 | **已吸收** | `hook-sources.ts` 已有 CODEX_HOOKS_PATH 回退逻辑；`zip-source.ts` 已是 `archiveBytes` + `yauzl.fromBuffer`（yazcode 侧早已移植） |
-| #47 禁用强更启动门禁 | **已有等价** | yazcode 的 `maybeBlockStartupForForceUpdate` 早就是无条件 `return { blocked: false }`（审计版不连官方配置服务） |
-| #40 动作行常驻 / 用户消息时间戳 / 共享轮询 / 速度展示 | **已同源** | 常驻：yazcode 基线从无 hover 门控（动作行恒显）；时间戳：UserInputRow 已有 timeLabel（864/1297）；共享轮询与速度双缺陷修复：v1.0.7 首创 + 2026-10-17 22a15d1 已修 |
-| #56 services 测试脚本对齐 vitest | **不适用** | yazcode 测试为 node:test 形态且无该脚本问题；全测试域 `process.cwd()` 零命中（已扫描 packages/*/test 与 apps/zcode-cli/tests） |
-| #58 rewardsMenuIcon / #49 footer 登录入口 | **不适用** | yazcode 无账号/奖励体系（去智谱彻底） |
-| #45 release 修复群 | **不适用为主** | gen-ui alias 依赖 gen-ui 大件；数据根/决策窗口 yazcode 自有方案；WRC yazcode 无 mobile 目录；i18n 微修无独立价值 |
-| #41 版本体系 / #37 侧栏版本号 / #35 CLI 类型门禁 / #31 provider 打包 / #33 licenses AND 分类 | **已有等价** | yazcode 各自独立落地过（92b3be1、ffd11c4、645114e+1c33104、645114e、v1.0.4 许可三连修） |
-| #19 数据根归属文件迁移 / #25 Coding Plan 预设恢复 | **立场性不引入** | #19 两侧方案已定型分歧；#25 与去智谱立场相悖 |
-| #27 linked-issue 门禁 / #60 oxfmt 归一 | **不适用** | 仓库 CI/格式化惯例属上游仓自己的事 |
-| #15 OrcaRouter | **可选未采** | 沿用 10-06 判断：parity 可选，yazcode 无需求场景 |
-| #43 再基线的其余技能（opentui 编程向、e2e-case-lifecycle、zcode-large-task-fixture 等） | **不建议** | 与办公向定位不符或已自有等价；react-best-practices/ai-elements 刷新维持 10-11 判断「可跟进但低优先级」 |
+| 上游项                                                                                       | 判定             | 依据                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #29 插件：Codex 根 hooks.json 兼容 + zip 内存解压防挂起                                      | **已吸收**       | `hook-sources.ts` 已有 CODEX_HOOKS_PATH 回退逻辑；`zip-source.ts` 已是 `archiveBytes` + `yauzl.fromBuffer`（yazcode 侧早已移植）                                  |
+| #47 禁用强更启动门禁                                                                         | **已有等价**     | yazcode 的 `maybeBlockStartupForForceUpdate` 早就是无条件 `return { blocked: false }`（审计版不连官方配置服务）                                                   |
+| #40 动作行常驻 / 用户消息时间戳 / 共享轮询 / 速度展示                                        | **已同源**       | 常驻：yazcode 基线从无 hover 门控（动作行恒显）；时间戳：UserInputRow 已有 timeLabel（864/1297）；共享轮询与速度双缺陷修复：v1.0.7 首创 + 2026-10-17 22a15d1 已修 |
+| #56 services 测试脚本对齐 vitest                                                             | **不适用**       | yazcode 测试为 node:test 形态且无该脚本问题；全测试域 `process.cwd()` 零命中（已扫描 packages/\*/test 与 apps/zcode-cli/tests）                                   |
+| #58 rewardsMenuIcon / #49 footer 登录入口                                                    | **不适用**       | yazcode 无账号/奖励体系（去智谱彻底）                                                                                                                             |
+| #45 release 修复群                                                                           | **不适用为主**   | gen-ui alias 依赖 gen-ui 大件；数据根/决策窗口 yazcode 自有方案；WRC yazcode 无 mobile 目录；i18n 微修无独立价值                                                  |
+| #41 版本体系 / #37 侧栏版本号 / #35 CLI 类型门禁 / #31 provider 打包 / #33 licenses AND 分类 | **已有等价**     | yazcode 各自独立落地过（92b3be1、ffd11c4、645114e+1c33104、645114e、v1.0.4 许可三连修）                                                                           |
+| #19 数据根归属文件迁移 / #25 Coding Plan 预设恢复                                            | **立场性不引入** | #19 两侧方案已定型分歧；#25 与去智谱立场相悖                                                                                                                      |
+| #27 linked-issue 门禁 / #60 oxfmt 归一                                                       | **不适用**       | 仓库 CI/格式化惯例属上游仓自己的事                                                                                                                                |
+| #15 OrcaRouter                                                                               | **可选未采**     | 沿用 10-06 判断：parity 可选，yazcode 无需求场景                                                                                                                  |
+| #43 再基线的其余技能（opentui 编程向、e2e-case-lifecycle、zcode-large-task-fixture 等）      | **不建议**       | 与办公向定位不符或已自有等价；react-best-practices/ai-elements 刷新维持 10-11 判断「可跟进但低优先级」                                                            |
 
 ## T1（需拍板的大件）：UI Plugin（MCP Apps）/ gen-ui 宿主接线
 

@@ -99,8 +99,7 @@ describe("ProjectRepository", () => {
   it("远端更新改唯一 root 被拒（remote-root-immutable）；元数据可改", () => {
     const saved = repo.saveProject({ name: "r-meta", hostId: "ssh:h", roots: ["/r/meta"] });
     assert.throws(
-      () =>
-        repo.saveProject({ projectId: saved.projectId, name: "r-meta", roots: ["/r/other"] }),
+      () => repo.saveProject({ projectId: saved.projectId, name: "r-meta", roots: ["/r/other"] }),
       /project.remote-root-immutable/,
     );
     const renamed = repo.saveProject({
@@ -120,7 +119,11 @@ describe("ProjectRepository", () => {
   it("更新不带 hostId 以既有行为准；显式传不同 hostId 即拒（host-immutable）", () => {
     const saved = repo.saveProject({ name: "r-host", hostId: "ssh:h", roots: ["/r/host"] });
     // 不传 hostId 的更新（UI 编辑器路径）不得把远端项目翻成 local。
-    const renamed = repo.saveProject({ projectId: saved.projectId, name: "r-host-2", roots: ["/r/host"] });
+    const renamed = repo.saveProject({
+      projectId: saved.projectId,
+      name: "r-host-2",
+      roots: ["/r/host"],
+    });
     assert.equal(renamed.hostId, "ssh:h");
     assert.throws(
       () =>

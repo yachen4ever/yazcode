@@ -11,16 +11,16 @@ merge/pull/checkout，未动工作区，未向上游开 issue/PR）。上游基�
 
 ## 结论总表
 
-| # | 候选 | 上游同构点 | 成本 | 风险 | 建议动作 | 优先级 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | **toast 反馈零 rAF 依赖** | `packages/ui/src/components/ui/toast.tsx:241,245,408,439` | 小（自包含：1 新模块 + 1 组件改造 + 测试） | 低（前台视觉不变） | **直接提 PR** | **高** |
-| 2 | **SSH 主机密钥 TOFU 校验** | `packages/server/src/remote/sshAuth.ts:25-52`（buildSSHConnectConfig 无 hostVerifier，grep 零命中） | 中（283 行新模块 + 接线 + 测试） | 中（三手移植链需声明来源） | **先开 issue 讨论** | **高（安全）** |
-| 3 | **`.gitattributes` 行尾归一 catch-all** | `.gitattributes:1-7`（仅 3 条点状规则，无 catch-all；其注释自证已被 CRLF 咬过一次） | 极小（约 10 行属性 + 门禁参数） | 低 | **直接提 PR** | 中 |
-| 4 | **宿主注入面 deny-by-default** | `scripts/dev-desktop-env.mjs:57`（`env: process.env` 裸透传，无剥离原语） | 中（需按上游环境定制 allowlist） | 中（默认行为变化需论证） | **开 issue 讨论** | 中低 |
-| 5 | 重试预算档位 | 上游已有（`apps/zcode-cli/packages/adapters/src/model/retry-budget.ts` 同构实现） | — | — | **砍掉** | 不建议 |
-| 6 | 连通性探测 fail-closed 语义 | 上游无探测特性（本仓 26.5.5 产品面） | — | — | **砍掉** | 不建议 |
-| 7 | 台账生成幂等门禁 | 上游已有（`.github/workflows/licenses-notices.yml` 自建「重生成 vs 台账」长期闸门，且比本仓多 artifact+人工 review 环节） | — | — | **砍掉** | 不建议 |
-| 8 | 多环境对照隔离法 | 方法论，非代码候选 | — | — | 记录（不作为贡献项） | — |
+| #   | 候选                                    | 上游同构点                                                                                                                | 成本                                       | 风险                       | 建议动作             | 优先级         |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------- | -------------------- | -------------- |
+| 1   | **toast 反馈零 rAF 依赖**               | `packages/ui/src/components/ui/toast.tsx:241,245,408,439`                                                                 | 小（自包含：1 新模块 + 1 组件改造 + 测试） | 低（前台视觉不变）         | **直接提 PR**        | **高**         |
+| 2   | **SSH 主机密钥 TOFU 校验**              | `packages/server/src/remote/sshAuth.ts:25-52`（buildSSHConnectConfig 无 hostVerifier，grep 零命中）                       | 中（283 行新模块 + 接线 + 测试）           | 中（三手移植链需声明来源） | **先开 issue 讨论**  | **高（安全）** |
+| 3   | **`.gitattributes` 行尾归一 catch-all** | `.gitattributes:1-7`（仅 3 条点状规则，无 catch-all；其注释自证已被 CRLF 咬过一次）                                       | 极小（约 10 行属性 + 门禁参数）            | 低                         | **直接提 PR**        | 中             |
+| 4   | **宿主注入面 deny-by-default**          | `scripts/dev-desktop-env.mjs:57`（`env: process.env` 裸透传，无剥离原语）                                                 | 中（需按上游环境定制 allowlist）           | 中（默认行为变化需论证）   | **开 issue 讨论**    | 中低           |
+| 5   | 重试预算档位                            | 上游已有（`apps/zcode-cli/packages/adapters/src/model/retry-budget.ts` 同构实现）                                         | —                                          | —                          | **砍掉**             | 不建议         |
+| 6   | 连通性探测 fail-closed 语义             | 上游无探测特性（本仓 26.5.5 产品面）                                                                                      | —                                          | —                          | **砍掉**             | 不建议         |
+| 7   | 台账生成幂等门禁                        | 上游已有（`.github/workflows/licenses-notices.yml` 自建「重生成 vs 台账」长期闸门，且比本仓多 artifact+人工 review 环节） | —                                          | —                          | **砍掉**             | 不建议         |
+| 8   | 多环境对照隔离法                        | 方法论，非代码候选                                                                                                        | —                                          | —                          | 记录（不作为贡献项） | —              |
 
 ## 逐候选明细
 
@@ -28,6 +28,7 @@ merge/pull/checkout，未动工作区，未向上游开 issue/PR）。上游基�
 
 **上游同构点（逐行核实，与本仓 26.5.6 修前状态逐字同构）**：
 `packages/ui/src/components/ui/toast.tsx`
+
 - `:241` `const [visible, setVisible] = useState(false);` +
   `:245` `requestAnimationFrame(() => setVisible(true));` ——可见性经 rAF 翻转，
   翻转前元素停在 opacity-0；
@@ -115,7 +116,7 @@ dev/运行实例（本仓机队实践已实证同类污染形态）。
 ### 砍掉的线索及原因
 
 - **线索 5（重试预算档位）**：上游 `apps/zcode-cli/packages/adapters/src/model/
-  retry-budget.ts` 已有同构实现（single/unbounded 档位、同一哨兵常量
+retry-budget.ts` 已有同构实现（single/unbounded 档位、同一哨兵常量
   `UNBOUNDED_RETRY_MAX_ATTEMPTS`，且比本仓多一个 `resolveRetryOptionsForBudget`
   归一助手）——本仓该文件本就源自同源代码，无差可贡献。「CI 语境显式参数化」
   半边并入候选 4 的宿主注入面机制，不单列。
@@ -131,12 +132,12 @@ dev/运行实例（本仓机队实践已实证同类污染形态）。
 
 ## 建议动作汇总（须用户最终授权后方可执行）
 
-| 顺序 | 动作 | 形态 | 优先级 |
-| --- | --- | --- | --- |
-| 1 | toast 零 rAF 修复 | 直接提 PR（含测试与 spec 摘要） | 高 |
-| 2 | SSH 主机密钥 TOFU | 先开 issue（附机制与补丁草案 + 来源声明），意向后提 PR | 高（安全） |
-| 3 | `.gitattributes` catch-all | 直接提 PR（单次 renormalize 说明） | 中 |
-| 4 | 宿主注入面边界 | 开 issue 讨论（allowlist 提案） | 中低 |
+| 顺序 | 动作                       | 形态                                                   | 优先级     |
+| ---- | -------------------------- | ------------------------------------------------------ | ---------- |
+| 1    | toast 零 rAF 修复          | 直接提 PR（含测试与 spec 摘要）                        | 高         |
+| 2    | SSH 主机密钥 TOFU          | 先开 issue（附机制与补丁草案 + 来源声明），意向后提 PR | 高（安全） |
+| 3    | `.gitattributes` catch-all | 直接提 PR（单次 renormalize 说明）                     | 中         |
+| 4    | 宿主注入面边界             | 开 issue 讨论（allowlist 提案）                        | 中低       |
 
 ## 遗留
 

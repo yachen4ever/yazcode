@@ -9,14 +9,8 @@ import {
 /** P2 验收场景 1：三命令 schema 边界（strict、空 scriptId 拒、pendingApproval 兼容）。 */
 describe("browserCommandSchema userscript 分支", () => {
   it("接受三命令的最小合法形态", () => {
-    assert.equal(
-      browserCommandSchema.safeParse({ method: "userscript_list" }).success,
-      true,
-    );
-    assert.equal(
-      browserCommandSchema.safeParse({ method: "userscript_reload" }).success,
-      true,
-    );
+    assert.equal(browserCommandSchema.safeParse({ method: "userscript_list" }).success, true);
+    assert.equal(browserCommandSchema.safeParse({ method: "userscript_reload" }).success, true);
     assert.equal(
       browserCommandSchema.safeParse({
         method: "userscript_set_enabled",
@@ -55,18 +49,27 @@ describe("browserCommandSchema userscript 分支", () => {
 
   it("拒绝空 scriptId 与非布尔 enabled", () => {
     assert.equal(
-      browserCommandSchema.safeParse({ method: "userscript_set_enabled", scriptId: "", enabled: true })
-        .success,
+      browserCommandSchema.safeParse({
+        method: "userscript_set_enabled",
+        scriptId: "",
+        enabled: true,
+      }).success,
       false,
     );
     assert.equal(
-      browserCommandSchema.safeParse({ method: "userscript_set_enabled", scriptId: "  ", enabled: true })
-        .success,
+      browserCommandSchema.safeParse({
+        method: "userscript_set_enabled",
+        scriptId: "  ",
+        enabled: true,
+      }).success,
       false,
     );
     assert.equal(
-      browserCommandSchema.safeParse({ method: "userscript_set_enabled", scriptId: "a", enabled: "yes" })
-        .success,
+      browserCommandSchema.safeParse({
+        method: "userscript_set_enabled",
+        scriptId: "a",
+        enabled: "yes",
+      }).success,
       false,
     );
     assert.equal(

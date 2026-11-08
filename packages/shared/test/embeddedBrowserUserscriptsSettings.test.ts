@@ -63,8 +63,8 @@ test("embeddedBrowserUserscripts：整表非对象降级为空表", () => {
 
 test("embeddedBrowserUserscripts：M4 不变量 pendingApproval ⇒ enabled=false（放行/拒绝矩阵）", () => {
   const parseEntry = (entry: unknown) =>
-    appSettingsSchema.parse({ embeddedBrowserUserscripts: { s: entry } })
-      .embeddedBrowserUserscripts?.s;
+    appSettingsSchema.parse({ embeddedBrowserUserscripts: { s: entry } }).embeddedBrowserUserscripts
+      ?.s;
 
   // 放行矩阵：合法组合原样保留（enabled 缺省补 false）。
   assert.deepEqual(parseEntry({ enabled: true, sha256: "abc123" }), {

@@ -4,7 +4,10 @@ import { localTtftFactsSchema } from "../localTtft.js";
 // 阶段为类型占位（后半接通道层时启用），数据形状已按规范定稿。
 import { z } from "zod";
 import { APP_USAGE_RANGES, appUsageSnapshotSchema } from "../usage-stats.js";
-import { zcodeWorkspaceRefSchema, zcodeAdditionalDirectoriesSchema } from "../zcode-protocol-legacy-types.js";
+import {
+  zcodeWorkspaceRefSchema,
+  zcodeAdditionalDirectoriesSchema,
+} from "../zcode-protocol-legacy-types.js";
 import {
   PROTOCOL_V4_LIMITS,
   V4_WIRE_PROTOCOL_VERSION,

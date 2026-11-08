@@ -30,8 +30,7 @@ export function createProjectEditorForm(
       name: project.name,
       nameEdited: false,
       roots,
-      primaryRoot:
-        project.roots.find((root) => root.isPrimary)?.rootPath ?? roots[0] ?? "",
+      primaryRoot: project.roots.find((root) => root.isPrimary)?.rootPath ?? roots[0] ?? "",
     };
   }
   const roots = [...new Set(initialRoots.map((root) => root.trim()).filter(Boolean))];
@@ -59,28 +58,18 @@ export function addRootsToForm(
 }
 
 /** 移除目录；被移除的是主目录时回落首个 root（spec：主目录被移除时回落首个 root）。 */
-export function removeRootFromForm(
-  form: ProjectEditorForm,
-  rootPath: string,
-): ProjectEditorForm {
+export function removeRootFromForm(form: ProjectEditorForm, rootPath: string): ProjectEditorForm {
   const roots = form.roots.filter((root) => root !== rootPath);
-  const primaryRoot =
-    form.primaryRoot === rootPath ? (roots[0] ?? "") : form.primaryRoot;
+  const primaryRoot = form.primaryRoot === rootPath ? (roots[0] ?? "") : form.primaryRoot;
   return { ...form, roots, primaryRoot };
 }
 
-export function setPrimaryRootInForm(
-  form: ProjectEditorForm,
-  rootPath: string,
-): ProjectEditorForm {
+export function setPrimaryRootInForm(form: ProjectEditorForm, rootPath: string): ProjectEditorForm {
   if (!form.roots.includes(rootPath)) return form;
   return { ...form, primaryRoot: rootPath };
 }
 
-export function renameProjectInForm(
-  form: ProjectEditorForm,
-  name: string,
-): ProjectEditorForm {
+export function renameProjectInForm(form: ProjectEditorForm, name: string): ProjectEditorForm {
   return { ...form, name, nameEdited: true };
 }
 

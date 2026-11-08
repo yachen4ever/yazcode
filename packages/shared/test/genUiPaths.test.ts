@@ -19,10 +19,7 @@ describe("getGenUiOutputDirectory", () => {
       sessionId: "s1",
     });
     assert.equal(a, getGenUiOutputDirectory(root, { workspacePath: ws, sessionId: "s1" }));
-    assert.notEqual(
-      a,
-      getGenUiOutputDirectory(root, { workspacePath: ws, sessionId: "s2" }),
-    );
+    assert.notEqual(a, getGenUiOutputDirectory(root, { workspacePath: ws, sessionId: "s2" }));
     assert.notEqual(
       a,
       getGenUiOutputDirectory(root, {
@@ -47,18 +44,14 @@ describe("getGenUiOutputDirectory", () => {
         sessionId: "s1",
       }),
     );
-    assert.doesNotThrow(() =>
-      getGenUiOutputDirectory(ws, { workspacePath: ws, sessionId: "s1" }),
-    );
+    assert.doesNotThrow(() => getGenUiOutputDirectory(ws, { workspacePath: ws, sessionId: "s1" }));
   });
 
   it("根或工作区非绝对路径直接抛错", () => {
     assert.throws(() =>
       getGenUiOutputDirectory("relative/root", { workspacePath: ws, sessionId: "s1" }),
     );
-    assert.throws(() =>
-      getGenUiOutputDirectory(root, { workspacePath: "ws", sessionId: "s1" }),
-    );
+    assert.throws(() => getGenUiOutputDirectory(root, { workspacePath: "ws", sessionId: "s1" }));
   });
 
   it("常量与导出名稳定", () => {

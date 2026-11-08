@@ -159,7 +159,16 @@ export function useFileMentionProvider(
     return () => {
       active = false;
     };
-  }, [enabled, fileService, workspacePath, workspaceIdentity, query, limit, scope, additionalRootsKey]);
+  }, [
+    enabled,
+    fileService,
+    workspacePath,
+    workspaceIdentity,
+    query,
+    limit,
+    scope,
+    additionalRootsKey,
+  ]);
 
   const current =
     enabled &&

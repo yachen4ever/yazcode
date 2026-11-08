@@ -23,7 +23,7 @@
      ≤5MB、文件名符合第 1 条；命中后经 `gen-ui://` 协议流式返回。
    - 渲染 iframe `sandbox="allow-scripts"`（无 allow-same-origin / popups / top-navigation）；
      主进程注入测高桥与滚动条隐藏样式，先于作者脚本执行。
-   - P1 允许 fragment 从 CDN 白名单（cdnjs/esm.sh/jsdelivr/unpkg/fonts.*）加载脚本；
+   - P1 允许 fragment 从 CDN 白名单（cdnjs/esm.sh/jsdelivr/unpkg/fonts.\*）加载脚本；
      vendored 本地资源域（上游 genUiVendor）推迟到 P2。iframe 内点击外链 P1 不处理。
 4. **测高**：guest 是内容测量唯一来源（ResizeObserver+MutationObserver，合帧上报，
    排除根级 script/style/tooltip，vh 等量增量抑制），宿主容器被动跟随，上限 10000px。
@@ -88,4 +88,3 @@ flowchart LR
    显式声明 Gen UI 不可用）。
 3. 主进程校验（`genUiFileProtocol.ts`）的单测在 `packages/desktop/tests/genUiFileProtocol.test.ts`，
    覆盖验收场景 3 的全部拒绝路径与桥脚本注入位置。
-

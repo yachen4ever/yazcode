@@ -1172,7 +1172,7 @@ export function SessionPane({
     modelSelectionService,
     // P3d 草稿隔离：草稿态（sessionId=null）的 __draft__ scope 按项目段存取；
     // 正式 session scope 不带项目段（见 useDraftConfigControl）。
-    draftProjectId: sessionId === null ? draftProjectContext.project?.projectId ?? null : null,
+    draftProjectId: sessionId === null ? (draftProjectContext.project?.projectId ?? null) : null,
   });
   const modelSelectionView =
     modelSelectionRead.state.status === "ready" ? modelSelectionRead.state.view : null;

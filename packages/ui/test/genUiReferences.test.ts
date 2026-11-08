@@ -4,7 +4,7 @@ import { projectGenUiReferences } from "../src/lib/genUiReferences.js";
 
 // 上游历史写法使用 Unicode 私用区分隔符（UE00 开、UE02 协议名后缀、UE01 闭合），
 // 测试里用显式转义，避免不可见字符在编辑/评审中丢失。
-const token = "\u{E200}visualize\u{E202}{\"path\":\"/work/demo.html\"}\u{E201}";
+const token = '\u{E200}visualize\u{E202}{"path":"/work/demo.html"}\u{E201}';
 const directive = '::visualize{path="/work/demo.html" title="工作区体积" mode="wide"}';
 const jsonDirective = '::visualize{"path":"/work/demo.html","title":"贝塞尔曲线进阶"}';
 
@@ -82,7 +82,10 @@ describe("Gen UI reference projection", () => {
     for (const source of [directive, jsonDirective]) {
       for (let length = 2; length <= source.length; length++) {
         const parts = projectGenUiReferences(`Before ${source.slice(0, length)}`, false);
-        assert.equal(parts.some((part) => part.kind === "ui"), false);
+        assert.equal(
+          parts.some((part) => part.kind === "ui"),
+          false,
+        );
         assert.deepEqual(
           parts.filter((part) => part.kind === "text"),
           [{ kind: "text", text: "Before " }],
@@ -146,16 +149,16 @@ describe("Gen UI reference projection", () => {
     assert.deepEqual(projectGenUiReferences(`\`${token}\``, true), [
       { kind: "text", text: `\`${token}\`` },
     ]);
-    assert.deepEqual(
-      projectGenUiReferences(`hello\u{E200}visualize\u{E202}{"path":`, false),
-      [{ kind: "text", text: "hello" }, { kind: "pending" }],
-    );
+    assert.deepEqual(projectGenUiReferences(`hello\u{E200}visualize\u{E202}{"path":`, false), [
+      { kind: "text", text: "hello" },
+      { kind: "pending" },
+    ]);
   });
 
   it("does not execute malformed paths and preserves repeated occurrences", () => {
     assert.equal(
       projectGenUiReferences(
-        "\u{E200}visualize\u{E202}{\"path\":\"https://evil/a.html\"}\u{E201}",
+        '\u{E200}visualize\u{E202}{"path":"https://evil/a.html"}\u{E201}',
         true,
       )[0]?.kind,
       "invalid",

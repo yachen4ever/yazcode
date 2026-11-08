@@ -5,10 +5,7 @@ import {
   type RemoteModelCatalogResult,
   type RemoteModelListRequest,
 } from "@zcode/provider";
-import {
-  createInsecureTlsFetch,
-  createPinnedCertFetch,
-} from "@zcode/provider/insecure-tls-fetch";
+import { createInsecureTlsFetch, createPinnedCertFetch } from "@zcode/provider/insecure-tls-fetch";
 
 /** 模型列表拉取的分页与超时上限；异常网关的死循环在这里被截断。 */
 const MAX_PAGES = 10;
@@ -36,12 +33,11 @@ export function createRemoteModelCatalogExecutor(dependencies: {
       let request = buildRemoteModelListRequest(input);
       // 自签证书网关：检测请求与正式执行链同源生效。优先证书钉扎（校验保持
       // 开启），其次才是跳过校验的兜底——两者互斥，钉扎更安全。
-      const requestFetch =
-        input.tlsCaPath
-          ? createPinnedCertFetch(doFetch, input.baseUrl, input.tlsCaPath)
-          : input.allowInsecureTls === true
-            ? createInsecureTlsFetch(doFetch, input.baseUrl)
-            : doFetch;
+      const requestFetch = input.tlsCaPath
+        ? createPinnedCertFetch(doFetch, input.baseUrl, input.tlsCaPath)
+        : input.allowInsecureTls === true
+          ? createInsecureTlsFetch(doFetch, input.baseUrl)
+          : doFetch;
       const modelIds: string[] = [];
       const seen = new Set<string>();
       for (let page = 0; page < MAX_PAGES; page += 1) {

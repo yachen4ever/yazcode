@@ -233,7 +233,9 @@ test("session_ended 以 DriverError 抛出时同样复活并重试（throw 路�
       }
       listAppsCount += 1;
       if (listAppsCount === 1) {
-        const err = new Error("this session has ended; call start_session explicitly to reuse its label");
+        const err = new Error(
+          "this session has ended; call start_session explicitly to reuse its label",
+        );
         err.errorCode = "session_ended";
         throw err;
       }
@@ -252,7 +254,9 @@ test("throw 路径的复活失败原样透传错误", async () => {
   const client = {
     async callTool(name) {
       if (name === "start_session") throw new Error("revive lease gone");
-      const err = new Error("this session has ended; call start_session explicitly to reuse its label");
+      const err = new Error(
+        "this session has ended; call start_session explicitly to reuse its label",
+      );
       throw err;
     },
   };

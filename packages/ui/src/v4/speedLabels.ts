@@ -30,8 +30,7 @@ export function formatSpeedLabels(
       ? null
       : numberFormat.format(round.tokensPerSecond);
   const prefillLabel =
-    round?.prefillTokensPerSecond === null ||
-    round?.prefillTokensPerSecond === undefined
+    round?.prefillTokensPerSecond === null || round?.prefillTokensPerSecond === undefined
       ? null
       : numberFormat.format(round.prefillTokensPerSecond);
   return {

@@ -10,13 +10,13 @@ LICENSE；SKILL.md frontmatter 的 `license: Proprietary` 是未刷净的残留�
 
 ## 引入范围
 
-| 上游插件 | 引入 | 理由 |
-| --- | --- | --- |
-| `pdf-plugin`（pdf 0.1.8） | ✅ | 制作工作流（briefs 四路由 / design_engine / visual-judge agent / LaTeX resume / Playwright 渲染）为本仓空白 |
-| `documents-plugin`（docx 0.1.8） | ✅ | docx-js 从零创建 + 设计系统 + 批注路由，与 MiniMax C# 修订/redlining 互补 |
-| `spreadsheets-plugin`（xlsx 0.1.8） | ✅ | 图表引擎 / VBA 模板 / 分析场景配方 / 质检管线，与 MiniMax pandas 处理链互补 |
-| `presentations-plugin`（pptx 0.1.8） | ❌ | 仅 2 文件纯指引（57K，无脚本），MiniMax python-pptx 版（14 文件）更强 |
-| `image-search-plugin`（0.1.1） | ❌ | 纯 MCP 声明，依赖 `${ZCODE_BASE_URL}` 官方 JWT 账号鉴权，违背 `no-official-platform` spec |
+| 上游插件                             | 引入 | 理由                                                                                                        |
+| ------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------- |
+| `pdf-plugin`（pdf 0.1.8）            | ✅   | 制作工作流（briefs 四路由 / design_engine / visual-judge agent / LaTeX resume / Playwright 渲染）为本仓空白 |
+| `documents-plugin`（docx 0.1.8）     | ✅   | docx-js 从零创建 + 设计系统 + 批注路由，与 MiniMax C# 修订/redlining 互补                                   |
+| `spreadsheets-plugin`（xlsx 0.1.8）  | ✅   | 图表引擎 / VBA 模板 / 分析场景配方 / 质检管线，与 MiniMax pandas 处理链互补                                 |
+| `presentations-plugin`（pptx 0.1.8） | ❌   | 仅 2 文件纯指引（57K，无脚本），MiniMax python-pptx 版（14 文件）更强                                       |
+| `image-search-plugin`（0.1.1）       | ❌   | 纯 MCP 声明，依赖 `${ZCODE_BASE_URL}` 官方 JWT 账号鉴权，违背 `no-official-platform` spec                   |
 
 ## 行为规则
 
@@ -27,7 +27,7 @@ LICENSE；SKILL.md frontmatter 的 `license: Proprietary` 是未刷净的残留�
    按上游四件套工厂模式注册三个插件（`defaultEnabled: true`，Z.ai author，
    productivity 分类）；`scripts/prepare-prebuilds.mjs` 补打包段
    （packageName / relativePath / stagedPath / requiredSeedPaths）。
-3. **frontmatter 修正**：三个插件 skills/*/SKILL.md 的 `license:` 行
+3. **frontmatter 修正**：三个插件 skills/\*/SKILL.md 的 `license:` 行
    `Proprietary. LICENSE.txt has complete terms` → `Apache-2.0. See LICENSE.txt`。
 4. **MiniMax 版改名退居**（`.agents/skills/`）：
    - `pdf` → `pdf-ops`：收窄为「对已有 PDF 的操作」——填表 / 合并 / 拆分 / 提取 /

@@ -661,11 +661,11 @@ function verifyPackagedRuntimeDependencies(os, arch) {
   if (!existsSync(glmConfigPath)) {
     throw new Error(`打包产物缺少 glm bundle 内嵌 builtin Provider 配置: ${glmConfigPath}`);
   }
-  if (createHash("sha256").update(readFileSync(glmConfigPath)).digest("hex") !==
-      createHash("sha256").update(readFileSync(builtinConfigPath)).digest("hex")) {
-    throw new Error(
-      `打包产物内 glm 副本与主进程副本不一致（非同一仓库事实源）: ${glmConfigPath}`,
-    );
+  if (
+    createHash("sha256").update(readFileSync(glmConfigPath)).digest("hex") !==
+    createHash("sha256").update(readFileSync(builtinConfigPath)).digest("hex")
+  ) {
+    throw new Error(`打包产物内 glm 副本与主进程副本不一致（非同一仓库事实源）: ${glmConfigPath}`);
   }
 
   // pnpm hoisted 依赖布局下，electron-builder 可能把运行时代码本体装进 app.asar，

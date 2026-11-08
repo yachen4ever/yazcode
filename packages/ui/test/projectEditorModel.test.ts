@@ -127,7 +127,10 @@ describe("projectEditorDisplayName / projectEditorErrorKey", () => {
   });
 
   it("服务错误码映射 i18n 键，未知回落通用失败", () => {
-    assert.equal(projectEditorErrorKey(new Error("project.roots-empty")), "projectEditor.error.rootsEmpty");
+    assert.equal(
+      projectEditorErrorKey(new Error("project.roots-empty")),
+      "projectEditor.error.rootsEmpty",
+    );
     assert.equal(
       projectEditorErrorKey(new Error("project.primary-root-missing: /repos/alpha")),
       "projectEditor.error.primaryRootMissing",

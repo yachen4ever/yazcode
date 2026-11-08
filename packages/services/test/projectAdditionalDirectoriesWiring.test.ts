@@ -41,7 +41,10 @@ function projectTaskMeta(overrides: Partial<ZCodeTaskMeta> = {}): ZCodeTaskMeta 
   };
 }
 
-function snapshotFor(input: { sessionId: string; workspacePath: string }): ZCodeSessionStateSnapshot {
+function snapshotFor(input: {
+  sessionId: string;
+  workspacePath: string;
+}): ZCodeSessionStateSnapshot {
   return zcodeSessionStateSnapshotSchema.parse({
     protocol: { name: ZCODE_PROTOCOL_NAME, version: ZCODE_PROTOCOL_VERSION },
     session: {
@@ -148,7 +151,10 @@ describe("多目录项目 P2 adapter 接线", () => {
       // cwd 覆写与附加目录同一来源（prepareSession）。
       assert.equal(created[0]?.workspacePath, WORKSPACE_PATH);
       assert.deepEqual(created[0]?.additionalDirectories, [SECONDARY, "D:/notes"]);
-      const read = await repo.getTaskMeta({ workspacePath: WORKSPACE_PATH, taskId: "sess_created" });
+      const read = await repo.getTaskMeta({
+        workspacePath: WORKSPACE_PATH,
+        taskId: "sess_created",
+      });
       assert.deepEqual(read?.executionDirectories, [SECONDARY, "D:/notes"]);
     } finally {
       service.disposeAll();

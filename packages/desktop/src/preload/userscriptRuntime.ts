@@ -122,7 +122,8 @@ function buildGmArgs(item: UserScriptMatchItem, isMainFrame: boolean): GmArgs {
       const result = storageGet({ kind: "get", scriptId, key: String(key) });
       return result?.ok === true && "value" in result ? result.value : defaultValue;
     },
-    (key: string, value: unknown) => storageSet({ kind: "put", scriptId, key: String(key), value })?.ok === true,
+    (key: string, value: unknown) =>
+      storageSet({ kind: "put", scriptId, key: String(key), value })?.ok === true,
     (key: string) => storageSet({ kind: "delete", scriptId, key: String(key) })?.ok === true,
     () => storageGet({ kind: "list", scriptId })?.keys ?? [],
   ];
@@ -155,7 +156,11 @@ function executeScript(item: UserScriptMatchItem, isMainFrame: boolean): void {
 }
 
 /** 执行回执（fire-and-forget）：send 失败静默忽略，绝不影响页面本身。 */
-function reportExecution(report: { kind: "executed" | "failed"; scriptId: string; message?: string }): void {
+function reportExecution(report: {
+  kind: "executed" | "failed";
+  scriptId: string;
+  message?: string;
+}): void {
   try {
     ipcRenderer.send(USERSCRIPT_IPC_CHANNELS.report, report);
   } catch {

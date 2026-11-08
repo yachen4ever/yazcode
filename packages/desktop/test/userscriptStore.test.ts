@@ -145,11 +145,11 @@ describe("createUserscriptStore.scan", () => {
     const scriptsDir = join(dir, "parse");
     await mkdir(scriptsDir, { recursive: true });
     await writeFile(join(scriptsDir, "noblock.user.js"), "const x = 1;");
-    await writeFile(join(scriptsDir, "nomatch.user.js"), "// ==UserScript==\n// @name x\n// ==/UserScript==");
     await writeFile(
-      join(scriptsDir, "badpattern.user.js"),
-      scriptBody("http://bad.test"),
+      join(scriptsDir, "nomatch.user.js"),
+      "// ==UserScript==\n// @name x\n// ==/UserScript==",
     );
+    await writeFile(join(scriptsDir, "badpattern.user.js"), scriptBody("http://bad.test"));
     const store = createUserscriptStore({
       scriptsDir,
       manifestPort: fakeManifestPort({
@@ -177,7 +177,10 @@ describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼
   });
 
   /** 建一个已落盘的脚本并返回 store + sha256。 */
-  async function setup(scriptsDirName: string, manifest: Record<string, { enabled: boolean; sha256?: string; pendingApproval?: boolean }>) {
+  async function setup(
+    scriptsDirName: string,
+    manifest: Record<string, { enabled: boolean; sha256?: string; pendingApproval?: boolean }>,
+  ) {
     const scriptsDir = join(dir, scriptsDirName);
     await mkdir(scriptsDir, { recursive: true });
     const code = scriptBody(`https://${scriptsDirName}.test/*`);
@@ -191,8 +194,9 @@ describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼
     return { store, port, saved, sha256: computeScriptSha256(Buffer.from(code)) };
   }
 
-  const statusOf = (items: Awaited<ReturnType<Awaited<ReturnType<typeof createUserscriptStore>["inspect"]>>>) =>
-    items.find((item) => item.scriptId === "s")?.status;
+  const statusOf = (
+    items: Awaited<ReturnType<Awaited<ReturnType<typeof createUserscriptStore>["inspect"]>>>,
+  ) => items.find((item) => item.scriptId === "s")?.status;
 
   it("扫描发现的无条目新文件 → 待批准 → 批准后 → 服务中（两入口拉平）", async () => {
     const { store, port } = await setup("discover", {});
@@ -201,7 +205,12 @@ describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼
     assert.deepEqual((await store.scan()).serveable, []);
 
     // 批准（UI 拨开关/批准按钮同语义：钉住所见 sha）→ 服务中。
-    await port.saveManifest({ s: { enabled: true, sha256: computeScriptSha256(Buffer.from(scriptBody("https://discover.test/*"))) } });
+    await port.saveManifest({
+      s: {
+        enabled: true,
+        sha256: computeScriptSha256(Buffer.from(scriptBody("https://discover.test/*"))),
+      },
+    });
     assert.equal(statusOf(await store.inspect()), "serving");
     assert.equal((await store.scan()).serveable.length, 1);
   });
@@ -219,7 +228,9 @@ describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼
     await writeFile(join(scriptsDir, "s.user.js"), code);
     const store = createUserscriptStore({
       scriptsDir,
-      manifestPort: fakeManifestPort({ s: { enabled: true, sha256: computeScriptSha256(Buffer.from(code)) } }).port,
+      manifestPort: fakeManifestPort({
+        s: { enabled: true, sha256: computeScriptSha256(Buffer.from(code)) },
+      }).port,
       logger: { info: () => {}, warn: () => {} },
     });
     assert.equal(statusOf(await store.inspect()), "serving");
@@ -227,7 +238,9 @@ describe("createUserscriptStore 状态投影与批准门槛拉平（F3 升级兼
   });
 
   it("agent 请求启用的待批准条目（pendingApproval）保持待批准，不受入口拉平影响", async () => {
-    const { store } = await setup("agent-pending", { s: { enabled: false, pendingApproval: true } });
+    const { store } = await setup("agent-pending", {
+      s: { enabled: false, pendingApproval: true },
+    });
     assert.equal(statusOf(await store.inspect()), "pending_approval");
     assert.deepEqual((await store.scan()).serveable, []);
   });

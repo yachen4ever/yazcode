@@ -21,7 +21,7 @@ mint 26.5.2 后上游引入批 C（ZCodium #77/#92 单点加固，上游 811dc56
 
 1. **判定纯函数**：`desktopTrayGate.ts`（electron-free，可直测）导出
    `shouldHideWindowToTray({ platform, closeToTrayOnWindows, closeToTraySupported,
-   forceQuit, explicitQuitRequested })`——全部条件与运算，`closeToTraySupported`
+forceQuit, explicitQuitRequested })`——全部条件与运算，`closeToTraySupported`
    即 `desktopTrayReady`（托盘实例创建成功）。
 2. **就绪状态**：`desktopTray.ts` 维护模块级 `desktopTrayReady`，Tray 构造成功置 true、
    失败保持 false，导出 `isDesktopTrayReady()`。

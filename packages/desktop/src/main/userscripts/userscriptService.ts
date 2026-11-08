@@ -15,10 +15,7 @@ import {
   type UserscriptManifestPort,
   type UserScriptStatusItem,
 } from "./userscriptStore.js";
-import {
-  createUserscriptStorage,
-  type UserscriptStorage,
-} from "./userscriptStorage.js";
+import { createUserscriptStorage, type UserscriptStorage } from "./userscriptStorage.js";
 
 /**
  * 用户脚本服务层（无 electron 运行时依赖，测试可直跑）：
@@ -60,7 +57,9 @@ function isSenderAllowed(context: UserscriptRequestContext): boolean {
   return context.isAllowedSender;
 }
 
-function storageFailure(error: NonNullable<UserScriptStorageResult["error"]>): UserScriptStorageResult {
+function storageFailure(
+  error: NonNullable<UserScriptStorageResult["error"]>,
+): UserScriptStorageResult {
   return { ok: false, error };
 }
 
@@ -166,9 +165,9 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
       return await Promise.all(
         statuses.map(async (item) => ({
           ...item,
-          ...(await storage.hasStorageFile(item.scriptId))
+          ...((await storage.hasStorageFile(item.scriptId))
             ? { storageHealth: await storage.probeHealth(item.scriptId) }
-            : {},
+            : {}),
         })),
       );
     },
@@ -208,9 +207,7 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
       }
 
       const manifest = await manifestPort.getManifest();
-      manifest[scriptId] = enabled
-        ? { enabled: false, pendingApproval: true }
-        : { enabled: false };
+      manifest[scriptId] = enabled ? { enabled: false, pendingApproval: true } : { enabled: false };
       await manifestPort.saveManifest(manifest);
       options.logger.info(
         `[userscripts] agent set_enabled ${scriptId} enabled=${enabled} -> ${
@@ -226,7 +223,10 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
      * match：非 http(s)、非法入参或非 IAB 分区请求返回空集（no-op），
      * 与 runtime 的 scheme 守卫互为冗余防线。
      */
-    async match(payload: unknown, context: UserscriptRequestContext): Promise<UserScriptMatchResponse> {
+    async match(
+      payload: unknown,
+      context: UserscriptRequestContext,
+    ): Promise<UserScriptMatchResponse> {
       if (!isSenderAllowed(context)) return { scripts: [] };
       const url = parseMatchRequestUrl(payload);
       if (!url) return { scripts: [] };
@@ -252,7 +252,10 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     },
 
     /** GM_getValue / GM_listValues（sendSync 通道）。 */
-    async getStorage(payload: unknown, context: UserscriptRequestContext): Promise<UserScriptStorageResult> {
+    async getStorage(
+      payload: unknown,
+      context: UserscriptRequestContext,
+    ): Promise<UserScriptStorageResult> {
       if (!isSenderAllowed(context)) return storageFailure("invalid_request");
       if (!context.isMainFrame) {
         // 仅主 frame 提供 GM 存储（子 frame 只允许 addStyle），防 iframe 抢写共享存储。
@@ -273,7 +276,10 @@ export function createUserscriptService(options: CreateUserscriptServiceOptions)
     },
 
     /** GM_setValue / GM_deleteValue（sendSync 通道）。 */
-    async setStorage(payload: unknown, context: UserscriptRequestContext): Promise<UserScriptStorageResult> {
+    async setStorage(
+      payload: unknown,
+      context: UserscriptRequestContext,
+    ): Promise<UserScriptStorageResult> {
       if (!isSenderAllowed(context)) return storageFailure("invalid_request");
       if (!context.isMainFrame) return storageFailure("sub_frame_denied");
       const request = parseStorageSetRequest(payload);

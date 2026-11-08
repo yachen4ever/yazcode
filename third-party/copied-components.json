@@ -7,10 +7,7 @@
     "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
     "importRevision": null,
     "provenance": "The original copy revision is not recorded in the current checkout; this pinned license reference is not asserted to be the original import version.",
-    "roots": [
-      "packages/ui/src/components/ui",
-      "packages/ui/src/styles.css"
-    ],
+    "roots": ["packages/ui/src/components/ui", "packages/ui/src/styles.css"],
     "scope": "Upstream-derived portions only; ZCode-specific files in the same directory are not attributed to the upstream project.",
     "license": "MIT"
   },
@@ -22,10 +19,7 @@
     "sha256": "b4f9adb7c568904834d0dd6cc98d16c390d21ca32fc17ae7a267715269bd5529",
     "importRevision": null,
     "provenance": "The original copy revision is not recorded in the current checkout; this pinned license reference is not asserted to be the original import version.",
-    "roots": [
-      "packages/ui/src/components/ai-elements",
-      ".agents/skills/ai-elements"
-    ],
+    "roots": ["packages/ui/src/components/ai-elements", ".agents/skills/ai-elements"],
     "scope": "Upstream-derived UI components, skill instructions, reference documentation and example scripts only; locally adapted for ZCode imports, styling and agent workflow. Original import revision not recorded.",
     "license": "Apache-2.0",
     "modifiedFiles": [
@@ -172,9 +166,7 @@
   },
   {
     "id": "Fig autocomplete registry",
-    "roots": [
-      "apps/zcode-cli/packages/core/src/tool/handlers/generated/bash-command-registry.ts"
-    ],
+    "roots": ["apps/zcode-cli/packages/core/src/tool/handlers/generated/bash-command-registry.ts"],
     "license": "MIT",
     "source": "https://raw.githubusercontent.com/withfig/autocomplete/aef52acff84c45edde61ae610cc2c964802b9a38/LICENSE",
     "file": "third-party/upstream/5129f8779dca579cfcb235570688a2f15822b270575e04f27ef906aabbcc0355.txt",
@@ -203,11 +195,7 @@
     "sha256": "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff",
     "importRevision": null,
     "provenance": "Original import revision is not recorded. This pinned upstream license/source reference is not asserted to be the original import version.",
-    "roots": [
-      ".agents/skills/agent-browser",
-      ".agents/skills/dogfood",
-      ".agents/skills/electron"
-    ],
+    "roots": [".agents/skills/agent-browser", ".agents/skills/dogfood", ".agents/skills/electron"],
     "scope": "Upstream-derived instructions, reference documents and shell templates; locally adapted for the ZCode workspace. Reference release v0.20.0 contains all three skills.",
     "license": "Apache-2.0",
     "modifiedFiles": [
@@ -258,9 +246,7 @@
     "referenceRevision": "063bee94c3f4df8453406c830b0a7df0f2860278",
     "source": "https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278",
     "importRevision": null,
-    "roots": [
-      ".agents/skills/react-best-practices"
-    ],
+    "roots": [".agents/skills/react-best-practices"],
     "license": "MIT",
     "scope": "Vendored React/Next.js guidance and local adaptations; local README preserves Shu Ding / Vercel attribution.",
     "reviewRequired": "Pinned upstream README and skill declare MIT, but a complete original copyright/license notice has not been obtained."
@@ -273,9 +259,7 @@
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
     "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/docx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the bundled docx CLI namespace/assembly and paths were renamed to YazOffice, host-proprietary agent-runtime wording in env/setup scripts and docs was neutralized, and sample revision-author strings were changed to yazcode. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import; pure path renames with unchanged contents are not listed.",
-    "roots": [
-      ".agents/skills/docx-redline"
-    ],
+    "roots": [".agents/skills/docx-redline"],
     "scope": "DOCX create/template-apply/edit/read/repair/compare instructions, reference documents and the bundled .NET CLI sources. The skill declares GB/T 9704-2012 (Layout Standard for Official Documents) among its formatting references.",
     "license": "MIT",
     "modifiedFiles": [
@@ -342,9 +326,7 @@
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
     "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/xlsx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: tracked-changes revision author defaults were changed to yazcode, and upstream host references in docs, script headers and skill instructions were neutralized. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
-    "roots": [
-      ".agents/skills/xlsx-ops"
-    ],
+    "roots": [".agents/skills/xlsx-ops"],
     "scope": "Spreadsheet read/edit/create/convert instructions, conventions and recalculation guide, plus the bundled Python and LibreOffice helper scripts.",
     "license": "MIT",
     "modifiedFiles": [
@@ -367,14 +349,10 @@
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
     "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pptx in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the optional upstream sidecar element-map protocol (host-proprietary preview-edit tooling, inert without its host runtime) was removed together with its helper script and reference documents. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
-    "roots": [
-      ".agents/skills/pptx"
-    ],
+    "roots": [".agents/skills/pptx"],
     "scope": "PowerPoint read/create/edit instructions and the bundled helper scripts. The optional upstream sidecar element-map protocol (host-proprietary preview-edit tooling) was removed in the 2026-10 de-branding.",
     "license": "MIT",
-    "modifiedFiles": [
-      ".agents/skills/pptx/SKILL.md"
-    ]
+    "modifiedFiles": [".agents/skills/pptx/SKILL.md"]
   },
   {
     "id": "minimax-code pdf skill",
@@ -384,9 +362,7 @@
     "sha256": "28bb5c2948742f9f8d27ed84882844d09dff07cb5df64f20729875e8582a18ea",
     "importRevision": "564e9166d81f87b0b767b005e4779d4697b512be",
     "provenance": "Copied byte-for-byte from packages/local-runtime/assets/skills/pdf in the upstream repository; the import revision is verified against a local clone whose working tree is clean at that commit. In 2026-10 the vendored copy was de-branded: the host-proprietary vision-read helper (which POSTed rendered pages to a local agent-runtime endpoint) was deleted together with its guide and an archived upstream README; scanned-page reading now relies on poppler rendering plus the agent's native image reading; remaining host references in docs, templates and script headers were neutralized. modifiedFiles lists every file whose contents changed relative to the byte-for-byte import.",
-    "roots": [
-      ".agents/skills/pdf-ops"
-    ],
+    "roots": [".agents/skills/pdf-ops"],
     "scope": "PDF generate/reformat/fill/read instructions, route guides, LaTeX and brand-guide templates, and the bundled Python helper scripts.",
     "license": "MIT",
     "modifiedFiles": [
@@ -415,10 +391,7 @@
     "importRevision": "178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8",
     "license": "Apache-2.0",
     "provenance": "Vendored from OpenViking examples/ at revision 178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8 (upstream release v0.5.3, integration version 0.5.29): agent-hook-plugin plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except lib/ov-http.mjs, which carries yazcode-local error-handling hardening introduced in v26.0.7 and must not be overwritten by upstream syncs; integration.json ships the upstream 0.5.29 template and is rewritten by the install service at deploy time.",
-    "roots": [
-      "vendor/openviking/zcode",
-      "vendor/openviking/memory-plugin-shared"
-    ],
+    "roots": ["vendor/openviking/zcode", "vendor/openviking/memory-plugin-shared"],
     "scope": "Client-side agent integration runtime shipped inside the desktop bundle; only activated when the user selects the OpenViking memory provider."
   },
   {
@@ -430,9 +403,7 @@
     "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
     "license": "Apache-2.0",
     "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/pdf-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
-    "roots": [
-      "apps/zcode-cli/packages/pdf-plugin"
-    ],
+    "roots": ["apps/zcode-cli/packages/pdf-plugin"],
     "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
   },
   {
@@ -444,9 +415,7 @@
     "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
     "license": "Apache-2.0",
     "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/documents-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
-    "roots": [
-      "apps/zcode-cli/packages/documents-plugin"
-    ],
+    "roots": ["apps/zcode-cli/packages/documents-plugin"],
     "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
   },
   {
@@ -458,9 +427,7 @@
     "importRevision": "aac4755666d09fdcd70272fcf063c077a639015f",
     "license": "Apache-2.0",
     "provenance": "Vendored from zai-org/ZCode v3.15.1 (aac4755666d09fdcd70272fcf063c077a639015f) official plugin: @zcode/spreadsheets-plugin — Z.ai office skills republished under Apache-2.0 (plugin.json, skill LICENSE.txt and repo root LICENSE all Apache-2.0). Files copied verbatim except: SKILL.md frontmatter license line corrected from stale \"Proprietary\" text to Apache-2.0, and one routing cross-reference note added after the H1 (both marked \"Modified by ZCode\"). Introduced in 26.1.0, see docs/specs/office-plugins-introduction.md.",
-    "roots": [
-      "apps/zcode-cli/packages/spreadsheets-plugin"
-    ],
+    "roots": ["apps/zcode-cli/packages/spreadsheets-plugin"],
     "scope": "Official office plugin (skills + visual-judge agent) shipped inside the desktop bundle; provides document creation workflows complementing the MiniMax-derived ops skills."
   },
   {
@@ -470,9 +437,7 @@
     "license": "Apache-2.0",
     "provenance": "Ported in yazcode 26.5.7 (issue yaclab/yazcode#16); pinned to the exact upstream commit the port was taken from.",
     "referenceRevision": "1575a7696eaacccb2e05a86d071212b94013dedc",
-    "roots": [
-      "packages/server/src/remote/sshKnownHosts.ts"
-    ],
+    "roots": ["packages/server/src/remote/sshKnownHosts.ts"],
     "scope": "Upstream-derived portions only (original path packages/server/src/remote/sshKnownHosts.ts, same as local): the TOFU store/verifier, ported with adapted comments and spec/spec-reference notes. The node:test port lives at packages/desktop/test/sshKnownHosts.test.ts (test file, not distributed). sshAuth.ts / ssh-backend.ts hostVerifier wiring is locally-owned adaptation referencing the upstream patch, not a file copy.",
     "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
   }

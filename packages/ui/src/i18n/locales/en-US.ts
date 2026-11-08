@@ -1651,7 +1651,8 @@ const enUS: Record<string, string> = {
   "workspaceSidebar.sortBy": "Sort by",
   "workspaceSidebar.sortByCreated": "Created",
   "workspaceSidebar.sortByUpdated": "Updated",
-  "projectEditor.description": "A project is a name plus an ordered list of folders; the primary folder is the working directory for new tasks",
+  "projectEditor.description":
+    "A project is a name plus an ordered list of folders; the primary folder is the working directory for new tasks",
   "projectEditor.createTitle": "New Project",
   "projectEditor.editTitle": "Edit Project",
   "projectEditor.name": "Project name",
@@ -1665,13 +1666,17 @@ const enUS: Record<string, string> = {
   "projectEditor.create": "Create",
   "projectEditor.delete": "Delete project",
   "projectEditor.deleteTitle": "Delete project",
-  "projectEditor.deleteDescription": "Deleting project \"{name}\" only removes its organization binding; files and existing tasks are untouched",
+  "projectEditor.deleteDescription":
+    'Deleting project "{name}" only removes its organization binding; files and existing tasks are untouched',
   "projectEditor.error.rootsEmpty": "A project needs at least one folder",
   "projectEditor.error.primaryNotInRoots": "The primary folder must be in the folder list",
-  "projectEditor.error.primaryRootMissing": "The primary folder no longer exists on disk; choose another",
-  "projectEditor.error.serviceUnavailable": "Project service is unavailable; restart the app and retry",
+  "projectEditor.error.primaryRootMissing":
+    "The primary folder no longer exists on disk; choose another",
+  "projectEditor.error.serviceUnavailable":
+    "Project service is unavailable; restart the app and retry",
   "projectEditor.error.saveFailed": "Failed to save the project; try again",
-  "projectEditor.remoteSingleRootHint": "Remote projects are pinned to this single folder; folders cannot be added or removed",
+  "projectEditor.remoteSingleRootHint":
+    "Remote projects are pinned to this single folder; folders cannot be added or removed",
   "projectEditor.error.remoteSingleRootRequired": "A remote project can only have one folder",
   "projectEditor.error.remoteRootImmutable": "The folder of a remote project cannot be changed",
   "projectEditor.error.hostImmutable": "The host binding of a project cannot be changed",
@@ -2549,7 +2554,8 @@ const enUS: Record<string, string> = {
   "settings.userscripts.createHint":
     "Saved to ~/.yazcode/userscripts/<script ID>.user.js and parked as pending approval; it only runs after you approve it.",
   "settings.userscripts.importReadFailed": "Failed to read the imported file",
-  "settings.userscripts.importInvalidName": "Cannot derive a script ID from the file name (requires a *.user.js suffix)",
+  "settings.userscripts.importInvalidName":
+    "Cannot derive a script ID from the file name (requires a *.user.js suffix)",
   "settings.userscripts.editor.scriptIdLabel": "Script ID",
   "settings.userscripts.editor.scriptIdHint":
     "Letters, digits, hyphens, underscores, etc.; no path separators or Windows-reserved characters, no leading dot, at most 64 characters.",
@@ -2576,7 +2582,8 @@ const enUS: Record<string, string> = {
   "settings.userscripts.delete.storageKeep": "Script only",
   "settings.userscripts.delete.successToast": "Script deleted",
   "settings.userscripts.delete.failedToast": "Failed to delete the script",
-  "settings.userscripts.delete.patchFailedToast": "Failed to remove the enablement record; deletion aborted (file kept)",
+  "settings.userscripts.delete.patchFailedToast":
+    "Failed to remove the enablement record; deletion aborted (file kept)",
   "settings.userscripts.write.successToast": "Script saved; it runs only after approval",
   "settings.userscripts.write.failedToast": "Failed to save the script",
   "settings.userscripts.error.invalid_script_id": "Invalid script ID",
@@ -2595,7 +2602,8 @@ const enUS: Record<string, string> = {
     "With the default @run-at document-start the DOM is not ready: wait for body/DOMContentLoaded before touching the DOM (or declare @run-at document-end).",
   "settings.userscripts.hints.include":
     "Legacy @include directives are not parsed; rewrite them as @match.",
-  "settings.userscripts.validate.metadataMissing": "Missing ==UserScript== metadata block (start/end markers).",
+  "settings.userscripts.validate.metadataMissing":
+    "Missing ==UserScript== metadata block (start/end markers).",
   "settings.userscripts.validate.matchMissing": "At least one @match declaration is required.",
   "settings.userscripts.validate.portHost":
     "Ports are not supported in @match: rewrite as {suggestion} (non-standard local ports cannot be injected yet).",
@@ -2615,13 +2623,16 @@ const enUS: Record<string, string> = {
     "Review the parsed result (what you preview is what the scanner will see) before writing locally.",
   "settings.userscripts.url.install": "Install",
   "settings.userscripts.url.back": "Back",
-  "settings.userscripts.url.parseErrorBanner": "This script failed static validation and cannot be installed:",
+  "settings.userscripts.url.parseErrorBanner":
+    "This script failed static validation and cannot be installed:",
   "settings.userscripts.url.sourcePreview": "Source preview",
   "settings.userscripts.url.error.invalid_url": "URL cannot be parsed",
-  "settings.userscripts.url.error.not_https": "Only https:// URLs are supported (redirects must stay https too)",
+  "settings.userscripts.url.error.not_https":
+    "Only https:// URLs are supported (redirects must stay https too)",
   "settings.userscripts.url.error.too_large": "Content exceeds the {limit} MB limit",
   "settings.userscripts.url.error.timeout": "Request timed out",
-  "settings.userscripts.url.error.remote_address_not_allowed": "Target address is not allowed (public addresses only)",
+  "settings.userscripts.url.error.remote_address_not_allowed":
+    "Target address is not allowed (public addresses only)",
   "settings.userscripts.url.error.download_failed": "Download failed",
   "settings.browser.data.section": "Browser data",
   "settings.browser.desktopOnly": "Browser data can only be managed in the yazcode desktop app.",

@@ -47,10 +47,10 @@ JSON，供 UI 识别同一远程目标 / 跨窗口共享键），**不是主机�
 
 ## 状态所有者
 
-| 状态 | 所有者 | 说明 |
-| --- | --- | --- |
+| 状态                          | 所有者                                                                            | 说明                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | known_hosts（主机密钥指纹表） | 文件系统：`getAppConfigDir()/ssh/known-hosts.json`（`<数据根>/.yazcode/v2/ssh/`） | `SSHHostKeyStore` 唯一读写者；进程内缓存 + 原子替换写；schemaVersion 1 |
-| 连接拒绝原因（本次连接尝试） | `SSHBackend.hostKeyRejection` 实例字段 | verifier 回调写入、onClientError 消费；连接级生命周期 |
+| 连接拒绝原因（本次连接尝试）  | `SSHBackend.hostKeyRejection` 实例字段                                            | verifier 回调写入、onClientError 消费；连接级生命周期                  |
 
 事件顺序（一次 SSH 连接）：
 

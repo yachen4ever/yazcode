@@ -90,7 +90,7 @@ describe("task index 项目归属三件套", () => {
 
   // ── L1 收敛（docs/specs/multi-root-projects.md「executionDirectories 空数组语义」）──
 
-  it("L1：空数组固化写列 \"[]\"，meta_json 与列兜底两条读路径都解析为显式空", async () => {
+  it('L1：空数组固化写列 "[]"，meta_json 与列兜底两条读路径都解析为显式空', async () => {
     const { DatabaseSync } = (await import("node:sqlite")) as typeof import("node:sqlite");
     await repo.syncTaskMeta({
       meta: projectTaskMeta({

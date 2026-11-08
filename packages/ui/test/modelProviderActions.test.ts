@@ -56,9 +56,9 @@ describe("probeProviderConnectivity（26.5.5 发现 1 连通性复核）", () =>
       providerId: overrides.providerId,
       enabled: overrides.enabled ?? true,
       executable: overrides.executable ?? true,
-      models:
-        overrides.models ??
-        [{ modelId: `${overrides.providerId}-model`, config: {}, executable: true }],
+      models: overrides.models ?? [
+        { modelId: `${overrides.providerId}-model`, config: {}, executable: true },
+      ],
     }) as unknown as ProviderSettingsFormProvider;
 
   it("全部探测成功 → 返回空集", async () => {

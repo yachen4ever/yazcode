@@ -4,12 +4,12 @@
 
 宿主 zcode 环境对 yazcode 构建/运行时的注入污染已四轮反应式修复：
 
-| 轮次 | 修复 | 触发事故 |
-| --- | --- | --- |
-| 26.2.0 | 手动清变量 | 26.2.0 首装阻断 |
-| R0 | CLI 三入口点名洗涤 | CLI 三入口 |
-| R1（419bab4e） | electron-builder 点名 `stripHostInjectedBuiltinProviderEnv` | F1 第一轮（extraResources 链） |
-| R2（fcb2ef1c/aacbea1e） | 运行时单一事实源 + `loadBuiltinProviderConfig` 单点防御 | F1 第二轮（env 优先分支，真因） |
+| 轮次                    | 修复                                                        | 触发事故                        |
+| ----------------------- | ----------------------------------------------------------- | ------------------------------- |
+| 26.2.0                  | 手动清变量                                                  | 26.2.0 首装阻断                 |
+| R0                      | CLI 三入口点名洗涤                                          | CLI 三入口                      |
+| R1（419bab4e）          | electron-builder 点名 `stripHostInjectedBuiltinProviderEnv` | F1 第一轮（extraResources 链）  |
+| R2（fcb2ef1c/aacbea1e） | 运行时单一事实源 + `loadBuiltinProviderConfig` 单点防御     | F1 第二轮（env 优先分支，真因） |
 
 四轮都「有效但未根治」，原因有三：
 
@@ -53,80 +53,80 @@ grep -rnE "\.\.\.process\.env|\.\.\.env\b" packages apps scripts
 
 ### 归类一：发布注入合法（release.yml 唯一事实源，4 变量）
 
-| 变量 | 注入位置 | 消费点 |
-| --- | --- | --- |
-| `ZCODE_DIST_BASE_URL` | release.yml:231 | `scripts/build-zcode.mjs:29` |
-| `ZCODE_ENV` | release.yml:343 | `scripts/builtin-provider-config.mjs:44,61`；`packages/desktop/electron-builder.config.js:85`；`packages/desktop/vite.config.ts:152`；`packages/web/vite.config.ts:34`；`packages/desktop/tsup.config.ts:64` |
-| `ZCODE_APP_VERSION` | release.yml:345,440,445 | `scripts/prepare-prebuilds.mjs:48`；`packages/desktop/scripts/build-metadata.mjs:103`；`apps/zcode-cli/packages/bootstrap/src/model-config.ts:72` |
-| `ZCODIUM_REMOTE_ASSET_CDN_BASE_URL` | release.yml:348 | ⚠ 无消费者（死注入，见已知问题 F1） |
+| 变量                                | 注入位置                | 消费点                                                                                                                                                                                                       |
+| ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ZCODE_DIST_BASE_URL`               | release.yml:231         | `scripts/build-zcode.mjs:29`                                                                                                                                                                                 |
+| `ZCODE_ENV`                         | release.yml:343         | `scripts/builtin-provider-config.mjs:44,61`；`packages/desktop/electron-builder.config.js:85`；`packages/desktop/vite.config.ts:152`；`packages/web/vite.config.ts:34`；`packages/desktop/tsup.config.ts:64` |
+| `ZCODE_APP_VERSION`                 | release.yml:345,440,445 | `scripts/prepare-prebuilds.mjs:48`；`packages/desktop/scripts/build-metadata.mjs:103`；`apps/zcode-cli/packages/bootstrap/src/model-config.ts:72`                                                            |
+| `ZCODIUM_REMOTE_ASSET_CDN_BASE_URL` | release.yml:348         | ⚠ 无消费者（死注入，见已知问题 F1）                                                                                                                                                                          |
 
 ### 归类二：宿主注入污染面（须剔除，按后果分组）
 
 **R1 凭据/鉴权语义**（注入即接管鉴权或改道流量）
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
-| `packages/server/src/entry-http.ts:20` | `ZCODE_SERVER_AUTH_TOKEN` | 服务端鉴权令牌被顶替 |
-| `packages/server/src/entry-http.ts:18` | `ZCODE_SERVER_HOST` | 绑定地址被顶替 → server 暴露局域网 |
-| `apps/zcode-cli/packages/adapters/src/network/http-config.ts:81` | `ZCODE_HTTP_PROXY` | 模型 API 出口代理被顶替（不在 denylist） |
-| `apps/zcode-cli/packages/adapters/src/auth/shared-credentials.ts:288` | `ZCODE_DATA_BASE_DIR` | 凭据库根目录被顶替 |
-| `apps/zcode-cli/packages/cli/src/provider-runtime-env.ts:59-60` | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE` / `ZCODE_PERSONAL_PROVIDER_CONFIG_FILE` | 内置/个人 provider 配置（含 API key 文件）路径被顶替 |
-| `packages/zcode-server-cli/src/server-core/core.ts:28` | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE` | server 侧同 R1.6（mint F1 同款面） |
-| `packages/desktop/src/main/desktopProviderConfigPaths.ts:18` | 同上 | desktop 侧同 R1.6 |
-| `apps/zcode-cli/packages/bootstrap/src/auth-login.ts:345` | `ZCODE_PERSONAL_PROVIDER_CONFIG_FILE` | 用户 API key 文件路径被顶替 |
-| `apps/zcode-cli/packages/bootstrap/src/app/standalone-account-provider-runtime.ts:51` | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE` | 流量改道 |
+| 消费点                                                                                | 变量                                                                         | 后果                                                 |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `packages/server/src/entry-http.ts:20`                                                | `ZCODE_SERVER_AUTH_TOKEN`                                                    | 服务端鉴权令牌被顶替                                 |
+| `packages/server/src/entry-http.ts:18`                                                | `ZCODE_SERVER_HOST`                                                          | 绑定地址被顶替 → server 暴露局域网                   |
+| `apps/zcode-cli/packages/adapters/src/network/http-config.ts:81`                      | `ZCODE_HTTP_PROXY`                                                           | 模型 API 出口代理被顶替（不在 denylist）             |
+| `apps/zcode-cli/packages/adapters/src/auth/shared-credentials.ts:288`                 | `ZCODE_DATA_BASE_DIR`                                                        | 凭据库根目录被顶替                                   |
+| `apps/zcode-cli/packages/cli/src/provider-runtime-env.ts:59-60`                       | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE` / `ZCODE_PERSONAL_PROVIDER_CONFIG_FILE` | 内置/个人 provider 配置（含 API key 文件）路径被顶替 |
+| `packages/zcode-server-cli/src/server-core/core.ts:28`                                | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE`                                         | server 侧同 R1.6（mint F1 同款面）                   |
+| `packages/desktop/src/main/desktopProviderConfigPaths.ts:18`                          | 同上                                                                         | desktop 侧同 R1.6                                    |
+| `apps/zcode-cli/packages/bootstrap/src/auth-login.ts:345`                             | `ZCODE_PERSONAL_PROVIDER_CONFIG_FILE`                                        | 用户 API key 文件路径被顶替                          |
+| `apps/zcode-cli/packages/bootstrap/src/app/standalone-account-provider-runtime.ts:51` | `ZCODE_BUILTIN_PROVIDER_CONFIG_FILE`                                         | 流量改道                                             |
 
 **R2 路径语义**（数据落盘位置被顶替）
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
-| `packages/desktop/src/main/desktopRuntimeEnv.ts:76,81,70,62` | `ZCODE_DESKTOP_USER_DATA_DIR` / `_SESSION_DATA_DIR` / `_HOME_DIR` / `_APPLICATION_NAME` | 登录态·会话数据写入宿主目录；应用名单实例锁错配 |
-| `packages/desktop/src/main/desktopRuntimeEnv.ts:495-505` | `ZCODE_CUA_BUNDLED_HELPER_APP_PATH` / `ZCODE_HOME` | 已签名应用加载未签名 Helper（dev 路径无 packaged 保护） |
-| `packages/desktop/src/main/remoteCdn.ts:47` | `ZCODE_CDN_BASE_URL` | 插件市场从攻击者源拉取 |
-| `packages/desktop/src/main/desktopRuntimeEnv.ts:234` | `ZCODE_REMOTE_ASSET_CDN_BASE_URL` | 远程运行时（WSL/SSH）从攻击者源下载执行 |
+| 消费点                                                       | 变量                                                                                    | 后果                                                    |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `packages/desktop/src/main/desktopRuntimeEnv.ts:76,81,70,62` | `ZCODE_DESKTOP_USER_DATA_DIR` / `_SESSION_DATA_DIR` / `_HOME_DIR` / `_APPLICATION_NAME` | 登录态·会话数据写入宿主目录；应用名单实例锁错配         |
+| `packages/desktop/src/main/desktopRuntimeEnv.ts:495-505`     | `ZCODE_CUA_BUNDLED_HELPER_APP_PATH` / `ZCODE_HOME`                                      | 已签名应用加载未签名 Helper（dev 路径无 packaged 保护） |
+| `packages/desktop/src/main/remoteCdn.ts:47`                  | `ZCODE_CDN_BASE_URL`                                                                    | 插件市场从攻击者源拉取                                  |
+| `packages/desktop/src/main/desktopRuntimeEnv.ts:234`         | `ZCODE_REMOTE_ASSET_CDN_BASE_URL`                                                       | 远程运行时（WSL/SSH）从攻击者源下载执行                 |
 
 **R3 网络/端点语义**
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
-| `packages/desktop/src/main/desktopRuntimeEnv.ts:253-254` | `ZCODE_BASE_URL` / `ZCODE_ENDPOINT_ORIGIN` | 权威端点 origin 被顶替（`process.env` 优先于 `.env`）→ 全部 API 改道 |
-| `packages/desktop/src/main/index.ts:193` | `ZCODE_DISABLE_FIXED_REMOTE_DEBUGGING_PORT` | 固定远程调试端口被顶替 → DevTools 端口本地 RCE 面 |
+| 消费点                                                   | 变量                                        | 后果                                                                 |
+| -------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| `packages/desktop/src/main/desktopRuntimeEnv.ts:253-254` | `ZCODE_BASE_URL` / `ZCODE_ENDPOINT_ORIGIN`  | 权威端点 origin 被顶替（`process.env` 优先于 `.env`）→ 全部 API 改道 |
+| `packages/desktop/src/main/index.ts:193`                 | `ZCODE_DISABLE_FIXED_REMOTE_DEBUGGING_PORT` | 固定远程调试端口被顶替 → DevTools 端口本地 RCE 面                    |
 
 **R4 计费/权益语义**
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
+| 消费点                                                                                                                                                           | 变量                  | 后果                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------------- |
 | `packages/services/src/session/offPeakMockGateway.ts:68,79,512-513`；`offPeakRuntimeModel.ts:143-144`；`bigmodelCodingPlanSubscriptionProvider.ts:223,1338,1343` | `ZCODE_OFFPEAK_MOCK*` | Mock 计费网关被顶替 → 真实套餐判定被 mock 覆盖 |
 
 **R5 可执行文件/参数语义**（最高危）
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
+| 消费点                                                                      | 变量                                                 | 后果                                              |
+| --------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
 | `packages/services/src/zcode-agent/zcodeAgentProcessManager.ts:441,446,447` | `ZCODE_AGENT_SERVER_COMMAND` / `_ARGS_JSON` / `_CWD` | agent 可执行文件与参数被顶替 → 直接执行任意二进制 |
-| `packages/desktop/src/main/desktopRuntimeEnv.ts:478` | `ZCODE_LARK_CLI_BINARY` | lark-cli 二进制路径被顶替 |
+| `packages/desktop/src/main/desktopRuntimeEnv.ts:478`                        | `ZCODE_LARK_CLI_BINARY`                              | lark-cli 二进制路径被顶替                         |
 
 **R6 功能开关语义**
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
-| `packages/services/src/coding-plan-subscription/bigmodelCodingPlanSubscriptionProvider.ts:251` | `ZCODE_DYNAMIC_WORKFLOW_MODE` | 灰度开关被顶替（agent 侧裸消费） |
-| `packages/services/src/fs/fsFaultInjection.ts:313` | `ZCODE_E2E_FS_FAULTS_ALLOW` / `ZCODE_ENV` | 门控变量本身被顶替 → 生产环境打开 FS 故障注入 |
-| `packages/shared/src/runtimeEnv.ts:124`；`adapters/src/logging/index.ts:231`；`model/runner-debug.ts:465` | `ZCODE_RUNTIME_ENV` | 运行模式被顶替 → 触发仅 dev 生效的分支 |
+| 消费点                                                                                                    | 变量                                      | 后果                                          |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------- |
+| `packages/services/src/coding-plan-subscription/bigmodelCodingPlanSubscriptionProvider.ts:251`            | `ZCODE_DYNAMIC_WORKFLOW_MODE`             | 灰度开关被顶替（agent 侧裸消费）              |
+| `packages/services/src/fs/fsFaultInjection.ts:313`                                                        | `ZCODE_E2E_FS_FAULTS_ALLOW` / `ZCODE_ENV` | 门控变量本身被顶替 → 生产环境打开 FS 故障注入 |
+| `packages/shared/src/runtimeEnv.ts:124`；`adapters/src/logging/index.ts:231`；`model/runner-debug.ts:465` | `ZCODE_RUNTIME_ENV`                       | 运行模式被顶替 → 触发仅 dev 生效的分支        |
 
 **R7 前缀扫描扩大面**
 
-| 消费点 | 扫描 | 后果 |
-| --- | --- | --- |
-| `apps/zcode-cli/packages/adapters/src/plugins/mcp.ts:430` | `name.startsWith("ZCODE_")` | plugin manifest 任意 `ZCODE_*` 模板变量从 env 取值 → 跨出 plugin 声明边界 |
-| `packages/services/src/node.ts:1039,1042`；`packages/desktop/src/host/storagePreparationProcesses.ts:132`；`packages/services/src/openviking/mcpProxy.ts:57`；`packages/services/src/system/sshConfigAlias.ts:507`；`packages/services/src/cua-permission-broker/windowsCuaDevHelperHost.ts:321` | 整包 `process.env` 传递 | 全部宿主 `ZCODE_*` 进入子进程 env |
+| 消费点                                                                                                                                                                                                                                                                                           | 扫描                        | 后果                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- | ------------------------------------------------------------------------- |
+| `apps/zcode-cli/packages/adapters/src/plugins/mcp.ts:430`                                                                                                                                                                                                                                        | `name.startsWith("ZCODE_")` | plugin manifest 任意 `ZCODE_*` 模板变量从 env 取值 → 跨出 plugin 声明边界 |
+| `packages/services/src/node.ts:1039,1042`；`packages/desktop/src/host/storagePreparationProcesses.ts:132`；`packages/services/src/openviking/mcpProxy.ts:57`；`packages/services/src/system/sshConfigAlias.ts:507`；`packages/services/src/cua-permission-broker/windowsCuaDevHelperHost.ts:321` | 整包 `process.env` 传递     | 全部宿主 `ZCODE_*` 进入子进程 env                                         |
 
 **R8 构建期烤入产物**（宿主注入 → 污染出厂件）
 
-| 消费点 | 变量 | 后果 |
-| --- | --- | --- |
-| `packages/desktop/vite.config.ts:145,161-164,195`；`packages/web/vite.config.ts:30,85` | `ZCODE_BASE_URL` / `ZCODE_ENDPOINT_ORIGIN` | 端点 origin 烤进 `__ZCODE_ENDPOINT_ENV__` → 出厂包全部 API 指向攻击者端点 |
-| `packages/desktop/tsup.config.ts:64`；`packages/desktop/electron-builder.config.js:84-85` | `ZCODE_ENV` + 整包 `process.env` | 产品身份（Preview/正式）判定被顶替 |
-| `packages/desktop/scripts/bundle.mjs:144,155`；`scripts/prepare-prebuilds.mjs:77` | `ZCODE_ELECTRON_RUNTIME_MIRROR` / `ZCODE_DEPS_BASE_URL` / `ZCODE_NODE_DIST_MIRROR` | **构建期二进制下载源被顶替 → 供应链投毒** |
+| 消费点                                                                                    | 变量                                                                               | 后果                                                                      |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/desktop/vite.config.ts:145,161-164,195`；`packages/web/vite.config.ts:30,85`    | `ZCODE_BASE_URL` / `ZCODE_ENDPOINT_ORIGIN`                                         | 端点 origin 烤进 `__ZCODE_ENDPOINT_ENV__` → 出厂包全部 API 指向攻击者端点 |
+| `packages/desktop/tsup.config.ts:64`；`packages/desktop/electron-builder.config.js:84-85` | `ZCODE_ENV` + 整包 `process.env`                                                   | 产品身份（Preview/正式）判定被顶替                                        |
+| `packages/desktop/scripts/bundle.mjs:144,155`；`scripts/prepare-prebuilds.mjs:77`         | `ZCODE_ELECTRON_RUNTIME_MIRROR` / `ZCODE_DEPS_BASE_URL` / `ZCODE_NODE_DIST_MIRROR` | **构建期二进制下载源被顶替 → 供应链投毒**                                 |
 
 ### 归类三：dev 调试通道（显式开发者配置，须保留）
 
@@ -163,17 +163,17 @@ YAZCODE_REMOTE_ASSET_CDN_BASE_URL
 
 ### 归类五：现有防护现状（收敛前）
 
-| 位置 | 形态 | 覆盖 | 缺口 |
-| --- | --- | --- | --- |
-| `packages/shared/src/runtimeEnv.ts:44-94` `SANITIZED_RUNTIME_ENV_KEYS` | denylist 40 键 | 凭据/遥测族 | `ZCODE_HTTP_PROXY`/`ZCODE_NO_PROXY`/`ZCODE_AGENT_CA_CERT`/`ZCODE_BUILTIN_PROVIDER_*`/`ZCODE_DATA_BASE_DIR`/`ZCODE_BASE_URL`/`ZCODE_OFFPEAK_MOCK*`/`ZCODE_AGENT_SERVER_*`/`ZCODE_DESKTOP_*`/`ZCODE_SERVER_*` 全不在名单 |
-| `apps/zcode-cli/packages/cli/src/env.ts:29-49` | denylist | 同上 | 同上 |
-| `apps/zcode-cli/packages/cli/scripts/build.mjs:244-248` | 前缀 `ZCODE_` | 全部 `ZCODE_` 键 | 漏 `YAZCODE_`/`ZCODIUM_`；CI 下完全不洗 |
-| `scripts/build-zcode.mjs:22-26` | 前缀 `ZCODE_` | 同上 | 同上 |
-| `packages/desktop/scripts/build-metadata.mjs:92-96` | 前缀 `ZCODE_` | 同上 | 同上 |
-| `scripts/build-desktop-agent-cli.mjs:18-35` | 双前缀点名 | `*_BUILTIN_PROVIDER*` 家族 | 仅该家族 |
-| `scripts/builtin-provider-config.mjs:29-37`（R2） | 双前缀点名 | 同上 | 仅该家族 |
-| `scripts/dev-desktop-env.mjs:29-30` | 点名 2 键 | builtin provider 旧名 | 漏改名新名 `YAZCODE_BUILTIN_PROVIDER_*` |
-| `packages/desktop/electron-builder.config.js:74-82`（R1） | 外层双前缀 strip | 同上 | 与 R2 重复 |
+| 位置                                                                   | 形态             | 覆盖                       | 缺口                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------- | ---------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/shared/src/runtimeEnv.ts:44-94` `SANITIZED_RUNTIME_ENV_KEYS` | denylist 40 键   | 凭据/遥测族                | `ZCODE_HTTP_PROXY`/`ZCODE_NO_PROXY`/`ZCODE_AGENT_CA_CERT`/`ZCODE_BUILTIN_PROVIDER_*`/`ZCODE_DATA_BASE_DIR`/`ZCODE_BASE_URL`/`ZCODE_OFFPEAK_MOCK*`/`ZCODE_AGENT_SERVER_*`/`ZCODE_DESKTOP_*`/`ZCODE_SERVER_*` 全不在名单 |
+| `apps/zcode-cli/packages/cli/src/env.ts:29-49`                         | denylist         | 同上                       | 同上                                                                                                                                                                                                                   |
+| `apps/zcode-cli/packages/cli/scripts/build.mjs:244-248`                | 前缀 `ZCODE_`    | 全部 `ZCODE_` 键           | 漏 `YAZCODE_`/`ZCODIUM_`；CI 下完全不洗                                                                                                                                                                                |
+| `scripts/build-zcode.mjs:22-26`                                        | 前缀 `ZCODE_`    | 同上                       | 同上                                                                                                                                                                                                                   |
+| `packages/desktop/scripts/build-metadata.mjs:92-96`                    | 前缀 `ZCODE_`    | 同上                       | 同上                                                                                                                                                                                                                   |
+| `scripts/build-desktop-agent-cli.mjs:18-35`                            | 双前缀点名       | `*_BUILTIN_PROVIDER*` 家族 | 仅该家族                                                                                                                                                                                                               |
+| `scripts/builtin-provider-config.mjs:29-37`（R2）                      | 双前缀点名       | 同上                       | 仅该家族                                                                                                                                                                                                               |
+| `scripts/dev-desktop-env.mjs:29-30`                                    | 点名 2 键        | builtin provider 旧名      | 漏改名新名 `YAZCODE_BUILTIN_PROVIDER_*`                                                                                                                                                                                |
+| `packages/desktop/electron-builder.config.js:74-82`（R1）              | 外层双前缀 strip | 同上                       | 与 R2 重复                                                                                                                                                                                                             |
 
 **结论**：全仓**没有任何一处**覆盖 `YAZCODE_`/`ZCODIUM_` 全前缀；四处防护语义各不相同
 （denylist / `ZCODE_` 前缀 / 双前缀点名 / 点名 2 键），是「反复」的直接原因。
@@ -255,18 +255,18 @@ YAZCODE_REMOTE_ASSET_CDN_BASE_URL
 （这是 deny-by-default 的关键：不需要逐点改代码，剔除发生在进程环境层），
 因此「去向」指的是该消费点在**剥离之后**从哪取到值：
 
-| 消费点族群 | 剥离后的取值来源 | 备注 |
-| --- | --- | --- |
-| 桌面 main 自身注入写侧（`desktopRuntimeEnv.ts` 显式写入的 ZCODE_RUNTIME_ENV / ZCODE_ENV / ZCODE_APP_VERSION / 数据根双写 / 托盘安装目录 / CUA helper 路径 / lark 二进制 / 动态工作流模式） | **Main 决策**（剥离后由 main 显式写回，不依赖继承环境） | 写侧不受剥离影响 |
-| host → agent spawn env（`services/node.ts` resolveSpawnEnv：代理/CA、官方服务开关、endpoint origin、CUA broker） | **显式构造**（`agentProxyEnv.ts` / `officialPlatformPolicy.ts` 逐键写入） | 写侧不受剥离影响 |
-| 打包态 builtin 配置路径（`desktopProviderConfigPaths.ts`） | **包内路径**（R2 语义，打包态忽略 env） | 不变 |
-| CLI 侧 builtin/personal 配置路径（`provider-runtime-env.ts`、`standalone-account-provider-runtime.ts`、`auth-login.ts`） | **host 注入的显式 env**（host 侧已按 R2 修正为包内路径，随 initMessage 传递） | 不变 |
-| 构建期事实源（`builtin-provider-config.mjs`） | **仓库 config/provider/zcode-builtin.json** | R2 + 本批原语双重保证 |
-| 构建期版本/环境（`build-metadata.mjs`、`prepare-prebuilds.mjs`、`build-zcode.mjs`） | **CI 注入（发布注入集）或 .env 文件** | 本批：本地构建不信任同名 shell 注入 |
-| dev 隔离目录族（`ZCODE_DESKTOP_*`、`ZCODE_DATA_BASE_DIR`） | **dev 启动器显式注入**（dev-desktop-env.mjs 白名单开启） | 打包态剔除 |
-| 构建期开关/镜像（`ZCODE_TARGET_*`、`ZCODE_SKIP_*`、`ZCODE_*_MIRROR`、`ZCODE_DEPS_BASE_URL`） | **构建脚本显式传参**（dev 通道集） | 始终可信 |
-| server 侧（`entry-http.ts` 的 host/port/token/static-root、`zcode-server-cli` 的 builtin 路径） | **启动方显式配置**（CLI 参数/环境由 server 进程自身 owner 决定） | 打包态启动的 desktop 不经此面 |
-| 测试侧 | **测试自身写入或注入对象** | 盘点确认：无一处依赖「宿主环境恰好存在某 ZCODE_*」 |
+| 消费点族群                                                                                                                                                                                 | 剥离后的取值来源                                                              | 备注                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 桌面 main 自身注入写侧（`desktopRuntimeEnv.ts` 显式写入的 ZCODE_RUNTIME_ENV / ZCODE_ENV / ZCODE_APP_VERSION / 数据根双写 / 托盘安装目录 / CUA helper 路径 / lark 二进制 / 动态工作流模式） | **Main 决策**（剥离后由 main 显式写回，不依赖继承环境）                       | 写侧不受剥离影响                                     |
+| host → agent spawn env（`services/node.ts` resolveSpawnEnv：代理/CA、官方服务开关、endpoint origin、CUA broker）                                                                           | **显式构造**（`agentProxyEnv.ts` / `officialPlatformPolicy.ts` 逐键写入）     | 写侧不受剥离影响                                     |
+| 打包态 builtin 配置路径（`desktopProviderConfigPaths.ts`）                                                                                                                                 | **包内路径**（R2 语义，打包态忽略 env）                                       | 不变                                                 |
+| CLI 侧 builtin/personal 配置路径（`provider-runtime-env.ts`、`standalone-account-provider-runtime.ts`、`auth-login.ts`）                                                                   | **host 注入的显式 env**（host 侧已按 R2 修正为包内路径，随 initMessage 传递） | 不变                                                 |
+| 构建期事实源（`builtin-provider-config.mjs`）                                                                                                                                              | **仓库 config/provider/zcode-builtin.json**                                   | R2 + 本批原语双重保证                                |
+| 构建期版本/环境（`build-metadata.mjs`、`prepare-prebuilds.mjs`、`build-zcode.mjs`）                                                                                                        | **CI 注入（发布注入集）或 .env 文件**                                         | 本批：本地构建不信任同名 shell 注入                  |
+| dev 隔离目录族（`ZCODE_DESKTOP_*`、`ZCODE_DATA_BASE_DIR`）                                                                                                                                 | **dev 启动器显式注入**（dev-desktop-env.mjs 白名单开启）                      | 打包态剔除                                           |
+| 构建期开关/镜像（`ZCODE_TARGET_*`、`ZCODE_SKIP_*`、`ZCODE_*_MIRROR`、`ZCODE_DEPS_BASE_URL`）                                                                                               | **构建脚本显式传参**（dev 通道集）                                            | 始终可信                                             |
+| server 侧（`entry-http.ts` 的 host/port/token/static-root、`zcode-server-cli` 的 builtin 路径）                                                                                            | **启动方显式配置**（CLI 参数/环境由 server 进程自身 owner 决定）              | 打包态启动的 desktop 不经此面                        |
+| 测试侧                                                                                                                                                                                     | **测试自身写入或注入对象**                                                    | 盘点确认：无一处依赖「宿主环境恰好存在某 ZCODE\_\*」 |
 
 **关键结论**：剥离发生在**环境层**而非逐点改代码——所有消费点在剥离后自动获得
 「白名单外的注入值不可见」保证；写侧（main/host 显式构造）不受影响。这正是

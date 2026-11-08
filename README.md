@@ -22,13 +22,13 @@ yazcode 在底座之上做了两类变动：**从其他开源仓库引入**（�
 
 ### 从其他仓库引入
 
-| 能力 | 来源仓库 | 许可 | 说明 |
-| ---- | ---- | ---- | ---- |
-| 审计加固（遥测移除） | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT | 移除约 2.6 万行监控遥测、官方服务默认关闭；yazcode 的历史底座（现转为独立线，通用改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium) 再回馈上游）。 |
-| Computer Use 桌面操控 | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium) | Apache-2.0 | 原生层复用 MIT 的 [trycua/cua](https://github.com/trycua/cua) `@trycua/cua-driver`（Rust，Win32 E2E 122/122）；插件默认启用、驱动回收自愈。 |
-| 办公制作向插件 | [zai-org/ZCode](https://github.com/zai-org/ZCode) 3.15.1 | Apache-2.0 | 官方 pdf / documents / spreadsheets 插件：排版工作流、docx-js 设计系统、图表与 VBA 模板，配套 `visual-judge` 渲染质检子代理。 |
-| 办公处理向技能（ops 系） | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code) | MIT | docx / xlsx / pptx / pdf 的处理纪律版，已完成去残留（品牌、修订作者、宿主专有通道）。 |
-| OpenViking 客户端运行时 | [volcengine/OpenViking](https://github.com/volcengine/OpenViking) | Apache-2.0（`examples/`） | 外部记忆服务的客户端集成（语义召回 + 自动沉淀），随包分发；服务端独立部署、两者不耦合。 |
+| 能力                     | 来源仓库                                                              | 许可                      | 说明                                                                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 审计加固（遥测移除）     | [ZCodium-project/ZCodium](https://github.com/ZCodium-project/ZCodium) | MIT                       | 移除约 2.6 万行监控遥测、官方服务默认关闭；yazcode 的历史底座（现转为独立线，通用改进先进入我们的 [zcodium fork](https://github.com/yachen4ever/ZCodium) 再回馈上游）。 |
+| Computer Use 桌面操控    | [axiom-desu/ZCodium](https://github.com/axiom-desu/ZCodium)           | Apache-2.0                | 原生层复用 MIT 的 [trycua/cua](https://github.com/trycua/cua) `@trycua/cua-driver`（Rust，Win32 E2E 122/122）；插件默认启用、驱动回收自愈。                             |
+| 办公制作向插件           | [zai-org/ZCode](https://github.com/zai-org/ZCode) 3.15.1              | Apache-2.0                | 官方 pdf / documents / spreadsheets 插件：排版工作流、docx-js 设计系统、图表与 VBA 模板，配套 `visual-judge` 渲染质检子代理。                                           |
+| 办公处理向技能（ops 系） | [MiniMaxAI/minimax-code](https://github.com/MiniMaxAI/minimax-code)   | MIT                       | docx / xlsx / pptx / pdf 的处理纪律版，已完成去残留（品牌、修订作者、宿主专有通道）。                                                                                   |
+| OpenViking 客户端运行时  | [volcengine/OpenViking](https://github.com/volcengine/OpenViking)     | Apache-2.0（`examples/`） | 外部记忆服务的客户端集成（语义召回 + 自动沉淀），随包分发；服务端独立部署、两者不耦合。                                                                                 |
 
 ### yazcode 自研
 
@@ -143,11 +143,11 @@ yazcode 使用**年份号段** `26.y.z`，与上游 `3.14.x` 及社区 fork 的 
 
 审计工作源于下述监控与数据外传发现；本仓库不在此之外做额外事实认定：
 
-| 来源 | 链接 |
-| ---- | ---- |
+| 来源                 | 链接                                                                   |
+| -------------------- | ---------------------------------------------------------------------- |
 | ferstar 原始技术分析 | https://blog.ferstar.org/posts/zcode-silent-workspace-snapshot-upload/ |
-| 独立复现 | https://blog.margrop.net/post/zcode-silent-git-upload-investigation/ |
-| 澎湃新闻报道 | https://www.thepaper.cn/newsDetail_forward_34111815 |
+| 独立复现             | https://blog.margrop.net/post/zcode-silent-git-upload-investigation/   |
+| 澎湃新闻报道         | https://www.thepaper.cn/newsDetail_forward_34111815                    |
 
 ## 许可与免责声明
 

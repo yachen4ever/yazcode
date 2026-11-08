@@ -266,10 +266,7 @@ export function useRootWorkspaceActions({
         // （正文仍经 composerTextInsert 即时插入，降级可接受）。
         const projects = useProjectStore.getState().projects;
         const draftProjectId =
-          resolveProjectForWorkspacePath(
-            projects,
-            newTaskTarget.workspacePath,
-          )?.projectId ?? null;
+          resolveProjectForWorkspacePath(projects, newTaskTarget.workspacePath)?.projectId ?? null;
         persistV4ComposerDraft(
           newTaskTarget.workspacePath,
           newTaskTarget.workspaceIdentity ?? undefined,

@@ -33,7 +33,9 @@ async function loadBuiltinConfigEntry(importCase: string): Promise<{ from: strin
   // cache-busting query 强制重新执行 config 顶层，让本次注入真实进入加载流程。
   const config = (await import(`../electron-builder.config.js?case=${importCase}`))
     .default as BuilderConfig;
-  const entry = config.extraResources.find((item) => item.to === "config/provider/zcode-builtin.json");
+  const entry = config.extraResources.find(
+    (item) => item.to === "config/provider/zcode-builtin.json",
+  );
   assert.ok(entry, "extraResources 必须包含 config/provider/zcode-builtin.json 副本条目");
   return entry;
 }
@@ -60,9 +62,8 @@ describe("builtin provider 配置打包事实源", () => {
   it("统一原语（deny-by-default）剔除宿主注入变量，保留 dev 通道与合法构建变量", async () => {
     // R2 语义升级为统一原语（spec：docs/specs/host-env-injection-boundary.md）：
     // 三前缀（ZCODE_/YAZCODE_/ZCODIUM_）全剔，白名单例外。
-    const { stripHostInjectedBuiltinProviderEnv } = await import(
-      "../../../scripts/builtin-provider-config.mjs"
-    );
+    const { stripHostInjectedBuiltinProviderEnv } =
+      await import("../../../scripts/builtin-provider-config.mjs");
     const cleaned = stripHostInjectedBuiltinProviderEnv({
       ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json",
       YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host/active.json",
@@ -102,9 +103,8 @@ describe("builtin provider 配置打包事实源", () => {
   });
 
   it("发布注入集仅在 CI 语境可信：本地构建不信任同名注入（版本烤入事故防线）", async () => {
-    const { stripHostInjectedBuiltinProviderEnv } = await import(
-      "../../../scripts/builtin-provider-config.mjs"
-    );
+    const { stripHostInjectedBuiltinProviderEnv } =
+      await import("../../../scripts/builtin-provider-config.mjs");
     const injected = {
       ZCODE_APP_VERSION: "3.17.2",
       ZCODE_DIST_BASE_URL: "https://attacker.example/releases/",
@@ -139,9 +139,8 @@ describe("builtin provider 配置打包事实源", () => {
   it("loadBuiltinProviderConfig 单点防御：污染 env 直传时事实源仍锁定仓库（R2）", async () => {
     // R2 实证：prepare-prebuilds/SEA 等链路经本函数直吃 process.env，宿主注入
     // 指向 GLM runtime 副本时构建即炸；清洗收编进函数后所有消费链统一受保护。
-    const { loadBuiltinProviderConfig } = await import(
-      "../../../scripts/builtin-provider-config.mjs"
-    );
+    const { loadBuiltinProviderConfig } =
+      await import("../../../scripts/builtin-provider-config.mjs");
     const config = await loadBuiltinProviderConfig({
       env: {
         ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/tmp/host-runtime/endpoint-x/zcode-builtin.json",

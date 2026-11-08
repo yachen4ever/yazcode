@@ -65,11 +65,7 @@ export function projectToolResult(result) {
     content.push({ type: "text", text: result.text });
   }
   for (const image of Array.isArray(result.images) ? result.images : []) {
-    if (
-      image &&
-      typeof image.dataBase64 === "string" &&
-      typeof image.mimeType === "string"
-    ) {
+    if (image && typeof image.dataBase64 === "string" && typeof image.mimeType === "string") {
       content.push({ type: "image", data: image.dataBase64, mimeType: image.mimeType });
     }
   }

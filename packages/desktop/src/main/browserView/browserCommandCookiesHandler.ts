@@ -56,7 +56,11 @@ export async function handleCookies(
     const cookie = command.action.cookies[index];
     // 运行时兜底校验（schema 已拦大部分；这里防 mock/手拼请求绕过）。
     if (!isCookieParamLike(cookie)) {
-      failed.push({ index, name: String((cookie as { name?: unknown })?.name ?? ""), error: "invalid cookie param" });
+      failed.push({
+        index,
+        name: String((cookie as { name?: unknown })?.name ?? ""),
+        error: "invalid cookie param",
+      });
       continue;
     }
     try {

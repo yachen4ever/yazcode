@@ -13,13 +13,13 @@
 
 用户提到的两个版本号指向**同一批内容**，不是两个独立的改动集：
 
-| 渠道 | 事实 |
-| --- | --- |
-| `zai-org/ZCode` GitHub releases | 只到 **v3.14.3**（2026-09-24）。**没有 v3.16.2 release** |
-| `zai-org/ZCode` tags | 只到 **v3.15.1**（`aac47556`）。**没有 v3.16.2 tag** |
-| `zai-org/ZCode` main 分支 `package.json` | `version: 3.16.2` ✅ |
-| `zai-org/ZCode` main 提交线 | `872ad960`(open source) → `v3.14.3` → `v3.15.1` → `0a1fc56d`(10-19) → **`3c5b2276`(10-20, "sync ZCode source")** |
-| `ZCodium-project/ZCodium` releases | **v1.16.2（2026-10-22）** ✅，其 `package.json` 为 `zcode@1.16.2` |
+| 渠道                                     | 事实                                                                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `zai-org/ZCode` GitHub releases          | 只到 **v3.14.3**（2026-09-24）。**没有 v3.16.2 release**                                                         |
+| `zai-org/ZCode` tags                     | 只到 **v3.15.1**（`aac47556`）。**没有 v3.16.2 tag**                                                             |
+| `zai-org/ZCode` main 分支 `package.json` | `version: 3.16.2` ✅                                                                                             |
+| `zai-org/ZCode` main 提交线              | `872ad960`(open source) → `v3.14.3` → `v3.15.1` → `0a1fc56d`(10-19) → **`3c5b2276`(10-20, "sync ZCode source")** |
+| `ZCodium-project/ZCodium` releases       | **v1.16.2（2026-10-22）** ✅，其 `package.json` 为 `zcode@1.16.2`                                                |
 
 结论：**3.16.2 是上游主干版本号，尚无 tag/release**；ZCodium v1.16.2 是它的**发布工程分支**
 （把上游 `3c5b2276` 同步过去，按 fork 的 1.y.z 体系发版）。所以「3.16.2 与 1.16.2 的正向改动」
@@ -43,19 +43,19 @@
 
 ## 已核实「无需引入」清单（存档理由，后续会话不必重查）
 
-| 上游项 | 判定 | 依据 |
-| --- | --- | --- |
-| 3.16.2 九项功能增量（托盘角标、Source Server 探针、`0007` 索引迁移、动态工作流选择、OAuth 多标签登录、Side Pane 完整视图、Composer/文件树/设置 UI、分屏下线、版本元数据） | **不建议引入** | 自动审计 issue #63 已逐条核对：与本仓库独立版本体系（1.y.z / 26.z）、审计版 UI 裁剪、保留的分屏功能交叉；上游分屏下线会打断我们的 `WorkspaceGroupedTasksSection` / `WorkbenchPane` |
-| **vitest 全量迁移**（上游 `vitest.config.ts` + `test:unit` + `test:unit:affected` + `coverage`） | **暂不引入（可分阶段）** | 上游把全部单测迁到 vitest 单仓 runner，配套 `vitest.setup.ts`、13 个 alias、`projects` 分组、fork 隔离池。我们现有 9 个套件 372 用例跑在 `node:test` + `tsx` 上，**已全绿且已接入门禁**；迁移的收益是上游那 13 组 fork 隔离名单，而那份名单针对的是上游自己的 flaky 集，与我们的 372 用例无交集。**现在迁＝把绿门禁推倒重来，收益不对称** |
-| 上游 `max-lines` 800 + 已接纳文件降级为 warning | **不采纳** | 我们的阈值是 **400**（`.oxlintrc.json`），比上游更严。上游的 800 是为它自己的大文件（`v4-gateway.ts` 等）放宽的，与我们无关 |
-| `scripts/architecture/` 重构（`adopt` / `context` / `report` / `resolver` / `violations` / `upstream-admission` / `upstream-snapshot`） | **部分引入（见 T1）** | 我们已有 `architecture-check.mjs` / `index.mjs`(390 行) / `policy.mjs`(190 行) / `git-file-names.mjs`，覆盖模块边界检查。上游多出的是**治理脚本自身的自测**与**上游文件快照准入**，这两块我们没有 |
-| 上游 `sqlite-schema-contract.mjs` + `check-sqlite-schema.ts` | **引入（见 T2）** | 我们有迁移机制但**无 schema 契约门禁**：`packages/services/src/session/tasksDatabase/migrations.ts` 与 `apps/zcode-cli/packages/adapters/src/storage/session-store/migrations/`（0020-0022）都能改结构而无门禁拦 |
-| 上游 `license-identifiers.mjs` + `scripts/test/license-identifiers.test.mjs` | **不适用** | 我们 `scripts/licenses.mjs check` 已覆盖许可标识分类（且更严格：`check --strict` + `reviewRequired` 清单） |
-| 上游 `cli-lint-admission.mjs` / `run-cli-lint.mjs` | **不引入（暂）** | 上游用它枚举各包 oxlint 脚本并对 `eslint(max-lines)` 在已接纳文件上降级。我们的 lint 口径已统一（`pnpm lint` 93 warnings / 0 errors），无「按包枚举」的必要 |
-| 上游 `bootstrap-patched-dependencies.mjs` | **不适用** | 我们的 CLI 打包链是 `scripts/prepare-prebuilds.mjs` + `build-desktop-agent-cli.mjs`，与上游 bootstrap 装配不同构 |
-| 上游 `run-affected-unit-tests.mjs` + `scripts/affected-unit-tests/*` | **不引入（暂）** | 上游用它做「按改动范围选测」以压缩全量门禁时长。我们的 `verify:pre-push` 已 190s（含冷启动 build），372 用例本身只占 21s；**增量选测是优化项，不是欠账**，且引入它等于给门禁开「按需跳过」的口子，与我们「失败即拦」的口径冲突 |
-| 上游 `scripts/verify-project-upgrade.mts` | **不引入** | 上游用来验证「项目升级」链路；我们是独立发行版，无上游升级流程 |
-| `apps/zcode-cli` 嵌套 `pnpm-lock.yaml` | **既成事实，不动** | 上游同样保留该文件，且同样**无法独立安装**（缺 `@zcode/model-option-map`）。实测我们那份已与 package.json 漂移 6/13 包，但**全仓无人安装它**（CI/release 都不装），上游也一样。这是上游遗留物，不是我们的欠账 |
+| 上游项                                                                                                                                                                    | 判定                     | 依据                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3.16.2 九项功能增量（托盘角标、Source Server 探针、`0007` 索引迁移、动态工作流选择、OAuth 多标签登录、Side Pane 完整视图、Composer/文件树/设置 UI、分屏下线、版本元数据） | **不建议引入**           | 自动审计 issue #63 已逐条核对：与本仓库独立版本体系（1.y.z / 26.z）、审计版 UI 裁剪、保留的分屏功能交叉；上游分屏下线会打断我们的 `WorkspaceGroupedTasksSection` / `WorkbenchPane`                                                                                                                                                        |
+| **vitest 全量迁移**（上游 `vitest.config.ts` + `test:unit` + `test:unit:affected` + `coverage`）                                                                          | **暂不引入（可分阶段）** | 上游把全部单测迁到 vitest 单仓 runner，配套 `vitest.setup.ts`、13 个 alias、`projects` 分组、fork 隔离池。我们现有 9 个套件 372 用例跑在 `node:test` + `tsx` 上，**已全绿且已接入门禁**；迁移的收益是上游那 13 组 fork 隔离名单，而那份名单针对的是上游自己的 flaky 集，与我们的 372 用例无交集。**现在迁＝把绿门禁推倒重来，收益不对称** |
+| 上游 `max-lines` 800 + 已接纳文件降级为 warning                                                                                                                           | **不采纳**               | 我们的阈值是 **400**（`.oxlintrc.json`），比上游更严。上游的 800 是为它自己的大文件（`v4-gateway.ts` 等）放宽的，与我们无关                                                                                                                                                                                                               |
+| `scripts/architecture/` 重构（`adopt` / `context` / `report` / `resolver` / `violations` / `upstream-admission` / `upstream-snapshot`）                                   | **部分引入（见 T1）**    | 我们已有 `architecture-check.mjs` / `index.mjs`(390 行) / `policy.mjs`(190 行) / `git-file-names.mjs`，覆盖模块边界检查。上游多出的是**治理脚本自身的自测**与**上游文件快照准入**，这两块我们没有                                                                                                                                         |
+| 上游 `sqlite-schema-contract.mjs` + `check-sqlite-schema.ts`                                                                                                              | **引入（见 T2）**        | 我们有迁移机制但**无 schema 契约门禁**：`packages/services/src/session/tasksDatabase/migrations.ts` 与 `apps/zcode-cli/packages/adapters/src/storage/session-store/migrations/`（0020-0022）都能改结构而无门禁拦                                                                                                                          |
+| 上游 `license-identifiers.mjs` + `scripts/test/license-identifiers.test.mjs`                                                                                              | **不适用**               | 我们 `scripts/licenses.mjs check` 已覆盖许可标识分类（且更严格：`check --strict` + `reviewRequired` 清单）                                                                                                                                                                                                                                |
+| 上游 `cli-lint-admission.mjs` / `run-cli-lint.mjs`                                                                                                                        | **不引入（暂）**         | 上游用它枚举各包 oxlint 脚本并对 `eslint(max-lines)` 在已接纳文件上降级。我们的 lint 口径已统一（`pnpm lint` 93 warnings / 0 errors），无「按包枚举」的必要                                                                                                                                                                               |
+| 上游 `bootstrap-patched-dependencies.mjs`                                                                                                                                 | **不适用**               | 我们的 CLI 打包链是 `scripts/prepare-prebuilds.mjs` + `build-desktop-agent-cli.mjs`，与上游 bootstrap 装配不同构                                                                                                                                                                                                                          |
+| 上游 `run-affected-unit-tests.mjs` + `scripts/affected-unit-tests/*`                                                                                                      | **不引入（暂）**         | 上游用它做「按改动范围选测」以压缩全量门禁时长。我们的 `verify:pre-push` 已 190s（含冷启动 build），372 用例本身只占 21s；**增量选测是优化项，不是欠账**，且引入它等于给门禁开「按需跳过」的口子，与我们「失败即拦」的口径冲突                                                                                                            |
+| 上游 `scripts/verify-project-upgrade.mts`                                                                                                                                 | **不引入**               | 上游用来验证「项目升级」链路；我们是独立发行版，无上游升级流程                                                                                                                                                                                                                                                                            |
+| `apps/zcode-cli` 嵌套 `pnpm-lock.yaml`                                                                                                                                    | **既成事实，不动**       | 上游同样保留该文件，且同样**无法独立安装**（缺 `@zcode/model-option-map`）。实测我们那份已与 package.json 漂移 6/13 包，但**全仓无人安装它**（CI/release 都不装），上游也一样。这是上游遗留物，不是我们的欠账                                                                                                                             |
 
 ## T1（建议立项）：架构治理脚本自测 + 上游文件准入快照
 
@@ -131,10 +131,10 @@ db:schema:check = node --test scripts/test/sqlite-schema-contract.test.mjs
 
 我们**有迁移机制，但没有 schema 契约门禁**——这正是本次调研挖出的真实欠账：
 
-| 库 | 迁移文件 | 现状 |
-| --- | --- | --- |
-| app tasks-index | `packages/services/src/session/tasksDatabase/migrations.ts` + `schema-v1.ts` + `provider-selection-v2.ts` + `official-glm-selection-v3.ts` | 无基线、无「只增」校验 |
-| CLI session-store | `apps/zcode-cli/packages/adapters/src/storage/session-store/migrations/`（`0020` `0021` `0022`） | 同上 |
+| 库                | 迁移文件                                                                                                                                   | 现状                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| app tasks-index   | `packages/services/src/session/tasksDatabase/migrations.ts` + `schema-v1.ts` + `provider-selection-v2.ts` + `official-glm-selection-v3.ts` | 无基线、无「只增」校验 |
+| CLI session-store | `apps/zcode-cli/packages/adapters/src/storage/session-store/migrations/`（`0020` `0021` `0022`）                                           | 同上                   |
 
 任务库是用户数据的落脚点。**一次「顺手改个列」就能静默破坏老会话的可读性**，
 而我们目前没有任何自动化手段能发现这件事——只有用户报障。上游这套门禁正是针对这个风险。
@@ -142,6 +142,7 @@ db:schema:check = node --test scripts/test/sqlite-schema-contract.test.mjs
 ### 与上游的差异（移植时必须处理）
 
 上游的 `check-sqlite-schema.ts` **不能直接抄**，它 import 了我们没有的路径：
+
 - `packages/shared/src/sqlite-migrations/index.js`（上游独有）
 - `apps/zcode-cli/packages/adapters/src/storage/session-store/migrations.js` 的 `SQLITE_MIGRATIONS` 导出形态与我们不同
 

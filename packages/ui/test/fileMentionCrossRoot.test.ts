@@ -8,20 +8,20 @@ import { mapAdditionalRootFileToMentionItem } from "../src/mentions/providers/fi
 describe("mapAdditionalRootFileToMentionItem", () => {
   it("非 cwd root 的文件提及用绝对路径引用并标注 rootName 来源", () => {
     const item = mapAdditionalRootFileToMentionItem(
-      { name: "index.ts", relativePath: "src/index.ts", path: "/repos/lib/src/index.ts", type: "file" },
+      {
+        name: "index.ts",
+        relativePath: "src/index.ts",
+        path: "/repos/lib/src/index.ts",
+        type: "file",
+      },
       "/repos/lib",
     );
     assert.equal(item.label, "index.ts");
     assert.equal(item.description, "lib/src/index.ts");
     assert.equal(item.value, "/repos/lib/src/index.ts");
     // markdown destination 必须是绝对路径（cwd 命中才是相对路径）。
-    assert.equal(
-      item.markdown,
-      "[index.ts](/repos/lib/src/index.ts)",
-    );
-    assert.deepEqual(parseMentionMarkdown(item.markdown), [
-      { type: "file", label: "index.ts" },
-    ]);
+    assert.equal(item.markdown, "[index.ts](/repos/lib/src/index.ts)");
+    assert.deepEqual(parseMentionMarkdown(item.markdown), [{ type: "file", label: "index.ts" }]);
     assert.ok(item.keywords.includes("lib"));
   });
 
@@ -31,8 +31,6 @@ describe("mapAdditionalRootFileToMentionItem", () => {
       "/repos/lib",
     );
     assert.equal(item.markdown, "[utils](/repos/lib/src/utils/)");
-    assert.deepEqual(parseMentionMarkdown(item.markdown), [
-      { type: "directory", label: "utils" },
-    ]);
+    assert.deepEqual(parseMentionMarkdown(item.markdown), [{ type: "directory", label: "utils" }]);
   });
 });

@@ -15,8 +15,24 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dirname, "..", ".agents", "skills");
 const MAX_BYTES = 2 * 1024 * 1024; // 超过 2MB 的单文件跳过并告警（防止把生成物/大二进制读进内存）。
 const BINARY_EXTENSIONS = new Set([
-  "png", "jpg", "jpeg", "gif", "zip", "docx", "xlsx", "pptx", "ttf", "otf",
-  "woff", "woff2", "pdf", "ico", "icns", "dll", "exe", "bin",
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "zip",
+  "docx",
+  "xlsx",
+  "pptx",
+  "ttf",
+  "otf",
+  "woff",
+  "woff2",
+  "pdf",
+  "ico",
+  "icns",
+  "dll",
+  "exe",
+  "bin",
 ]);
 // 大小写不敏感的品牌残留；端口单独按字面匹配。
 const CASE_INSENSITIVE = [/minimax/i, /mavis/i];
@@ -74,7 +90,8 @@ for (const { absolute, relative } of allFiles) {
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     if (ALLOWED_LINE.test(line)) continue;
-    const matched = CASE_INSENSITIVE.some((re) => re.test(line)) || CASE_SENSITIVE.some((re) => re.test(line));
+    const matched =
+      CASE_INSENSITIVE.some((re) => re.test(line)) || CASE_SENSITIVE.some((re) => re.test(line));
     if (matched) {
       hits.push(`${relative}:${i + 1}: ${line.trim().slice(0, 200)}`);
     }

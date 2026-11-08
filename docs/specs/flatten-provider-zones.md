@@ -4,7 +4,7 @@
 
 ZCodium 是去智谱化的社区 fork，但剥离不彻底：模型设置仍保留「智谱」专区
 （BigModel / Start Plan / Coding Plan）、首启强制弹套餐/API Key 引导、账号子系统
-（zhipu-account access + 8 个 account:* 内置 Provider）仍在数据源中。
+（zhipu-account access + 8 个 account:\* 内置 Provider）仍在数据源中。
 本 PR 完成剥离：智谱（Z.ai / BigModel）降级为与 DeepSeek / Kimi 同类的普通 API-Key
 预设，移除订阅（Coding Plan）的产品面。
 

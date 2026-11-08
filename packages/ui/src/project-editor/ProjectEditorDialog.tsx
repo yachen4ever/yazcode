@@ -256,7 +256,10 @@ export function ProjectEditorDialog({
             {isRemoteMode ? (
               // 远端项目固定单 root（remote-policy 约束）：只读展示，不提供增删/
               // 设主目录/本地浏览——本地目录选择器也选不到远端路径。
-              <p className="mt-2 text-ui-sm text-foreground-subtle" data-testid="project-editor-remote-hint">
+              <p
+                className="mt-2 text-ui-sm text-foreground-subtle"
+                data-testid="project-editor-remote-hint"
+              >
                 {msg("projectEditor.remoteSingleRootHint")}
               </p>
             ) : (
@@ -292,7 +295,11 @@ export function ProjectEditorDialog({
             )}
           </fieldset>
           {error ? (
-            <p role="alert" className="text-ui-sm text-destructive" data-testid="project-editor-error">
+            <p
+              role="alert"
+              className="text-ui-sm text-destructive"
+              data-testid="project-editor-error"
+            >
               {error}
             </p>
           ) : null}

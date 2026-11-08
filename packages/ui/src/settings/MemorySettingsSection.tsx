@@ -258,9 +258,12 @@ export function MemorySettingsSection({
             id: "settings.memory.providerDescription",
           })}
           control={
-            <Select value={memoryProvider} onValueChange={(value) => {
+            <Select
+              value={memoryProvider}
+              onValueChange={(value) => {
                 handleProviderChange(value as MemoryProvider);
-              }}>
+              }}
+            >
               <SelectTrigger
                 aria-label={intl.formatMessage({ id: "settings.memory.provider" })}
                 data-testid={TID_SETTINGS_MEMORY_SWITCH}
@@ -338,10 +341,7 @@ export function MemorySettingsSection({
                 <Button variant="outline" disabled={ovChecking} onClick={() => void handleVerify()}>
                   {intl.formatMessage({ id: "settings.memory.ov.test" })}
                 </Button>
-                <Button
-                  disabled={ovChecking || !ovVerified}
-                  onClick={() => void handleActivate()}
-                >
+                <Button disabled={ovChecking || !ovVerified} onClick={() => void handleActivate()}>
                   {intl.formatMessage({ id: "settings.memory.ov.activate" })}
                 </Button>
                 <Button

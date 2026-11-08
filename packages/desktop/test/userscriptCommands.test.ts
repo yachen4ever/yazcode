@@ -248,7 +248,10 @@ describe("用户批准钉住所见 sha（P2 复核 M1）", () => {
 
 describe("browserCommandUserscriptsHandler", () => {
   it("非 userscript 命令返回 null（交回原命令链路）", async () => {
-    assert.equal(await maybeHandleUserscriptCommand({ method: "navigate", url: "https://a.test" }, null), null);
+    assert.equal(
+      await maybeHandleUserscriptCommand({ method: "navigate", url: "https://a.test" }, null),
+      null,
+    );
     assert.equal(await maybeHandleUserscriptCommand(null, null), null);
   });
 
@@ -323,9 +326,8 @@ describe("browserCommandUserscriptsHandler", () => {
       injectedPort,
     );
     assert.ok(injectedResult?.ok);
-    const injectedScripts = (
-      injectedResult.value as { scripts: Array<Record<string, unknown>> }
-    ).scripts;
+    const injectedScripts = (injectedResult.value as { scripts: Array<Record<string, unknown>> })
+      .scripts;
     assert.equal(injectedScripts[0]?.lastInjectedAt, 1_700_000_000_000);
 
     const setResult = await maybeHandleUserscriptCommand(

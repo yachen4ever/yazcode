@@ -11,9 +11,7 @@ import { parse } from "yaml";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
-const workflow = parse(
-  await readFile(join(repoRoot, ".github/workflows/release.yml"), "utf8"),
-);
+const workflow = parse(await readFile(join(repoRoot, ".github/workflows/release.yml"), "utf8"));
 
 test("desktop matrix 的 mac 构建绑定原生 ARM64 runner，不回退退役版本", () => {
   const macTargets = workflow.jobs.desktop.strategy.matrix.include.filter(

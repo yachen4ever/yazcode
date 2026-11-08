@@ -30,9 +30,9 @@ ZCode Built-in Release 均不可用」，浏览器控制 disabled、模型设置
    mint 的宿主会话内启动 → 必炸。与包内容无关（mint 解包三处文件均在）。
 4. **构建期同样存在未设防链（y430p 本机亲历复现）**：在 zcode 宿主会话内跑
    `pnpm bundle:desktop -- --os linux`，`prepare:runtime-assets → prepare:remote-assets
-   → packages/server build:remote` 链的 `loadBuiltinProviderConfig` 直接吃
+→ packages/server build:remote` 链的 `loadBuiltinProviderConfig` 直接吃
    `process.env`，报 `Invalid Built-in Provider config (production):
-   /Users/yachen/.zcode/v2/runtime/provider/darwin-x86_64/3.17.2/endpoint-…/zcode-builtin.json`
+/Users/yachen/.zcode/v2/runtime/provider/darwin-x86_64/3.17.2/endpoint-…/zcode-builtin.json`
    ——R1 只修了 electron-builder 主配置链，`prepare-prebuilds.mjs`（remote-assets）
    与 SEA 资产链仍是裸消费方。
 5. 既有防护盘点：CLI `build.mjs` 前缀级洗涤仅非 CI 生效；R1 的
