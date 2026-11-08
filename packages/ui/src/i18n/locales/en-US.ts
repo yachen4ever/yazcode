@@ -2505,6 +2505,10 @@ const enUS: Record<string, string> = {
     "Enable the Browser Use plugin so new sessions can access and control web pages in the built-in browser.",
   "settings.browser.control.enabledToast": "Built-in browser control enabled",
   "settings.browser.control.disabledToast": "Built-in browser control disabled",
+  // 26.5.6 fix item 3: locale entries were missing when the hint states shipped in 26.5.5.
+  "settings.browser.control.loadingHint": "Browser control status is loading…",
+  "settings.browser.control.unavailableHint":
+    "Browser control plugin is not ready. Try again later, or restart the app and reopen this page.",
   "settings.browser.security.section": "Security",
   "settings.embeddedBrowserAllowInsecureCertificates": "Ignore certificate errors",
   "settings.embeddedBrowserAllowInsecureCertificatesDescription":

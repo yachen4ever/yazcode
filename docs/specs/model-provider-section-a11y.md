@@ -108,3 +108,36 @@ loading/失败 toast。**26.5.4 增补批 3a 的聚合与失败 toast 已在顶�
 
 验收：行开关 aria 与 §1 的端点开关同一模式（name 稳定、状态在 aria-checked）；
 源级断言不再出现状态翻转的三元文案。
+
+## 5. 连通性状态圆点的转换语义（26.5.6 修复项 4）
+
+背景（minttest 六轮实测补入观察）：端点转「最近连接失败」后，恢复正确 URL 再刷新，
+28s 采样圆点仍停留失败态——失败方向可见，恢复方向无转换。
+
+语义定案（`unreachableProviderIds` 的完整生命周期，状态所有者 =
+`ModelProviderSection` 本地 state，经 `ProviderConnectivityStatusContext` 下发）：
+
+```
+手动刷新 ──► probeProviderConnectivity（对当前已保存配置并发探测）
+                │
+                ├─ provider 探测失败/超时/抛错 ──► 计入失败集
+                └─ provider 探测成功            ──► 不计入
+                │
+                ▼
+        整集替换 setState（不是增量合并）
+                │
+                ├─ 失败集非空 ──► 圆点 unreachable（warning「最近连接失败」）+ 失败 toast
+                └─ 失败集为空 ──► 圆点回 ready/unavailable（回绿）＋ 静默
+```
+
+1. **整集替换、无记忆**：每次手动刷新的探测结果整体替换上一次失败集——上一轮
+   失败的 provider 本轮探测成功即回绿；探测成功路径与失败路径是同一跳
+   （同一 `setState`），不允许只实现失败方向。
+2. **探测挂起期间保留旧态**：新一轮探测进行中不清空旧失败集（避免橙→绿→橙闪烁）；
+   探测完成一次性落新态。10s 超时兜底保证旧态最多滞留 ~10s。
+3. **成功静默**：回绿本身即反馈，不弹成功 toast（与 §2/§3 成功口径一致）。
+4. **不写持久化**：unreachable 是纯内存观测，应用重启即清（配置就绪维度仍由
+   `executable` 承载，两维度正交不变）。
+
+验收：失败 URL → 刷新 → 橙（「最近连接失败」）；恢复正确 URL（保存落盘）→ 刷新 →
+≤10s 回绿且无成功 toast；`probeProviderConnectivity` 成功返回空集已有直测覆盖。
