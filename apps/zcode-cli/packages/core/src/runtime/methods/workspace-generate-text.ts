@@ -20,9 +20,13 @@ import { recordModelUsageFact } from "./usage-observability.js";
 import { createRuntimeModel } from "./runtime-model.js";
 import { normalizeStreamError } from "../helpers/index.js";
 import { auxiliaryModelOptions } from "../../model/auxiliary-model-options.js";
+import { ModelRetryBudget } from "@zcode/contracts";
 
 const WORKSPACE_GENERATE_TEXT_TIMEOUT_MS = 60_000;
 const CONNECTIVITY_PROBE_MAX_OUTPUT_TOKENS = 1;
+// 探测专属上限：黑洞/挂起 URL 在该窗口被截断，与 UI 侧 probeProviderConnectivity
+// 的 10s 兜底对齐；正常端点毫秒级完成，不受影响（issue #12 实测正常档 31ms）。
+const CONNECTIVITY_PROBE_TIMEOUT_MS = 10_000;
 // 探测请求使用固定最小 prompt，避免多余推理开销；不可改写角色、文本或混入会话历史。
 const CONNECTIVITY_PROBE_SYSTEM = "You are ZCode connectivity probe.";
 const CONNECTIVITY_PROBE_USER = "hi";
@@ -61,6 +65,11 @@ export async function testModelConnectivity(
     reasoningLevel: baseModel.optionSpecs.reasoningLevel.values[0]!,
     maxOutputTokens: CONNECTIVITY_PROBE_MAX_OUTPUT_TOKENS,
   });
+  // 探测禁止失败重试（26.5.7 前置调查 issue #12）：连接拒绝等 NetworkError 在物理层
+  // 毫秒级失败，默认重试预算（10 次重试、2s→60s 退避）会把即时拒绝拖满退避曲线——
+  // 实测 127.0.0.1:9 在 40s 观测窗口内仍在重试。Single 预算经下方 runWith 上下文
+  // 携带（withRuntimeInvocationLayer 外层显式优先），失败立即返回，失败语义不变
+  // （仍如实判失败）；调用方（probeProviderConnectivity）自带状态呈现。
   const traceContext = createChildTraceContext(options?.traceContext ?? this.rootTraceContext, {
     attributes: {
       providerId: String(model.providerId),
@@ -68,8 +77,10 @@ export async function testModelConnectivity(
       querySource: "provider_settings_connectivity",
     },
   });
+  // 探测专属 10s 上限：黑洞/挂起 URL 的单次尝试在该窗口内被截断，与 UI 侧
+  // probeProviderConnectivity 的 10s 兜底对齐（不再依赖辅助生成共用的 60s）。
   const abortSignal =
-    options?.abortSignal ?? AbortSignal.timeout(WORKSPACE_GENERATE_TEXT_TIMEOUT_MS);
+    options?.abortSignal ?? AbortSignal.timeout(CONNECTIVITY_PROBE_TIMEOUT_MS);
   const request: ModelRequest = {
     abortSignal,
     messages: [
@@ -83,6 +94,7 @@ export async function testModelConnectivity(
       metadata: traceContextToLogContext(traceContext),
       modelRequestSessionType: "other",
       modelCall: { operation: "workspace_generate_text" },
+      modelRetryBudget: ModelRetryBudget.Single,
       statusSink: this.createModelStatusSink(traceContext, []),
       traceContext,
       refreshRuntimeHeadersBeforeAttempt: createRefreshRuntimeHeadersBeforeModelAttempt(this, {

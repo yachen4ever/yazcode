@@ -46,7 +46,18 @@ function withRuntimeInvocationLayer(runtime: AgentRuntimeInternal, model: Model)
       ? {}
       : { modelRequestAdmission: runtime.modelRequestAdmission }),
   };
-  return withModelInvocationContext(model, () => layer);
+  return withModelInvocationContext(model, () => {
+    // 调用级显式预算优先（如连通性探测的 Single——外层 runWith 携带），taskType
+    // 预算只作缺省；rest 字段维持外层继承，admission 仍以 runtime 装配为准。
+    // 若内层直接覆盖（原 {...outer, ...layer} 顺序），调用级预算永远被 taskType
+    // 缺省压掉，探测路径的失败重试无法按调用语义收口（26.5.7 前置调查 issue #12）。
+    const outer = getCurrentModelInvocationContext();
+    return {
+      ...outer,
+      modelRetryBudget: outer?.modelRetryBudget ?? layer.modelRetryBudget,
+      ...(layer.modelRequestAdmission ? { modelRequestAdmission: layer.modelRequestAdmission } : {}),
+    };
+  });
 }
 
 export function withModelInvocationContext(

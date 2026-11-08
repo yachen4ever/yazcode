@@ -37,10 +37,14 @@ export const ModelRequestSessionType = {
  * - `unbounded`：**瞬态**失败无上限重试（退避曲线不变、封顶 60s 后无限探测），永久失败照旧立即抛。
  *   给 workflow actor（taskType workflow_child / nested_workflow_child）使用：模型错误绝不是
  *   workflow 错误，唯一出口是用户 cancel。
+ * - `single`：**禁止失败重试**（总尝试数 1）。给连通性探测这类「调用方自带失败处理、
+ *   失败语义就是结论」的辅助调用使用：连接拒绝等 NetworkError 在物理层毫秒级失败，
+ *   探测重试只会把即时拒绝拖满退避曲线（26.5.7 前置调查 issue #12 根因）。
  */
 export const ModelRetryBudget = {
   Default: "default",
   Unbounded: "unbounded",
+  Single: "single",
 } as const;
 
 export type ModelRetryBudget = (typeof ModelRetryBudget)[keyof typeof ModelRetryBudget];
