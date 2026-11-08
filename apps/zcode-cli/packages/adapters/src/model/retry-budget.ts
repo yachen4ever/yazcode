@@ -14,10 +14,19 @@ import { ModelRetryBudget } from "@zcode/contracts";
 export const UNBOUNDED_RETRY_MAX_ATTEMPTS = 0;
 
 export function isUnboundedRetryBudget(budget: ModelRetryBudget | undefined): boolean {
+  // undefined 防御（26.5.8 ①）：陈旧 dist / 半新半旧依赖图下 `ModelRetryBudget.Unbounded`
+  // 可能解析为 undefined，`budget === undefined` 会把**缺省预算**误判成 unbounded——
+  // 所有调用静默放开重试（语义反转且无声）。先排除 undefined，缺省永不误判。
+  if (budget === undefined) return false;
   return budget === ModelRetryBudget.Unbounded;
 }
 
 function isSingleAttemptBudget(budget: ModelRetryBudget | undefined): boolean {
+  // undefined 防御（26.5.8 ①，同上）：陈旧 dist 下 `ModelRetryBudget.Single` 解析为
+  // undefined 时，`undefined === undefined` 会把**缺省预算**误判成 single——所有未指定
+  // 预算的调用静默变成单次尝试。缺省预算 fail-open 到 default 侧（26.5.7 验收实测踩过
+  // 该路径：本地陈旧 dist 使例句语境翻转）。
+  if (budget === undefined) return false;
   return budget === ModelRetryBudget.Single;
 }
 
