@@ -8,13 +8,18 @@ import { getAppConfigDir } from "@zcode/services/node";
  * SSH 主机密钥 TOFU（trust on first use）存储与判定。
  *
  * **移植自 axiom-desu/ZCodium@1575a769**（packages/server/src/remote/sshKnownHosts.ts，
- * Apache-2.0；许可登记见 third-party/inventory.json 的 axiom-zcodium 条目；移植适配点
- * 见 docs/specs/ssh-remote-hardening.md「移植适配点」）。威胁模型：ssh2 未配置
+ * Apache-2.0；许可登记见 third-party/copied-components.json 的
+ * axiom-zcodium-ssh-hostkey-tofu 条目；移植适配点见
+ * docs/specs/ssh-remote-hardening.md「移植适配点」）。威胁模型：ssh2 未配置
  * hostVerifier 时接受任意主机密钥，中间人可冒充目标主机完成密钥交换，骗取用户密码 /
  * 私钥口令。按 OpenSSH 默认策略补齐校验：
  * - 无记录 → 接受并落库（首次连接）；
  * - 记录匹配 → 接受；
  * - 记录不匹配 → 拒绝，且拒绝原因可区分（主机密钥变更 vs 存储故障），不得静默重连。
+ *
+ * Modified by ZCode: 存储路径注释改写为本仓数据根（.yazcode/v2）、补充移植来源与
+ * 本文件同 remoteSshHostKey 连接身份键的语义互指注释、头注释按本仓 spec 口径改写；
+ * TOFU 判定与存储逻辑与上游一致。
  *
  * 存储键复用 buildSshRemoteHostKey()。注意与该函数的分工：它是**连接身份键**
  * （host/port/username/认证方式/私钥路径，供 UI 识别同一远程目标），这里借它做 TOFU
