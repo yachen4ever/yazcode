@@ -31753,6 +31753,30 @@
           "sha256": "30a077cd57678f729d870a747a0b16f4bb58fb412a4b54b3fb91fd174051d5c6"
         }
       ]
+    },
+    {
+      "id": "axiom-zcodium-ssh-hostkey-tofu",
+      "referenceRevision": "1575a7696eaacccb2e05a86d071212b94013dedc",
+      "source": "https://raw.githubusercontent.com/axiom-desu/ZCodium/1575a7696eaacccb2e05a86d071212b94013dedc/LICENSE",
+      "file": "third-party/upstream/606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b.txt",
+      "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b",
+      "importRevision": null,
+      "provenance": "Ported in yazcode 26.5.7 (issue yaclab/yazcode#16); pinned to the exact upstream commit the port was taken from.",
+      "roots": [
+        "packages/server/src/remote"
+      ],
+      "scope": "Upstream-derived portions only (original path packages/server/src/remote/sshKnownHosts.ts, same as local): sshKnownHosts.ts (TOFU store/verifier, direct port with adapted comments) and its node:test port. sshAuth.ts / ssh-backend.ts hostVerifier wiring is locally-owned adaptation referencing the upstream patch, not a file copy.",
+      "license": "Apache-2.0",
+      "files": [
+        {
+          "file": "packages/server/src/remote/sshKnownHosts.ts",
+          "sha256": "2121b55e2a46dd0cd46c97f82d0a07b23d14e21dfc261a51849066d19fa67428"
+        },
+        {
+          "file": "packages/desktop/test/sshKnownHosts.test.ts",
+          "sha256": "cc8e90aeaccadb0cd4ef36732c5d0b6816b88ad7eb2645d724eb5dc1a75158ca"
+        }
+      ]
     }
   ],
   "patches": [

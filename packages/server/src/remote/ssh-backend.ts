@@ -4,7 +4,7 @@ import type { ConnectConfig } from "ssh2";
 import { createReadStream } from "node:fs";
 import { posix } from "node:path";
 import { Emitter } from "@zcode/rpc";
-import { resolveZCodeRuntimeEnv } from "@zcode/shared";
+import { resolveZCodeRuntimeEnv, type SSHConnectOptions } from "@zcode/shared";
 import type {
   IRemoteBackend,
   RemoteDisconnectEvent,
@@ -29,6 +29,13 @@ import {
   createKeyboardInteractiveResponder,
   normalizeSSHConnectError,
 } from "@zcode/server/remote/sshAuth.js";
+import {
+  createSSHHostVerifier,
+  formatHostKeyRejectionError,
+  getSSHKnownHostsPath,
+  SSHHostKeyStore,
+  type SSHHostKeyRejection,
+} from "@zcode/server/remote/sshKnownHosts.js";
 import {
   createSSHUploadProgressReporter,
   formatSSHUploadError,
@@ -98,6 +105,10 @@ export class SSHBackend implements IRemoteBackend {
   private disposed = false;
   private hasEverConnected = false;
   private disconnectReported = false;
+  // 本次连接尝试中 hostVerifier 记录的拒绝原因。ssh2 对 verify(false) 只抛固定的
+  // "Host denied (verification failed)"，分不清密钥变更与存储故障；verifier 先行记录，
+  // onClientError 优先把它换成可区分、可操作的产品错误。
+  private hostKeyRejection: SSHHostKeyRejection | null = null;
   private readonly disconnectEmitter = new Emitter<RemoteDisconnectEvent>();
   readonly onDidDisconnect = this.disconnectEmitter.event;
 
@@ -107,7 +118,9 @@ export class SSHBackend implements IRemoteBackend {
       // dispose 期间保留监听器只为吸收这类迟到事件，不能再向上层重复报告或触发未捕获异常。
       return;
     }
-    const normalizedError = normalizeSSHConnectError(error);
+    const normalizedError = this.hostKeyRejection
+      ? formatHostKeyRejectionError(this.hostKeyRejection, getSSHKnownHostsPath())
+      : normalizeSSHConnectError(error);
     // ready 之后如果底层连接抖动，ssh2 仍会发出 "error" 事件。
     // 若没有常驻监听，Node 会把它当成未捕获异常直接抛出，可能导致 host 进程崩溃。
     // 这里先记录错误详情再上报断连；上层收到断连后会退出 host，反过来会丢掉真实 error 文案。
@@ -128,6 +141,25 @@ export class SSHBackend implements IRemoteBackend {
     this.client.on("error", this.onClientError);
     this.client.on("close", this.onClientClose);
     this.client.on("end", this.onClientEnd);
+    // SSH 主机密钥 TOFU 校验（spec: docs/specs/ssh-remote-hardening.md，移植自
+    // axiom-desu/ZCodium@1575a769）。不注入 hostVerifier 时 ssh2 接受任意主机密钥，
+    // 中间人可冒充目标主机完成密钥交换，用户密码 / 私钥口令会直接交给冒充者——这正是
+    // 会执行任意命令的远端 Agent 部署链路。存储键复用 buildSshRemoteHostKey（已排除
+    // 密码与私钥口令），known_hosts 不落凭据。
+    const hostVerifier = createSSHHostVerifier({
+      store: new SSHHostKeyStore(),
+      target: {
+        kind: "ssh",
+        host: options.host,
+        port: options.port,
+        username: options.username,
+        privateKeyPath: options.privateKeyPath,
+        password: options.password,
+      } satisfies SSHConnectOptions,
+      onRejection: (rejection) => {
+        this.hostKeyRejection = rejection;
+      },
+    });
     this.config = buildSSHConnectConfig({
       host: options.host,
       port: options.port,
@@ -136,6 +168,7 @@ export class SSHBackend implements IRemoteBackend {
       passphrase: options.privateKeyPassphrase,
       password: options.password,
       agent: options.agent,
+      hostVerifier,
     });
     if (resolveZCodeRuntimeEnv(process.env) === "development") {
       this.config.debug = (message: string) => {
