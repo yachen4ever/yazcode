@@ -22,8 +22,10 @@ const POLLUTED_ENV: Record<string, string> = {
   // F1 同款：builtin 配置路径（bundled 与 personal）
   ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/host/runtime/provider/endpoint-a/zcode-builtin.json",
   YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/host/runtime/provider/endpoint-a/zcode-builtin.json",
-  ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE: "/host/runtime/provider/endpoint-b/zcode-builtin.json",
-  YAZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE: "/host/runtime/provider/endpoint-b/zcode-builtin.json",
+  ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE:
+    "/host/runtime/provider/endpoint-b/zcode-builtin.json",
+  YAZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE:
+    "/host/runtime/provider/endpoint-b/zcode-builtin.json",
   // 官方 legacy 前缀（改名表第三顺位兜底）——注意：改名变量的 legacy 名是合法
   // 白名单项（读侧 readExternalEnvVar 会兜底读它），故此处用未登记改名的 legacy 键
   // 作为污染面样本。
@@ -129,8 +131,7 @@ describe("hostEnvBoundary：deny-by-default 原语", () => {
     const cleaned = stripHostInjectedEnv(devEnv, { allowDevRuntimeKeys: true });
     for (const key of Object.keys(devEnv)) {
       assert.ok(
-        DEV_CHANNEL_ENV_ALLOWLIST.includes(key) ||
-          DEV_RUNTIME_ONLY_ENV_ALLOWLIST.includes(key),
+        DEV_CHANNEL_ENV_ALLOWLIST.includes(key) || DEV_RUNTIME_ONLY_ENV_ALLOWLIST.includes(key),
         `dev 通道键须在白名单: ${key}`,
       );
       assert.equal(cleaned[key], devEnv[key], `dev 通道键必须存活: ${key}`);

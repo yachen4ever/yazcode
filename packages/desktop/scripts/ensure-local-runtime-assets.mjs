@@ -15,8 +15,8 @@ const desktopRoot = resolve(import.meta.dirname, "..");
 const target = getTargetPlatform();
 const bundledToolsRoot = join(desktopRoot, "bundled-tools", target.key);
 // mise 等 shim 只提供无扩展名的 pnpm；硬编码 *.cmd 会让 Windows 本机
-        // 打包链直接 ENOENT。用裸命令交给 shell 按 PATHEXT 解析（与 bundle.mjs 一致）。
-        const pnpmCommand = "pnpm";
+// 打包链直接 ENOENT。用裸命令交给 shell 按 PATHEXT 解析（与 bundle.mjs 一致）。
+const pnpmCommand = "pnpm";
 const nativeSearchReleasePlan = resolveNativeSearchReleasePlan({
   platform: target.os,
   arch: target.arch,

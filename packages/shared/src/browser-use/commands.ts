@@ -556,7 +556,9 @@ export const browserCommandSchema = z.discriminatedUnion("method", [
       method: z.literal("cookies"),
       action: z.discriminatedUnion("name", [
         z.object({ name: z.literal("get") }).strict(),
-        z.object({ name: z.literal("set"), cookies: z.array(browserCookieParamSchema).min(1) }).strict(),
+        z
+          .object({ name: z.literal("set"), cookies: z.array(browserCookieParamSchema).min(1) })
+          .strict(),
       ]),
       tabId: z.string().optional(),
     })

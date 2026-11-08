@@ -147,11 +147,7 @@ async function hasCommit(run, ref) {
  * merge-base；全部不可解析回退 HEAD 并由调用方显式告警。
  * run 注入便于测试（默认真实 git，cwd 由调用方决定）。
  */
-export async function resolveSchemaBase({
-  env = process.env,
-  cwd,
-  run = execFile,
-} = {}) {
+export async function resolveSchemaBase({ env = process.env, cwd, run = execFile } = {}) {
   const exec = (cmd, args) => run(cmd, args, { cwd: cwd ?? process.cwd() });
 
   const explicit = env.SQLITE_SCHEMA_BASE_REF?.trim();
@@ -179,12 +175,7 @@ export async function resolveSchemaBase({
     .then((result) => result.stdout.trim())
     .catch(() => "");
   const githubBase = env.GITHUB_BASE_REF?.trim();
-  for (const ref of [
-    originHead,
-    githubBase ? `origin/${githubBase}` : "",
-    "origin/main",
-    "main",
-  ]) {
+  for (const ref of [originHead, githubBase ? `origin/${githubBase}` : "", "origin/main", "main"]) {
     if (!ref || !(await hasCommit(exec, ref))) continue;
     const mergeBase = await exec("git", ["merge-base", "HEAD", ref])
       .then((result) => result.stdout.trim())

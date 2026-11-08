@@ -18,9 +18,7 @@ export function primaryRootOf(project: ProjectRecord): string | null {
 /** 项目其余 roots（有序、排除主目录）；供提及范围与 roots 徽标消费。 */
 export function additionalRootsOf(project: ProjectRecord): string[] {
   const primary = primaryRootOf(project);
-  return project.roots
-    .map((root) => root.rootPath)
-    .filter((rootPath) => rootPath !== primary);
+  return project.roots.map((root) => root.rootPath).filter((rootPath) => rootPath !== primary);
 }
 
 /** 项目全部 roots，主目录在前；无项目返回 null。 */

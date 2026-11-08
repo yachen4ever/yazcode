@@ -90,7 +90,8 @@ describe("additionalDirectories 协议三通道 schema", () => {
 
     for (const { name, schema } of schemas) {
       assert.throws(
-        () => schema.parse(paramsWith(schema, makePaths(ZCODE_ADDITIONAL_DIRECTORIES_MAX_ITEMS + 1))),
+        () =>
+          schema.parse(paramsWith(schema, makePaths(ZCODE_ADDITIONAL_DIRECTORIES_MAX_ITEMS + 1))),
         undefined,
         `${name} 应拒绝 257 项`,
       );
@@ -100,9 +101,7 @@ describe("additionalDirectories 协议三通道 schema", () => {
   it("非字符串项拒绝；strict 拒绝未知键", () => {
     for (const { schema } of schemas) {
       assert.throws(() => schema.parse(paramsWith(schema, [42])));
-      assert.throws(() =>
-        schema.parse({ ...paramsWith(schema, ["/tmp/a"]), unknownKey: true }),
-      );
+      assert.throws(() => schema.parse({ ...paramsWith(schema, ["/tmp/a"]), unknownKey: true }));
     }
   });
 });

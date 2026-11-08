@@ -147,7 +147,9 @@ export function IabUserscriptUrlInstallDialog({
       // scriptId 预填：最终 URL 的文件名 stem（用户可改；合法性由 main 权威校验）。
       let stem: string | null = null;
       try {
-        stem = deriveScriptIdFromFilename(new URL(result.source.url).pathname.split("/").pop() ?? "");
+        stem = deriveScriptIdFromFilename(
+          new URL(result.source.url).pathname.split("/").pop() ?? "",
+        );
       } catch {
         stem = null;
       }
@@ -157,9 +159,7 @@ export function IabUserscriptUrlInstallDialog({
       logger.warn("[userscripts-settings] fetch source failed", {
         error: error instanceof Error ? error.message : String(error),
       });
-      setFetchError(
-        intl.formatMessage({ id: "settings.userscripts.url.error.download_failed" }),
-      );
+      setFetchError(intl.formatMessage({ id: "settings.userscripts.url.error.download_failed" }));
     } finally {
       setFetching(false);
     }
@@ -169,9 +169,7 @@ export function IabUserscriptUrlInstallDialog({
     if (!platform.writeIabUserscript || !fetched) return;
     const targetId = scriptId.trim();
     if (!targetId) {
-      setInstallError(
-        intl.formatMessage({ id: "settings.userscripts.editor.scriptIdRequired" }),
-      );
+      setInstallError(intl.formatMessage({ id: "settings.userscripts.editor.scriptIdRequired" }));
       return;
     }
     setInstalling(true);
@@ -240,9 +238,7 @@ export function IabUserscriptUrlInstallDialog({
     >
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>
-            {intl.formatMessage({ id: "settings.userscripts.url.title" })}
-          </DialogTitle>
+          <DialogTitle>{intl.formatMessage({ id: "settings.userscripts.url.title" })}</DialogTitle>
           <DialogDescription>
             {stage === "input"
               ? intl.formatMessage({ id: "settings.userscripts.url.inputHint" })
@@ -270,13 +266,7 @@ export function IabUserscriptUrlInstallDialog({
               </div>
             ) : null}
             <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={fetching}
-                onClick={onClose}
-              >
+              <Button type="button" variant="ghost" size="sm" disabled={fetching} onClick={onClose}>
                 {intl.formatMessage({ id: "settings.userscripts.editor.cancel" })}
               </Button>
               <Button
@@ -316,7 +306,10 @@ export function IabUserscriptUrlInstallDialog({
             </div>
             {fetched.parseError ? (
               <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-ui-sm text-foreground">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+                <AlertTriangle
+                  className="mt-0.5 size-4 shrink-0 text-destructive"
+                  aria-hidden="true"
+                />
                 <span className="min-w-0 break-all">
                   {intl.formatMessage({ id: "settings.userscripts.url.parseErrorBanner" })}
                   <span className="font-mono">{fetched.parseError}</span>
@@ -354,7 +347,13 @@ export function IabUserscriptUrlInstallDialog({
                     { id: scriptId.trim() },
                   )}
                 </span>
-                <Button type="button" variant="outline" size="sm" disabled={installing} onClick={installAsAlternate}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={installing}
+                  onClick={installAsAlternate}
+                >
                   {intl.formatMessage({ id: "settings.userscripts.editor.saveAsAlternate" })}
                 </Button>
                 <Button

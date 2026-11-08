@@ -12,7 +12,11 @@ import { TaskIndexRepo } from "../packages/services/src/session/taskIndexRepo.js
 import { AutomationRepo } from "../packages/services/src/session/automationRepo.js";
 import { OffPeakTaskRepo } from "../packages/services/src/session/offPeakTaskRepo.js";
 import { SQLITE_MIGRATIONS } from "../apps/zcode-cli/packages/adapters/src/storage/session-store/migrations.js";
-import { assertAdditiveSchema, dumpSqliteSchema, resolveSchemaBase } from "./sqlite-schema-contract.mjs";
+import {
+  assertAdditiveSchema,
+  dumpSqliteSchema,
+  resolveSchemaBase,
+} from "./sqlite-schema-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const update = process.argv.includes("--update");

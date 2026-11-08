@@ -188,7 +188,6 @@ export function ProviderCardHeader({
   );
 }
 
-
 export function ProviderConnectionSection({
   provider,
   readOnly,
@@ -298,7 +297,7 @@ export function ProviderConnectionSection({
             <span className="flex items-center gap-2 text-ui-sm font-medium">
               <ShieldCheckIcon className="size-4 text-foreground-subtle" />
               {intl.formatMessage({ id: "settings.modelProvider.sslAdvanced" })}
-              {(allowInsecureTlsValue || tlsCaPathValue) ? (
+              {allowInsecureTlsValue || tlsCaPathValue ? (
                 <span className="rounded bg-warning/15 px-1.5 py-0.5 text-ui-sm text-warning">
                   {intl.formatMessage({ id: "settings.modelProvider.sslAdvancedActive" })}
                 </span>
@@ -329,7 +328,9 @@ export function ProviderConnectionSection({
                     {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTls" })}
                   </label>
                   <p className="text-ui-sm text-foreground-subtle">
-                    {intl.formatMessage({ id: "settings.modelProvider.allowInsecureTlsDescription" })}
+                    {intl.formatMessage({
+                      id: "settings.modelProvider.allowInsecureTlsDescription",
+                    })}
                   </p>
                 </div>
               </div>
@@ -360,14 +361,13 @@ export function ProviderConnectionSection({
                     <Input
                       aria-label={intl.formatMessage({ id: "settings.modelProvider.certPath" })}
                       value={tlsCaPathValue}
-                      placeholder={intl.formatMessage({ id: "settings.modelProvider.certPathPlaceholder" })}
+                      placeholder={intl.formatMessage({
+                        id: "settings.modelProvider.certPathPlaceholder",
+                      })}
                       className="min-w-0 flex-1"
                       onChange={(event) => onTlsCaPathChange(event.target.value)}
                     />
-                    <Button
-                      variant="outline"
-                      onClick={() => caFileInputRef.current?.click()}
-                    >
+                    <Button variant="outline" onClick={() => caFileInputRef.current?.click()}>
                       {intl.formatMessage({ id: "settings.modelProvider.chooseCertFile" })}
                     </Button>
                   </div>

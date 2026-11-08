@@ -193,9 +193,7 @@ export function IabUserscriptsSettingsCard() {
         onToggleExpand={
           hostFileAvailable
             ? () =>
-                setExpandedScriptId((current) =>
-                  current === row.scriptId ? null : row.scriptId,
-                )
+                setExpandedScriptId((current) => (current === row.scriptId ? null : row.scriptId))
             : undefined
         }
       />

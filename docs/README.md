@@ -8,15 +8,15 @@
 
 从「我要回答什么问题」进入，不要从「我要读哪个模块」进入。
 
-| 我想知道… | 跑这条 / 读这份 |
-| --- | --- |
+| 我想知道…                          | 跑这条 / 读这份                         |
+| ---------------------------------- | --------------------------------------- |
 | 某个模块的归属、依赖方向、公开入口 | `pnpm architecture:context <module-id>` |
-| 改动会不会违反架构约束 | `pnpm architecture:check --changed` |
-| 某个 export 被谁引用、能不能删 | `pnpm dep:refs <file>:<exportName>` |
-| 这个文件导出了什么 | `pnpm dep:refs --list-exports <file>` |
-| 有没有没用到的依赖或导出 | `pnpm knip` |
-| 某项**契约**为什么是这样 | 下方「规格索引」 |
-| 提交前的完整门禁 | `pnpm verify:pre-push` |
+| 改动会不会违反架构约束             | `pnpm architecture:check --changed`     |
+| 某个 export 被谁引用、能不能删     | `pnpm dep:refs <file>:<exportName>`     |
+| 这个文件导出了什么                 | `pnpm dep:refs --list-exports <file>`   |
+| 有没有没用到的依赖或导出           | `pnpm knip`                             |
+| 某项**契约**为什么是这样           | 下方「规格索引」                        |
+| 提交前的完整门禁                   | `pnpm verify:pre-push`                  |
 
 ## 模块阅读包
 
@@ -28,23 +28,23 @@ pnpm architecture:context <module-id>
 
 当前 15 个 module-id：
 
-| id | 路径 | managed |
-| --- | --- | --- |
-| `rpc` | `packages/rpc/src` | false |
-| `shared` | `packages/shared/src` | false |
-| `provider` | `packages/provider/src` | false |
-| `provider-node` | `packages/provider-node/src` | false |
-| `services` | `packages/services/src` | false |
-| `session` | `packages/services/src/session` | false |
-| `storage` | `packages/services/src/storage` | **true** |
-| `client` | `packages/client/src` | false |
-| `server` | `packages/server/src` | false |
-| `zcode-server-cli` | `packages/zcode-server-cli/src` | false |
-| `ui` | `packages/ui/src` | false |
-| `web` | `packages/web/src` | false |
-| `desktop` | `packages/desktop/src` | false |
-| `formal-proof` | `packages/formal-proof/src` | false |
-| `zcode-cli` | `apps/zcode-cli` | false |
+| id                 | 路径                            | managed  |
+| ------------------ | ------------------------------- | -------- |
+| `rpc`              | `packages/rpc/src`              | false    |
+| `shared`           | `packages/shared/src`           | false    |
+| `provider`         | `packages/provider/src`         | false    |
+| `provider-node`    | `packages/provider-node/src`    | false    |
+| `services`         | `packages/services/src`         | false    |
+| `session`          | `packages/services/src/session` | false    |
+| `storage`          | `packages/services/src/storage` | **true** |
+| `client`           | `packages/client/src`           | false    |
+| `server`           | `packages/server/src`           | false    |
+| `zcode-server-cli` | `packages/zcode-server-cli/src` | false    |
+| `ui`               | `packages/ui/src`               | false    |
+| `web`              | `packages/web/src`              | false    |
+| `desktop`          | `packages/desktop/src`          | false    |
+| `formal-proof`     | `packages/formal-proof/src`     | false    |
+| `zcode-cli`        | `apps/zcode-cli`                | false    |
 
 ### 一个容易误读的地方
 
@@ -68,81 +68,81 @@ spec 记录的是**契约与不变量**——「必须被记住的规则」，�
 
 ### 遥测与官方平台（产品立场类）
 
-| spec | 回答什么 |
-| --- | --- |
-| `packages/desktop/specs/no-telemetry.md` | 桌面端无遥测的边界 |
-| `packages/desktop/specs/telemetry-removal-report.md` | 桌面遥测移除报告 |
-| `packages/ui/specs/no-telemetry.md` | UI、平台与 Server 移除遥测 |
-| `packages/ui/specs/telemetry-removal-report.md` | UI / Shared / Server 遥测清理报告 |
-| `apps/zcode-cli/specs/no-telemetry.md` | Open Audit CLI 遥测删除边界 |
-| `apps/zcode-cli/specs/telemetry-removal-report.md` | CLI 与共享层遥测移除报告 |
-| `packages/desktop/specs/no-official-platform.md` | 官方平台断连 |
-| `packages/desktop/specs/no-official-platform-report.md` | 官方平台断连报告 |
+| spec                                                    | 回答什么                          |
+| ------------------------------------------------------- | --------------------------------- |
+| `packages/desktop/specs/no-telemetry.md`                | 桌面端无遥测的边界                |
+| `packages/desktop/specs/telemetry-removal-report.md`    | 桌面遥测移除报告                  |
+| `packages/ui/specs/no-telemetry.md`                     | UI、平台与 Server 移除遥测        |
+| `packages/ui/specs/telemetry-removal-report.md`         | UI / Shared / Server 遥测清理报告 |
+| `apps/zcode-cli/specs/no-telemetry.md`                  | Open Audit CLI 遥测删除边界       |
+| `apps/zcode-cli/specs/telemetry-removal-report.md`      | CLI 与共享层遥测移除报告          |
+| `packages/desktop/specs/no-official-platform.md`        | 官方平台断连                      |
+| `packages/desktop/specs/no-official-platform-report.md` | 官方平台断连报告                  |
 
 ### 命名与数据根（改名前必读）
 
-| spec | 回答什么 |
-| --- | --- |
-| `docs/specs/p0-user-facing-naming.md` | P0 用户可见命名统一（zcode → yazcode） |
-| `docs/specs/p1a-external-env-renames.md` | 对外环境变量改名 `ZCODE_` → `YAZCODE_`（旧名兼容一版） |
+| spec                                        | 回答什么                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `docs/specs/p0-user-facing-naming.md`       | P0 用户可见命名统一（zcode → yazcode）                                                |
+| `docs/specs/p1a-external-env-renames.md`    | 对外环境变量改名 `ZCODE_` → `YAZCODE_`（旧名兼容一版）                                |
 | `docs/specs/host-env-injection-boundary.md` | 宿主环境注入面边界：注入面总账 + deny-by-default 统一原语 + 运行时早期剥离 + 门禁固化 |
-| `docs/specs/zcodium-data-root.md` | 数据根目录更名 `.zcode` → `.yazcode` 与一次性迁移 |
-| `docs/specs/flatten-provider-zones.md` | 移除智谱套餐体系，Provider 拉平为普通预设 |
-| `docs/specs/memory-provider-selection.md` | 记忆提供方三态（disable / local / openviking）与无回落语义 |
-| `docs/specs/office-plugins-introduction.md` | 上游办公插件引入范围、路由去歧义与验收场景 |
-| `docs/specs/vision-fallback.md` | 视觉桥接：多模态拒绝的失败驱动桥接与无视觉缓存 |
-| `docs/specs/gen-ui-inline-visualization.md` | 会话内联可视化 P1：引用契约、输出目录下发与只读渲染链 |
+| `docs/specs/zcodium-data-root.md`           | 数据根目录更名 `.zcode` → `.yazcode` 与一次性迁移                                     |
+| `docs/specs/flatten-provider-zones.md`      | 移除智谱套餐体系，Provider 拉平为普通预设                                             |
+| `docs/specs/memory-provider-selection.md`   | 记忆提供方三态（disable / local / openviking）与无回落语义                            |
+| `docs/specs/office-plugins-introduction.md` | 上游办公插件引入范围、路由去歧义与验收场景                                            |
+| `docs/specs/vision-fallback.md`             | 视觉桥接：多模态拒绝的失败驱动桥接与无视觉缓存                                        |
+| `docs/specs/gen-ui-inline-visualization.md` | 会话内联可视化 P1：引用契约、输出目录下发与只读渲染链                                 |
 
 ### Provider 与外部服务
 
-| spec | 回答什么 |
-| --- | --- |
-| `docs/specs/model-provider-remote-model-detection.md` | 自定义 Provider 的可用模型自动检测 |
-| `docs/specs/provider-tls-options.md` | 服务商级 TLS 选项：证书钉扎 / 跳过校验互斥与指纹回退 |
-| `docs/specs/builtin-provider-config-packaging.md` | 打包内 builtin Provider 配置事实源锁定：宿主注入隔离与三平台共用契约 |
-| `packages/services/specs/provider-balance-query.md` | 外部 API Key Provider 余额查询 |
-| `packages/services/specs/official-service-switches.md` | 官方服务开关的持久化与进程投影 |
+| spec                                                   | 回答什么                                                             |
+| ------------------------------------------------------ | -------------------------------------------------------------------- |
+| `docs/specs/model-provider-remote-model-detection.md`  | 自定义 Provider 的可用模型自动检测                                   |
+| `docs/specs/provider-tls-options.md`                   | 服务商级 TLS 选项：证书钉扎 / 跳过校验互斥与指纹回退                 |
+| `docs/specs/builtin-provider-config-packaging.md`      | 打包内 builtin Provider 配置事实源锁定：宿主注入隔离与三平台共用契约 |
+| `packages/services/specs/provider-balance-query.md`    | 外部 API Key Provider 余额查询                                       |
+| `packages/services/specs/official-service-switches.md` | 官方服务开关的持久化与进程投影                                       |
 
 ### 运行时与发布
 
-| spec | 回答什么 |
-| --- | --- |
-| `packages/desktop/specs/remote-assets-github-release.md` | 远程资源 `zz-*` 资产的命名契约与自建源加载 |
-| `packages/desktop/specs/github-updates.md` | 桌面更新 |
-| `docs/specs/release-acceptance-order.md` | 发版顺序：实机验收先于打 tag，tag 与 release 是两个独立状态 |
-| `docs/specs/test-gate-integration.md` | 测试接入门禁：加载器引入方式、glob 约定与路径断言的平台无关写法 |
-| `docs/specs/sqlite-schema-contract.md` | sqlite schema 只增契约：基线由迁移产物生成、git 防篡改与 `db:schema:check` 门禁 |
-| `docs/specs/architecture-governance-self-test.md` | 架构治理脚本自测：临时工作区 fixture 真跑 `checkArchitecture` 锚定判定语义 |
-| `docs/upstream-port-tasks-20261018.md` | 上游变更引入评估（基准 main@9cd5e0e4）：已存档的「无需引入」清单与 T1/T2 立项项 |
-| `docs/upstream-port-tasks-20261022.md` | 上游变更引入评估（基准 3.16.2 / ZCodium 1.16.2）：架构治理自测、sqlite schema 只增契约两个建议立项项 |
-| `docs/upstream-port-tasks-20261025.md` | 上游变更引入评估（ZCodium 1.16.3 / #76 / v1.17.0）：仅 #66 浏览器迟到上报一项引入候选，v1.17.0 不引入 |
-| `docs/upstream-port-tasks-20261026.md` | 上游变更引入评估（ZCodium v1.16.2→v1.17.1）：无必引项；DMG 契约测试候选与 y430p 独立复核回填 |
-| `docs/upstream-port-tasks-20261105.md` | 上游变更引入评估（ZCodium v1.17.1→v1.17.4 + zai-org 3.17.x sync）：macos-14 runner 与模型发现脱敏两项引入候选；B1/B2/B3 全部确认合并 |
-| `packages/desktop/specs/macos-dmg-installation.md` | macOS DMG 安装体验 |
-| `docs/specs/dev-data-dir-isolation.md` | 开发/E2E 运行的数据目录隔离硬边界 |
-| `docs/specs/iab-download-autosave.md` | IAB 下载静默落盘（fail-open 语义） |
-| `docs/specs/iab-userscripts.md` | IAB 内置用户脚本：分区级 preload、GM 子集、fail-closed 信任门与 agent 工具面/确认流/设置卡（P1+P2） |
-| `docs/specs/multi-root-projects.md` | 多目录项目四期：数据层/服务层/协议三通道与 CLI 白名单/UI 期（含 G1 缺口登记） |
-| `docs/reports/release-26.2.1-acceptance.md` | 26.2.1 实机验收记录（gen-ui 七项） |
-| `docs/reports/vision-fallback-report.md` | 视觉桥接交付报告（改动清单/决策/验收自测） |
-| `docs/reports/mint-2652-f4-f7-disposition.md` | mint 26.5.2 双盲 F4–F7 逐项处置：F4 现状核实、F5 不做依据、F6 复测指引、F7 错误条关闭行为契约 |
-| `docs/specs/browser-cookies-tool.md` | Browser cookies 工具（get/set，跨后端 session 注入） |
-| `.agents/specs/bots-astrbot-bridge.md` | 机器人 AstrBot 桥接协议 v2 |
+| spec                                                     | 回答什么                                                                                                                             |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/desktop/specs/remote-assets-github-release.md` | 远程资源 `zz-*` 资产的命名契约与自建源加载                                                                                           |
+| `packages/desktop/specs/github-updates.md`               | 桌面更新                                                                                                                             |
+| `docs/specs/release-acceptance-order.md`                 | 发版顺序：实机验收先于打 tag，tag 与 release 是两个独立状态                                                                          |
+| `docs/specs/test-gate-integration.md`                    | 测试接入门禁：加载器引入方式、glob 约定与路径断言的平台无关写法                                                                      |
+| `docs/specs/sqlite-schema-contract.md`                   | sqlite schema 只增契约：基线由迁移产物生成、git 防篡改与 `db:schema:check` 门禁                                                      |
+| `docs/specs/architecture-governance-self-test.md`        | 架构治理脚本自测：临时工作区 fixture 真跑 `checkArchitecture` 锚定判定语义                                                           |
+| `docs/upstream-port-tasks-20261018.md`                   | 上游变更引入评估（基准 main@9cd5e0e4）：已存档的「无需引入」清单与 T1/T2 立项项                                                      |
+| `docs/upstream-port-tasks-20261022.md`                   | 上游变更引入评估（基准 3.16.2 / ZCodium 1.16.2）：架构治理自测、sqlite schema 只增契约两个建议立项项                                 |
+| `docs/upstream-port-tasks-20261025.md`                   | 上游变更引入评估（ZCodium 1.16.3 / #76 / v1.17.0）：仅 #66 浏览器迟到上报一项引入候选，v1.17.0 不引入                                |
+| `docs/upstream-port-tasks-20261026.md`                   | 上游变更引入评估（ZCodium v1.16.2→v1.17.1）：无必引项；DMG 契约测试候选与 y430p 独立复核回填                                         |
+| `docs/upstream-port-tasks-20261105.md`                   | 上游变更引入评估（ZCodium v1.17.1→v1.17.4 + zai-org 3.17.x sync）：macos-14 runner 与模型发现脱敏两项引入候选；B1/B2/B3 全部确认合并 |
+| `packages/desktop/specs/macos-dmg-installation.md`       | macOS DMG 安装体验                                                                                                                   |
+| `docs/specs/dev-data-dir-isolation.md`                   | 开发/E2E 运行的数据目录隔离硬边界                                                                                                    |
+| `docs/specs/iab-download-autosave.md`                    | IAB 下载静默落盘（fail-open 语义）                                                                                                   |
+| `docs/specs/iab-userscripts.md`                          | IAB 内置用户脚本：分区级 preload、GM 子集、fail-closed 信任门与 agent 工具面/确认流/设置卡（P1+P2）                                  |
+| `docs/specs/multi-root-projects.md`                      | 多目录项目四期：数据层/服务层/协议三通道与 CLI 白名单/UI 期（含 G1 缺口登记）                                                        |
+| `docs/reports/release-26.2.1-acceptance.md`              | 26.2.1 实机验收记录（gen-ui 七项）                                                                                                   |
+| `docs/reports/vision-fallback-report.md`                 | 视觉桥接交付报告（改动清单/决策/验收自测）                                                                                           |
+| `docs/reports/mint-2652-f4-f7-disposition.md`            | mint 26.5.2 双盲 F4–F7 逐项处置：F4 现状核实、F5 不做依据、F6 复测指引、F7 错误条关闭行为契约                                        |
+| `docs/specs/browser-cookies-tool.md`                     | Browser cookies 工具（get/set，跨后端 session 注入）                                                                                 |
+| `.agents/specs/bots-astrbot-bridge.md`                   | 机器人 AstrBot 桥接协议 v2                                                                                                           |
 
 ## 可执行门禁（规则的代码形态）
 
 下面这些约束已经写成会失败的检查，而不是写成文字。**改代码前先看它们，比读文档可靠。**
 
-| 门禁 | 位置 | 拦什么 |
-| --- | --- | --- |
-| `verify:pre-push` | `package.json` | `lint` + `typecheck`（根包）+ `architecture:check --changed` + `check:skill-residue` + `db:schema:check` + `build:cli` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test` |
-| `architecture:check` | `scripts/architecture/` | 模块边界、文件行数、公开方法数、循环依赖、深层导入 |
-| `tests` | `.github/workflows/tests.yml` | push / PR 时跑根 `pnpm test`，与本地门禁同口径 |
-| `licenses-notices` | `.github/workflows/licenses-notices.yml` | 许可台账与实际依赖树漂移；许可标识越界 |
-| `check-skill-residue` | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤 | 拦 vendored skill 的宿主品牌/端口残留回流 |
-| `release` | `.github/workflows/release.yml` | 任一平台产物缺失则 release 保持 draft |
-| `upstream-audit` | `.github/workflows/upstream-audit.yml` | 上游同步的增量审计 |
-| `vendor-openviking-check` | `.github/workflows/vendor-openviking-check.yml` + `scripts/check-vendor-openviking.mjs` | `vendor/openviking` 与 volcengine/OpenViking latest release 的 examples 目录漂移（blob sha 比对；有漂移即红叉并列 M/A/D 明细） |
+| 门禁                      | 位置                                                                                    | 拦什么                                                                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verify:pre-push`         | `package.json`                                                                          | `lint` + `typecheck`（根包）+ `architecture:check --changed` + `check:skill-residue` + `db:schema:check` + `build:cli` + `typecheck:cli`（全部 13 个 CLI 子包）+ `test` |
+| `architecture:check`      | `scripts/architecture/`                                                                 | 模块边界、文件行数、公开方法数、循环依赖、深层导入                                                                                                                      |
+| `tests`                   | `.github/workflows/tests.yml`                                                           | push / PR 时跑根 `pnpm test`，与本地门禁同口径                                                                                                                          |
+| `licenses-notices`        | `.github/workflows/licenses-notices.yml`                                                | 许可台账与实际依赖树漂移；许可标识越界                                                                                                                                  |
+| `check-skill-residue`     | `scripts/check-skill-residue.mjs` + licenses-notices 工作流步骤                         | 拦 vendored skill 的宿主品牌/端口残留回流                                                                                                                               |
+| `release`                 | `.github/workflows/release.yml`                                                         | 任一平台产物缺失则 release 保持 draft                                                                                                                                   |
+| `upstream-audit`          | `.github/workflows/upstream-audit.yml`                                                  | 上游同步的增量审计                                                                                                                                                      |
+| `vendor-openviking-check` | `.github/workflows/vendor-openviking-check.yml` + `scripts/check-vendor-openviking.mjs` | `vendor/openviking` 与 volcengine/OpenViking latest release 的 examples 目录漂移（blob sha 比对；有漂移即红叉并列 M/A/D 明细）                                          |
 
 `licenses-notices` 值得单独说明：它会重生成 `THIRD-PARTY-NOTICES.md` 与 `third-party/inventory.json`，并要求结果与已入库版本逐字节一致；不一致即失败。**这台闸门必须在 Linux 上跑**，脚本校验的是磁盘上真实安装的依赖树，而依赖树含平台相关的 optional 依赖——在 Windows 或 macOS 上重生成会得到不同结果。因此**不要在本地重生成这两份文件**，改完依赖后手动 dispatch 一次工作流，把 artifact 下载下来提交。
 

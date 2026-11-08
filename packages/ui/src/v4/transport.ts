@@ -55,7 +55,10 @@ export interface ConversationTransport {
   /** v4/conversation/unsubscribe。 */
   unsubscribe(subscriptionId: string): Promise<void>;
   /** v4/command。projectContext（G1）：预热 createSession 携带的项目归属，仅 host 内部消费。 */
-  sendCommand(envelope: CommandEnvelope, projectContext?: { projectId: string }): Promise<CommandAck>;
+  sendCommand(
+    envelope: CommandEnvelope,
+    projectContext?: { projectId: string },
+  ): Promise<CommandAck>;
   /** v4/commands/query：重连后按 commandId 与 CLI 权威事实对账。 */
   queryCommands(params: CommandsQueryParams): Promise<CommandsQueryResult>;
   /** v4/conversation/rowsRange（loadOlder）：按游标向上取一窗历史行。 */

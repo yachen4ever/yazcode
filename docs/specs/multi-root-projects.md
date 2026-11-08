@@ -179,8 +179,8 @@ primary, additionalDirectories)` 兜底（远端数据被外部篡改成多 root
     恒空），此为防御位。
   - 现算路径（项目已取）：`assertRemoteTaskDirectories(project.hostId, project,
 workspacePath, 现算值)`——cwd 漂移时漂移的根以附加目录形态先触发
-`project.remote-single-root-required`（上游断言同序）；`project.cwd-not-in-roots`
-语义由 policy 单测直接锚定。
+    `project.remote-single-root-required`（上游断言同序）；`project.cwd-not-in-roots`
+    语义由 policy 单测直接锚定。
 - **P2 通道零改动**：三通道 schema 与下发装配不动；remote 策略只作用于其上游产物源
   （prepareSession）与恢复解析器（resolveSessionDirectories），远端任务下发值恒为
   「无附加目录」。

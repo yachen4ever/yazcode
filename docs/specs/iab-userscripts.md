@@ -160,14 +160,14 @@ P1 边界：无 UI、无 agent 工具面（P2）、无 GM_xmlhttpRequest、无�
 
 ## 状态所有者
 
-| 状态                       | 所有者                                                                 | 说明                                                                                                                                                                                                                                                                                                       |
-| -------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| manifest（enabled/sha256） | `AppSettings.embeddedBrowserUserscripts`（SettingService 唯一写路径）  | **论证**：回执要求复用现有设置存储、避免自建第二份状态文件（两套状态所有者）。AppSettings 是桌面端应用级持久状态的唯一所有者，`visionFallback` 字段已有同模式先例（storage schema + patch schema + 类型三处登记）。store 不直接落盘，经注入的 manifest 端口（生产实现包 SettingService）读写，测试可替换。 |
-| 脚本文件                   | 用户（`~/.yazcode/userscripts/`）                                      | store 只读扫描，永不写脚本文件；用户级资产，跨 workspace 同源，站内作用域用 `@match` 表达。                                                                                                                                                                                                                |
-| GM 运行时数据              | main 侧 userscriptStorage（per-scriptId JSON 文件）                    | 唯一写者是 main 的 IPC handler；preload 只经 IPC 读写。与 manifest 分离：前者是脚本运行时数据（跟随数据根），后者是用户决策（跟随设置）。                                                                                                                                                                  |
-| runtime 本体               | app bundle（tsup preload entry → `out/preload/userscriptRuntime.cjs`） | 可信应用代码；路径解析与既有 preload 一致（dev/打包同构），不做数据目录写入。                                                                                                                                                                                                                              |
-| 执行结果（`lastExecution`） | main `userscriptService` 内存表（26.5.4 S1 新增）                   | 唯一写者是 `zcode:userscripts:report` 回执路径（行为规则 9）；读出口与 `lastInjectedAt` 同构。纯内存、重启清零、不落盘。                                                                                                                                                                                     |
-| 扫描缓存                   | 无                                                                     | store 每次匹配请求全量重扫（目录规模为个位数文件、KB 级，重扫同时天然完成 hash 一致性复核）；不做 TTL/事件订阅缓存，避免第二个状态所有者。                                                                                                                                                                 |
+| 状态                        | 所有者                                                                 | 说明                                                                                                                                                                                                                                                                                                       |
+| --------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| manifest（enabled/sha256）  | `AppSettings.embeddedBrowserUserscripts`（SettingService 唯一写路径）  | **论证**：回执要求复用现有设置存储、避免自建第二份状态文件（两套状态所有者）。AppSettings 是桌面端应用级持久状态的唯一所有者，`visionFallback` 字段已有同模式先例（storage schema + patch schema + 类型三处登记）。store 不直接落盘，经注入的 manifest 端口（生产实现包 SettingService）读写，测试可替换。 |
+| 脚本文件                    | 用户（`~/.yazcode/userscripts/`）                                      | store 只读扫描，永不写脚本文件；用户级资产，跨 workspace 同源，站内作用域用 `@match` 表达。                                                                                                                                                                                                                |
+| GM 运行时数据               | main 侧 userscriptStorage（per-scriptId JSON 文件）                    | 唯一写者是 main 的 IPC handler；preload 只经 IPC 读写。与 manifest 分离：前者是脚本运行时数据（跟随数据根），后者是用户决策（跟随设置）。                                                                                                                                                                  |
+| runtime 本体                | app bundle（tsup preload entry → `out/preload/userscriptRuntime.cjs`） | 可信应用代码；路径解析与既有 preload 一致（dev/打包同构），不做数据目录写入。                                                                                                                                                                                                                              |
+| 执行结果（`lastExecution`） | main `userscriptService` 内存表（26.5.4 S1 新增）                      | 唯一写者是 `zcode:userscripts:report` 回执路径（行为规则 9）；读出口与 `lastInjectedAt` 同构。纯内存、重启清零、不落盘。                                                                                                                                                                                   |
+| 扫描缓存                    | 无                                                                     | store 每次匹配请求全量重扫（目录规模为个位数文件、KB 级，重扫同时天然完成 hash 一致性复核）；不做 TTL/事件订阅缓存，避免第二个状态所有者。                                                                                                                                                                 |
 
 事件顺序（注入时序）：
 
@@ -291,7 +291,7 @@ P1 已随 26.3.0 发布并在 workwin 实机验收通过。P2 在不动 P1 信�
    - `userscript_list`（无参）：触发一次状态扫描，返回
      `value.scripts: [{ scriptId, name, version?, runAt, grants, match, status, sha256 }]`。
      `match` 是脚本声明的原始 pattern 列表；`status` ∈ `serving | enabled_pending_anchor |
-     hash_mismatch | disabled | pending_approval | parse_failed | grant_rejected`；
+hash_mismatch | disabled | pending_approval | parse_failed | grant_rejected`；
      `sha256` 是当前文件 hash（hex）。**回包不含脚本代码与任何文件路径**。
    - `userscript_reload`（无参）：触发一次完整扫描（含 P1 锚定语义——对已批准待锚定条目
      写回 manifest），返回与 `userscript_list` 同构的状态列表。P1 无扫描缓存，命令语义是
@@ -399,7 +399,7 @@ F3 起两入口拉平）｜`parse_failed` / `grant_rejected`（静态校验拒�
 9. **设置卡**：manifest 派生行（无平台方法时）不显示 name/mismatch 猜测；批准/开关
    patch 只经 SettingService；三语文案齐备。
 10. **schema 不变量（M4）**：条目 schema superRefine 强制 `pendingApproval:true ⇒
-    enabled:false`；违禁组合（含手改设置文件的旁路写入）整条目拒绝并经 catch 降级
+enabled:false`；违禁组合（含手改设置文件的旁路写入）整条目拒绝并经 catch 降级
     禁用，不连累整份设置文件解析；storage 与 patch 两条登记路径同矩阵放行/拒绝。
 
 ### P2 明确不做
@@ -481,10 +481,10 @@ F3 起两入口拉平）｜`parse_failed` / `grant_rejected`（静态校验拒�
 
 ### 状态所有者（P3 增量）
 
-| 状态 | 所有者 | 说明 |
-| --- | --- | --- |
-| 注入时刻（`lastInjectedAt`） | main `userscriptService` 内存表 | 唯一写者是 `match` 命令成功回包路径；唯一读出口是 `listStatus` / `statusOverview`。重启清零，不落盘（见行为规则 6）。 |
-| 卡片分区（待批准 / 其余） | `iabUserscriptsCardPresentation.ts` 纯投影 | 由同一份状态列表派生，不缓存、不持有第二份状态。 |
+| 状态                         | 所有者                                     | 说明                                                                                                                  |
+| ---------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| 注入时刻（`lastInjectedAt`） | main `userscriptService` 内存表            | 唯一写者是 `match` 命令成功回包路径；唯一读出口是 `listStatus` / `statusOverview`。重启清零，不落盘（见行为规则 6）。 |
+| 卡片分区（待批准 / 其余）    | `iabUserscriptsCardPresentation.ts` 纯投影 | 由同一份状态列表派生，不缓存、不持有第二份状态。                                                                      |
 
 事件顺序（注入时刻写入）：
 
@@ -550,7 +550,7 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
      manifest 为 `{ enabled: false, pendingApproval: true }`；
    - `hash_mismatch`（覆盖一个已批准脚本）：**不 patch manifest**，旧 `enabled + sha256`
      原样保留，扫描自然得到 hash 不一致而停服，走 P3 的「重新批准」入口。
-   唯一放行路径仍是设置卡的批准按钮（`nextManifestEntry("approve", 所见 sha)`）。
+     唯一放行路径仍是设置卡的批准按钮（`nextManifestEntry("approve", 所见 sha)`）。
 2. **保存动作永不写 sha256**。任何写盘路径都不得写 `{enabled:true, sha256:…}` 组合——
    那是批准语义，只有批准按钮能产生。
 3. **从 URL 安装三段确认，任一步都不得落盘**：
@@ -593,15 +593,15 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
    - `IabUserscriptsRead { scriptId }` → `{ ok, content }`（编辑前读当前文件）
    - `IabUserscriptsWrite { scriptId, content, overwrite }` →
      `{ ok, changed, scriptId, sha256 }` / 失败码 `invalid_script_id | invalid_content |
-     too_large | exists | write_failed`
+too_large | exists | write_failed`
    - `IabUserscriptsDelete { scriptId, deleteStorage }` →
      `{ ok, deletedFile, deletedStorage }` / 失败码 `invalid_script_id | unknown_script | delete_failed`
    - `IabUserscriptsFetchSource { url }` → `{ ok, source, preview }` /
      失败码 `invalid_url | not_https | too_large | timeout | remote_address_not_allowed |
-     download_failed`
-   契约类型放 `packages/shared/src/platform.ts`（与 `IabUserscriptStatusItem` 同处），
-   `apps/zcode-cli/packages/contracts` **不镜像**——这四个是桌面本地文件能力，agent
-   工具面拿不到（见规则 6）。
+download_failed`
+     契约类型放 `packages/shared/src/platform.ts`（与 `IabUserscriptStatusItem` 同处），
+     `apps/zcode-cli/packages/contracts` **不镜像**——这四个是桌面本地文件能力，agent
+     工具面拿不到（见规则 6）。
    - `preview` 形状：`{ name, version?, runAt, grants, match, parseError? }`，
      由 main 复用 `buildUserScriptDef` 的同一套解析得出，保证「预览所见 = 安装后扫描所得」。
 
@@ -619,29 +619,23 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
    `allowedProtocols: ["https:"]`、`maxRedirects: 5`、`maxBytes: 20MB`、`timeoutMs: 20000`。
 
 4b. **fake-ip 代理环境下的公网判定（mint 三轮 F2 重设计，替代 R1 的分段放行）**：
-    mihomo fake-ip 模式把**所有域名**的系统 DNS 解析结果映射到 `198.18.0.0/15`
-    （RFC 2544 基准保留段）——fake-ip 环境下本地解析结果对「真公网」与「域名伪装的
-    内网/回环目标」（如 `127-0-0-1.sslip.io`）**零区分度**。R1（b394a80f）把该段从
-    黑名单拆出放行以救真公网域名，但同一机制把 sslip 类负向目标也放行至下载层
-    （mint 实证闸门不拦、内网 8553 服务闸门层可达），负向防线缺口成立。
-    重设计口径（候选 A「独立解析」，两条硬约束：① fake-ip 下真公网域名可用；
-    ② 域名伪装的内网/回环目标在闸门层被拒，不依赖「代理恰好取不到」）：
-    - 系统解析结果命中 `198.18.0.0/15`（fake-ip 段）→ 触发**独立 DNS 复核**：
-      对同一 hostname 经 DoH（DNS-over-HTTPS JSON API，默认
-      `https://cloudflare-dns.com/dns-query`，443/TLS，fake-ip TUN 不劫持其应答）
-      查询 A 与 AAAA 记录取得**真实解析结果**，按真实 IP 执行既有黑名单判定：
-      任一命中黑名单段 → 拒（负向恢复）；全部公网 → 放行（正面保住）；
-    - DoH 复核失败（网络不可达/超时 3s/NXDOMAIN/无应答记录）→ **拒绝**
-      （fail-closed：fake-ip 环境下无法证明目标是公网；负向不得依赖运气）；
-    - 系统解析未命中 fake-ip 段（绝大多数环境）→ 判定路径与 R1 之前一致，
-      不触发 DoH，零新依赖；黑名单硬拒段与 some 语义不变（fake-ip 段与黑名单段
-      混合解析仍拒）；字面 IP 直接走黑名单（字面量无域名可复核）；
-    - 连接仍按系统解析结果钉扎（fake-ip 下连 198.18.x 由 TUN 按域名转发）——
-      复核只修正「判定依据」，不改变转发路径；
-    - DoH 端点为常量、注入可替换（测试）；该语义对共用守卫的 `desktopSaveFile`
-      （另存/下载）同步生效。
-    - 否决备选：R1 的纯分段放行（负向打穿，本轮教训）；连接层对端校验
-      （TLS 之外无可靠对端身份证据）；仅改报错文案（不满足负向硬约束）。
+mihomo fake-ip 模式把**所有域名**的系统 DNS 解析结果映射到 `198.18.0.0/15`
+（RFC 2544 基准保留段）——fake-ip 环境下本地解析结果对「真公网」与「域名伪装的
+内网/回环目标」（如 `127-0-0-1.sslip.io`）**零区分度**。R1（b394a80f）把该段从
+黑名单拆出放行以救真公网域名，但同一机制把 sslip 类负向目标也放行至下载层
+（mint 实证闸门不拦、内网 8553 服务闸门层可达），负向防线缺口成立。
+重设计口径（候选 A「独立解析」，两条硬约束：① fake-ip 下真公网域名可用；
+② 域名伪装的内网/回环目标在闸门层被拒，不依赖「代理恰好取不到」）：- 系统解析结果命中 `198.18.0.0/15`（fake-ip 段）→ 触发**独立 DNS 复核**：
+对同一 hostname 经 DoH（DNS-over-HTTPS JSON API，默认
+`https://cloudflare-dns.com/dns-query`，443/TLS，fake-ip TUN 不劫持其应答）
+查询 A 与 AAAA 记录取得**真实解析结果**，按真实 IP 执行既有黑名单判定：
+任一命中黑名单段 → 拒（负向恢复）；全部公网 → 放行（正面保住）；- DoH 复核失败（网络不可达/超时 3s/NXDOMAIN/无应答记录）→ **拒绝**
+（fail-closed：fake-ip 环境下无法证明目标是公网；负向不得依赖运气）；- 系统解析未命中 fake-ip 段（绝大多数环境）→ 判定路径与 R1 之前一致，
+不触发 DoH，零新依赖；黑名单硬拒段与 some 语义不变（fake-ip 段与黑名单段
+混合解析仍拒）；字面 IP 直接走黑名单（字面量无域名可复核）；- 连接仍按系统解析结果钉扎（fake-ip 下连 198.18.x 由 TUN 按域名转发）——
+复核只修正「判定依据」，不改变转发路径；- DoH 端点为常量、注入可替换（测试）；该语义对共用守卫的 `desktopSaveFile`
+（另存/下载）同步生效。- 否决备选：R1 的纯分段放行（负向打穿，本轮教训）；连接层对端校验
+（TLS 之外无可靠对端身份证据）；仅改报错文案（不满足负向硬约束）。
 
 5. **UI 结构**（文件都 ≤400 行，超出即拆）：
    - 工具行：`新建` / `导入` / `从 URL 安装` 三个按钮，只有 `statusAvailable`（桌面宿主）
@@ -668,23 +662,24 @@ fail-closed、`@match` 编译校验、GM 存储上限全部沿用 P1/P2。
    造成未确认内容被写入。
 
 5b. **@match 输入时即时校验（26.5.4 S2）**：新建 / 导入 / URL 安装预览 / 编辑四条
-   写入路径共用同一编辑器，编辑内容变化（防抖）时用与 main 同源的规则纯函数
-   （shared `userscriptRules`，见接口节）解析元数据块并逐条诊断 `@match`：
-   - 失败给**可执行提示**：端口 host（`http://localhost:8899/*`）→ 建议改写为裸 host
-     （`http://localhost/*`，本机非标准端口暂不支持注入）；缺元数据块 / 缺 `@match` /
-     path 通配超限 / 其它非法 pattern → 显示对应原因；
-   - **保存不阻断**：即时校验是提示不是闸门——落盘 ≠ 批准（红线 1）语义不变，保存后
-     仍由扫描 fail-closed 承接（`parse_failed` 徽标 + `detail`）。校验的价值是把
-     「保存后锁死再自行推断」提前为「输入时看见原因与改法」；
-   - 校验是纯函数派生（同一实现），不引入第二份规则事实，也不产生额外状态。
+写入路径共用同一编辑器，编辑内容变化（防抖）时用与 main 同源的规则纯函数
+（shared `userscriptRules`，见接口节）解析元数据块并逐条诊断 `@match`：
+
+- 失败给**可执行提示**：端口 host（`http://localhost:8899/*`）→ 建议改写为裸 host
+  （`http://localhost/*`，本机非标准端口暂不支持注入）；缺元数据块 / 缺 `@match` /
+  path 通配超限 / 其它非法 pattern → 显示对应原因；
+- **保存不阻断**：即时校验是提示不是闸门——落盘 ≠ 批准（红线 1）语义不变，保存后
+  仍由扫描 fail-closed 承接（`parse_failed` 徽标 + `detail`）。校验的价值是把
+  「保存后锁死再自行推断」提前为「输入时看见原因与改法」；
+- 校验是纯函数派生（同一实现），不引入第二份规则事实，也不产生额外状态。
 
 ### 状态所有者（P4 增量）
 
-| 状态 | 所有者 | 说明 |
-| --- | --- | --- |
-| 脚本文件内容 | 文件系统；写者 = main 写盘通道 | 只写 `<scriptsDir>/<scriptId>.user.js`；覆盖留单代 `.bak` |
-| 覆盖前的旧内容 | 文件系统 `<scriptId>.user.js.bak` | 单代、非 `.user.js` 后缀、不参与扫描；用户可手工回收 |
-| URL 拉取的临时内容 | **不落盘** | 段 1 只在内存里返回；安装时才写文件 |
+| 状态               | 所有者                            | 说明                                                      |
+| ------------------ | --------------------------------- | --------------------------------------------------------- |
+| 脚本文件内容       | 文件系统；写者 = main 写盘通道    | 只写 `<scriptsDir>/<scriptId>.user.js`；覆盖留单代 `.bak` |
+| 覆盖前的旧内容     | 文件系统 `<scriptId>.user.js.bak` | 单代、非 `.user.js` 后缀、不参与扫描；用户可手工回收      |
+| URL 拉取的临时内容 | **不落盘**                        | 段 1 只在内存里返回；安装时才写文件                       |
 
 事件顺序（新建 / URL 安装）：
 

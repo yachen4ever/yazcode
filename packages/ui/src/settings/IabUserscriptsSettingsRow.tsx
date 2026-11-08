@@ -91,7 +91,10 @@ export function IabUserscriptsSettingsRow({
             aria-expanded={expanded}
           >
             <span className="flex items-start gap-1">
-              <Chevron className="mt-0.5 size-4 shrink-0 text-foreground-subtlest" aria-hidden="true" />
+              <Chevron
+                className="mt-0.5 size-4 shrink-0 text-foreground-subtlest"
+                aria-hidden="true"
+              />
               <RowTitle row={row} />
             </span>
             <RowMeta row={row} lastInjectedLabel={lastInjectedLabel} />
@@ -156,7 +159,13 @@ function RowTitle({ row }: { row: IabUserscriptViewRow }) {
   );
 }
 
-function RowMeta({ row, lastInjectedLabel }: { row: IabUserscriptViewRow; lastInjectedLabel: string }) {
+function RowMeta({
+  row,
+  lastInjectedLabel,
+}: {
+  row: IabUserscriptViewRow;
+  lastInjectedLabel: string;
+}) {
   return (
     <>
       {/* @match 域名：允许换行，多条 pattern 是并列关系而非一条长串。 */}

@@ -496,7 +496,8 @@ export const embeddedBrowserUserscriptEntrySchema = z
     if (entry.pendingApproval === true && entry.enabled === true) {
       ctx.addIssue({
         code: "custom",
-        message: "pendingApproval requires enabled=false (forbidden state: enabled+pendingApproval)",
+        message:
+          "pendingApproval requires enabled=false (forbidden state: enabled+pendingApproval)",
       });
     }
   })

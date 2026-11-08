@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  browserCommandSchema,
-  browserCookieParamSchema,
-} from "@zcode/shared";
+import { browserCommandSchema, browserCookieParamSchema } from "@zcode/shared";
 
 describe("browserCommandSchema cookies branch", () => {
   it("接受 cookies get 命令", () => {
@@ -19,9 +16,7 @@ describe("browserCommandSchema cookies branch", () => {
       method: "cookies",
       action: {
         name: "set",
-        cookies: [
-          { name: "_AIOPS_SESSION_", value: "token", domain: "oa.example.com", path: "/" },
-        ],
+        cookies: [{ name: "_AIOPS_SESSION_", value: "token", domain: "oa.example.com", path: "/" }],
       },
       tabId: "tab-1",
     });

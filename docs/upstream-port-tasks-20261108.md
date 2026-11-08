@@ -10,12 +10,12 @@ api.github.com——取证方式受限点如实注明）。基线：本仓 main 
 
 ## 上游动态（四线总览）
 
-| 线 | 上轮终点 | 本轮 tip | main 增量 | 判定基调 |
-| --- | --- | --- | --- | --- |
-| A. zai-org/ZCode | `a9fe401`（v3.17.2） | `a9fe401`（main 未动） | **0**；新增分支 `feat/ui-plugin`（`662c30b`） | 登记观察 |
-| B. ZCodium-project | `0e88f6ec`（v1.17.4） | `0e88f6ec`（main 未动） | **0**；无新 tag/release | 无新增项 |
-| C. axiom-desu/ZCodium | （首轮调研） | `e5346dec`（root 3.16.2） | 领先 ZCodium 上游 **425 commits** | **引入候选 1 + backlog 2** |
-| D. MBearo/ZCode-rs | （首轮调研） | `cfc27e0`（npm 0.1.86） | 29 commits 全史 | 不可引入；借鉴 + rev43 判定 |
+| 线                    | 上轮终点              | 本轮 tip                  | main 增量                                     | 判定基调                    |
+| --------------------- | --------------------- | ------------------------- | --------------------------------------------- | --------------------------- |
+| A. zai-org/ZCode      | `a9fe401`（v3.17.2）  | `a9fe401`（main 未动）    | **0**；新增分支 `feat/ui-plugin`（`662c30b`） | 登记观察                    |
+| B. ZCodium-project    | `0e88f6ec`（v1.17.4） | `0e88f6ec`（main 未动）   | **0**；无新 tag/release                       | 无新增项                    |
+| C. axiom-desu/ZCodium | （首轮调研）          | `e5346dec`（root 3.16.2） | 领先 ZCodium 上游 **425 commits**             | **引入候选 1 + backlog 2**  |
+| D. MBearo/ZCode-rs    | （首轮调研）          | `cfc27e0`（npm 0.1.86）   | 29 commits 全史                               | 不可引入；借鉴 + rev43 判定 |
 
 - **zai-org**：最新 release 即 v3.17.2（2026-11-04 10:41 发布，内容 = 上轮已审的
   `a9fe401` 回流）；main 此后零移动。新增唯一分支 `feat/ui-plugin`（单 commit
@@ -138,12 +138,12 @@ axiom 的 Rust TUI workbench、PTY e2e、远控分片计量等属其自有产品
 
 三方溯源（决定性事实）：
 
-| 来源 | revision | templates | account providerRules |
-| --- | --- | --- | --- |
-| 本仓 `config/provider/zcode-builtin.json`（与 desktop 随包副本一致） | **31** | 18 | **0**（账号供应商走运行时信封） |
-| **zai-org/ZCode main（3.17.2）** | **43** | 34 | **10**（含 offpeak×2/highspeed×2） |
-| axiom main | 40 | 22 | （官方 40 时点状态） |
-| MBearo `f98e90e4`（rev 43） | 43 | 34 | 10 |
+| 来源                                                                 | revision | templates | account providerRules              |
+| -------------------------------------------------------------------- | -------- | --------- | ---------------------------------- |
+| 本仓 `config/provider/zcode-builtin.json`（与 desktop 随包副本一致） | **31**   | 18        | **0**（账号供应商走运行时信封）    |
+| **zai-org/ZCode main（3.17.2）**                                     | **43**   | 34        | **10**（含 offpeak×2/highspeed×2） |
+| axiom main                                                           | 40       | 22        | （官方 40 时点状态）               |
+| MBearo `f98e90e4`（rev 43）                                          | 43       | 34        | 10                                 |
 
 **rev43 不是 MBearo 自创，而是官方 3.17.2 的现行事实源**（与 zai-org main 逐字节同
 源；MBearo 的 `f98e90e4` 是对官方 catalog 的同步）。本仓 rev31 落后官方 12 rev。
@@ -173,22 +173,22 @@ axiom 的 Rust TUI workbench、PTY e2e、远控分片计量等属其自有产品
 
 ## 判定汇总
 
-| # | 线 | 主题 | 判定 |
-| --- | --- | --- | --- |
-| A1 | zai-org | main 零增量 + v3.17.2 发布 | 登记观察（内容上轮已审） |
-| A2 | zai-org | feat/ui-plugin（MCP Apps/Gen UI） | 备忘（方向信号） |
-| B1 | ZCodium | main/tag 零增量 | 无新增项 |
-| B2 | ZCodium | B1/B2/B3 反向贡献 | 无再加固/无反悔（main 未动即证） |
-| B3 | ZCodium | #115/#116 cheapaimodel preset（OPEN） | 备忘（立场互证点，留观） |
-| C1 | axiom | SSH 主机密钥 TOFU（`1575a769`） | **引入（高优，安全）**：本仓同构缺陷成立 |
-| C2 | axiom | 共享状态文件跨进程锁（`fab7e55c`） | **backlog（引入候选）**：本仓同面无锁 |
-| C3 | axiom | Gemini/Google GenAI 扩展系 | 不适用（依赖其自有 api type） |
-| C4 | axiom | cli-rust TUI/desk-pilot/bots | 不适用（路线不同） |
-| C5 | axiom | 回填方法论 + parody 工具 | 备忘（合规灰区，引入需逐项评估来源） |
-| D1 | ZCode-rs | Rust 重写本体 | 不可引入 |
-| D2 | ZCode-rs | crate 分层/工程测试 helper/平台包矩阵 | 借鉴三项（见清单） |
-| D3 | ZCode-rs | 成熟度 | 观察名单（bus factor 1，不作依赖） |
-| D4 | ZCode-rs | provider rev 43 | **不整体引入**（=官方 3.17.2 事实源，与宿主封闭集/运行时配套不兼容）；升级只能随官方 3.17.x 吸收决策整体评估 |
+| #   | 线       | 主题                                  | 判定                                                                                                         |
+| --- | -------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| A1  | zai-org  | main 零增量 + v3.17.2 发布            | 登记观察（内容上轮已审）                                                                                     |
+| A2  | zai-org  | feat/ui-plugin（MCP Apps/Gen UI）     | 备忘（方向信号）                                                                                             |
+| B1  | ZCodium  | main/tag 零增量                       | 无新增项                                                                                                     |
+| B2  | ZCodium  | B1/B2/B3 反向贡献                     | 无再加固/无反悔（main 未动即证）                                                                             |
+| B3  | ZCodium  | #115/#116 cheapaimodel preset（OPEN） | 备忘（立场互证点，留观）                                                                                     |
+| C1  | axiom    | SSH 主机密钥 TOFU（`1575a769`）       | **引入（高优，安全）**：本仓同构缺陷成立                                                                     |
+| C2  | axiom    | 共享状态文件跨进程锁（`fab7e55c`）    | **backlog（引入候选）**：本仓同面无锁                                                                        |
+| C3  | axiom    | Gemini/Google GenAI 扩展系            | 不适用（依赖其自有 api type）                                                                                |
+| C4  | axiom    | cli-rust TUI/desk-pilot/bots          | 不适用（路线不同）                                                                                           |
+| C5  | axiom    | 回填方法论 + parody 工具              | 备忘（合规灰区，引入需逐项评估来源）                                                                         |
+| D1  | ZCode-rs | Rust 重写本体                         | 不可引入                                                                                                     |
+| D2  | ZCode-rs | crate 分层/工程测试 helper/平台包矩阵 | 借鉴三项（见清单）                                                                                           |
+| D3  | ZCode-rs | 成熟度                                | 观察名单（bus factor 1，不作依赖）                                                                           |
+| D4  | ZCode-rs | provider rev 43                       | **不整体引入**（=官方 3.17.2 事实源，与宿主封闭集/运行时配套不兼容）；升级只能随官方 3.17.x 吸收决策整体评估 |
 
 ## 「下一批候选」汇总
 

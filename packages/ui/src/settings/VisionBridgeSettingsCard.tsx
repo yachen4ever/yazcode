@@ -59,8 +59,7 @@ export function VisionBridgeSettingsCard({
   }, [modelProviders]);
 
   const selectedProvider = useMemo(
-    () =>
-      providerOptions.find((option) => option.providerId === value?.providerId) ?? null,
+    () => providerOptions.find((option) => option.providerId === value?.providerId) ?? null,
     [providerOptions, value?.providerId],
   );
 
@@ -133,16 +132,14 @@ export function VisionBridgeSettingsCard({
           <SettingsRow
             label={intl.formatMessage({ id: "settings.visionBridge.provider" })}
             control={
-              <Select
-                value={value?.providerId ?? ""}
-                onValueChange={handleProviderChange}
-              >
+              <Select value={value?.providerId ?? ""} onValueChange={handleProviderChange}>
                 <SelectTrigger className="w-full justify-between" size="lg">
                   <SelectValue
                     placeholder={intl.formatMessage({
-                      id: providerOptions.length > 0
-                        ? "settings.visionBridge.providerPlaceholder"
-                        : "settings.visionBridge.noProviders",
+                      id:
+                        providerOptions.length > 0
+                          ? "settings.visionBridge.providerPlaceholder"
+                          : "settings.visionBridge.noProviders",
                     })}
                   />
                 </SelectTrigger>

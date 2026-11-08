@@ -4,15 +4,15 @@ This directory holds the source material behind [THIRD-PARTY-NOTICES.md](../THIR
 
 ## Contents
 
-| Path | Purpose |
-| --- | --- |
-| `inventory.json` | Production dependency union across the workspace plus copied source/assets and native tools: exact versions, sources, hashes and the notice hash. Its `scope` field documents what it does and does not cover. |
-| `copied-components.json` | Source components copied into the repository (revision and upstream source). |
-| `embedded-components.json` | Components embedded inside dependencies (parent package, revision and source). |
-| `npm-overrides.json` | Overridden npm packages with the exact upstream notice snapshot used for each. |
-| `native-search/` | Native search tool sources and licence material (`sources.json`, `licenses/`). |
-| `runtime/` | Node runtime licence texts and source references (`sources.json`). |
-| `upstream/` | Byte-exact upstream notice snapshots referenced by the inventory (sha256-named files). |
+| Path                       | Purpose                                                                                                                                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inventory.json`           | Production dependency union across the workspace plus copied source/assets and native tools: exact versions, sources, hashes and the notice hash. Its `scope` field documents what it does and does not cover. |
+| `copied-components.json`   | Source components copied into the repository (revision and upstream source).                                                                                                                                   |
+| `embedded-components.json` | Components embedded inside dependencies (parent package, revision and source).                                                                                                                                 |
+| `npm-overrides.json`       | Overridden npm packages with the exact upstream notice snapshot used for each.                                                                                                                                 |
+| `native-search/`           | Native search tool sources and licence material (`sources.json`, `licenses/`).                                                                                                                                 |
+| `runtime/`                 | Node runtime licence texts and source references (`sources.json`).                                                                                                                                             |
+| `upstream/`                | Byte-exact upstream notice snapshots referenced by the inventory (sha256-named files).                                                                                                                         |
 
 ## Generating and checking
 

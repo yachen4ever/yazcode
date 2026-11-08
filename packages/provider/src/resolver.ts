@@ -61,7 +61,9 @@ export function serializeRegistryProviderConfig(
       type: config.api.type,
       baseUrl: config.api.baseUrl,
       ...(config.api.headers == null ? {} : { headers: config.api.headers }),
-      ...(config.api.allowInsecureTls == null ? {} : { allowInsecureTls: config.api.allowInsecureTls }),
+      ...(config.api.allowInsecureTls == null
+        ? {}
+        : { allowInsecureTls: config.api.allowInsecureTls }),
       ...(config.api.tlsCaPath == null ? {} : { tlsCaPath: config.api.tlsCaPath }),
     },
     ...(config.builtinModelIds == null ? {} : { builtinModelIds: [...config.builtinModelIds] }),

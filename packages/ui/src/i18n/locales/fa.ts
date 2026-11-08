@@ -1643,7 +1643,8 @@ const faIR: Record<string, string> = {
   "workspaceSidebar.sortBy": "مرتب‌سازی بر اساس",
   "workspaceSidebar.sortByCreated": "تاریخ ایجاد",
   "workspaceSidebar.sortByUpdated": "تاریخ به‌روزرسانی",
-  "projectEditor.description": "پروژه نامی به همراه فهرستی مرتب از پوشه‌هاست؛ پوشه اصلی، دایرکتوری اجرای تسک‌های جدید است",
+  "projectEditor.description":
+    "پروژه نامی به همراه فهرستی مرتب از پوشه‌هاست؛ پوشه اصلی، دایرکتوری اجرای تسک‌های جدید است",
   "projectEditor.createTitle": "پروژه جدید",
   "projectEditor.editTitle": "ویرایش پروژه",
   "projectEditor.name": "نام پروژه",
@@ -1657,13 +1658,16 @@ const faIR: Record<string, string> = {
   "projectEditor.create": "ایجاد",
   "projectEditor.delete": "حذف پروژه",
   "projectEditor.deleteTitle": "حذف پروژه",
-  "projectEditor.deleteDescription": "حذف پروژه «{name}» فقط پیوند سازمانی را می‌شکند؛ فایل‌ها و تسک‌های موجود دست‌نخورده می‌مانند",
+  "projectEditor.deleteDescription":
+    "حذف پروژه «{name}» فقط پیوند سازمانی را می‌شکند؛ فایل‌ها و تسک‌های موجود دست‌نخورده می‌مانند",
   "projectEditor.error.rootsEmpty": "پروژه دست‌کم به یک پوشه نیاز دارد",
   "projectEditor.error.primaryNotInRoots": "پوشه اصلی باید در فهرست پوشه‌ها باشد",
   "projectEditor.error.primaryRootMissing": "پوشه اصلی روی دیسک وجود ندارد؛ پوشه دیگری انتخاب کنید",
-  "projectEditor.error.serviceUnavailable": "سرویس پروژه در دسترس نیست؛ برنامه را دوباره راه‌اندازی کنید",
+  "projectEditor.error.serviceUnavailable":
+    "سرویس پروژه در دسترس نیست؛ برنامه را دوباره راه‌اندازی کنید",
   "projectEditor.error.saveFailed": "ذخیره پروژه ناموفق بود؛ دوباره تلاش کنید",
-  "projectEditor.remoteSingleRootHint": "پروژه‌های راه دور به همین تک‌پوشه محدود هستند؛ افزودن یا حذف پوشه ممکن نیست",
+  "projectEditor.remoteSingleRootHint":
+    "پروژه‌های راه دور به همین تک‌پوشه محدود هستند؛ افزودن یا حذف پوشه ممکن نیست",
   "projectEditor.error.remoteSingleRootRequired": "پروژه راه دور تنها می‌تواند یک پوشه داشته باشد",
   "projectEditor.error.remoteRootImmutable": "پوشه پروژه راه دور قابل تغییر نیست",
   "projectEditor.error.hostImmutable": "میزبان پروژه قابل تغییر نیست",
@@ -2516,7 +2520,8 @@ const faIR: Record<string, string> = {
   "settings.userscripts.createHint":
     "پس از ذخیره در ~/.yazcode/userscripts/<شناسه اسکریپت>.user.js نوشته می‌شود و در انتظار تأیید می‌ماند؛ فقط پس از تأیید اجرا می‌شود.",
   "settings.userscripts.importReadFailed": "خواندن فایل واردشده ناموفق بود",
-  "settings.userscripts.importInvalidName": "نمی‌توان شناسه اسکریپت را از نام فایل استخراج کرد (پسوند *.user.js لازم است)",
+  "settings.userscripts.importInvalidName":
+    "نمی‌توان شناسه اسکریپت را از نام فایل استخراج کرد (پسوند *.user.js لازم است)",
   "settings.userscripts.editor.scriptIdLabel": "شناسه اسکریپت",
   "settings.userscripts.editor.scriptIdHint":
     "فقط حروف، ارقام، خط تیره و زیرخط و مانند آن؛ بدون جداکننده مسیر و نویسه‌های ممنوع ویندوز، بدون نقطه آغازین، حداکثر ۶۴ نویسه.",
@@ -2543,7 +2548,8 @@ const faIR: Record<string, string> = {
   "settings.userscripts.delete.storageKeep": "فقط اسکریپت",
   "settings.userscripts.delete.successToast": "اسکریپت حذف شد",
   "settings.userscripts.delete.failedToast": "حذف اسکریپت ناموفق بود",
-  "settings.userscripts.delete.patchFailedToast": "برداشتن رکورد فعال‌سازی ناموفق بود؛ حذف متوقف شد (فایل نگه داشته شد)",
+  "settings.userscripts.delete.patchFailedToast":
+    "برداشتن رکورد فعال‌سازی ناموفق بود؛ حذف متوقف شد (فایل نگه داشته شد)",
   "settings.userscripts.write.successToast": "اسکریپت ذخیره شد؛ پس از تأیید اجرا می‌شود",
   "settings.userscripts.write.failedToast": "ذخیره اسکریپت ناموفق بود",
   "settings.userscripts.error.invalid_script_id": "شناسه اسکریپت نامعتبر است",
@@ -2562,7 +2568,8 @@ const faIR: Record<string, string> = {
     "با @run-at پیش‌فرض document-start هنوز DOM آماده نیست: پیش از کار با DOM منتظر body/DOMContentLoaded بمانید (یا @run-at document-end اعلام کنید).",
   "settings.userscripts.hints.include":
     "دستور @include اسکریپت‌های قدیمی تجزیه نمی‌شود؛ آن را به @match بازنویسی کنید.",
-  "settings.userscripts.validate.metadataMissing": "بلوک فراداده ==UserScript== (نشانگرهای آغاز/پایان) یافت نشد.",
+  "settings.userscripts.validate.metadataMissing":
+    "بلوک فراداده ==UserScript== (نشانگرهای آغاز/پایان) یافت نشد.",
   "settings.userscripts.validate.matchMissing": "حداقل یک اعلان @match لازم است.",
   "settings.userscripts.validate.portHost":
     "پورت در @match پشتیبانی نمی‌شود: به شکل {suggestion} بازنویسی کنید (تزریق پورت‌های غیراستاندارد محلی فعلاً پشتیبانی نمی‌شود).",
@@ -2582,13 +2589,16 @@ const faIR: Record<string, string> = {
     "نتیجه تجزیه را بازبینی کنید (پیش‌نمایش همان چیزی است که اسکنر می‌بیند) و سپس تصمیم بگیرید.",
   "settings.userscripts.url.install": "نصب",
   "settings.userscripts.url.back": "بازگشت",
-  "settings.userscripts.url.parseErrorBanner": "این اسکریپت اعتبارسنجی ایستا را رد کرد و قابل نصب نیست:",
+  "settings.userscripts.url.parseErrorBanner":
+    "این اسکریپت اعتبارسنجی ایستا را رد کرد و قابل نصب نیست:",
   "settings.userscripts.url.sourcePreview": "پیش‌نمایش کد",
   "settings.userscripts.url.error.invalid_url": "URL قابل تجزیه نیست",
-  "settings.userscripts.url.error.not_https": "فقط نشانی‌های https:// پشتیبانی می‌شوند (بازمسیریابی هم باید https بماند)",
+  "settings.userscripts.url.error.not_https":
+    "فقط نشانی‌های https:// پشتیبانی می‌شوند (بازمسیریابی هم باید https بماند)",
   "settings.userscripts.url.error.too_large": "محتوا از محدودیت {limit} مگابایت فراتر است",
   "settings.userscripts.url.error.timeout": "درخواست بیش از حد طول کشید",
-  "settings.userscripts.url.error.remote_address_not_allowed": "نشانی هدف مجاز نیست (فقط نشانی‌های عمومی)",
+  "settings.userscripts.url.error.remote_address_not_allowed":
+    "نشانی هدف مجاز نیست (فقط نشانی‌های عمومی)",
   "settings.userscripts.url.error.download_failed": "دانلود ناموفق بود",
   "settings.browser.data.section": "داده‌های مرورگر",
   "settings.browser.desktopOnly": "داده‌های مرورگر فقط در نسخه دسکتاپ yazcode قابل مدیریت هستند.",
@@ -3142,7 +3152,8 @@ const faIR: Record<string, string> = {
   "settings.modelProvider.disableProvider": "غیرفعال‌سازی فراهم‌کننده",
   "settings.modelProvider.providerToggleAria": "کلید فعال‌سازی {name}",
   "settings.modelProvider.modelToggleAria": "کلید فعال‌سازی {name}",
-  "settings.modelProvider.refreshFailed": "به‌روزرسانی فراهم‌کننده‌های مدل ناموفق بود، بعداً دوباره تلاش کنید",
+  "settings.modelProvider.refreshFailed":
+    "به‌روزرسانی فراهم‌کننده‌های مدل ناموفق بود، بعداً دوباره تلاش کنید",
   // 26.5.6 修复项 3 同类清扫：a50897f 引入时 fa 漏定义（zh/en 均有）。
   "settings.modelProvider.detectModels": "تشخیص مدل‌های در دسترس",
   "settings.modelProvider.detectModelsEmpty": "هیچ مدلی در دسترس شناسایی نشد",

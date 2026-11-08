@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  formatSpeedLabels,
-  shouldStartSessionDebugPolling,
-} from "../src/v4/speedLabels.js";
+import { formatSpeedLabels, shouldStartSessionDebugPolling } from "../src/v4/speedLabels.js";
 
 const numberFormat = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
 
@@ -34,22 +31,46 @@ describe("formatSpeedLabels", () => {
   });
 
   it("durationLabel：<60s 显示秒，≥60s 显示分+秒，null/0 不显示", () => {
-    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 45.3, generationDurationMs: 45000 }, numberFormat).durationLabel, "45s");
-    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 90300 }, numberFormat).durationLabel, "1m30s");
-    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: null }, numberFormat).durationLabel, null);
-    assert.equal(formatSpeedLabels({ recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 0 }, numberFormat).durationLabel, null);
+    assert.equal(
+      formatSpeedLabels(
+        { recordedAt: 1, tokensPerSecond: 45.3, generationDurationMs: 45000 },
+        numberFormat,
+      ).durationLabel,
+      "45s",
+    );
+    assert.equal(
+      formatSpeedLabels(
+        { recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 90300 },
+        numberFormat,
+      ).durationLabel,
+      "1m30s",
+    );
+    assert.equal(
+      formatSpeedLabels(
+        { recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: null },
+        numberFormat,
+      ).durationLabel,
+      null,
+    );
+    assert.equal(
+      formatSpeedLabels(
+        { recordedAt: 1, tokensPerSecond: 12.1, generationDurationMs: 0 },
+        numberFormat,
+      ).durationLabel,
+      null,
+    );
   });
 });
 
 describe("shouldStartSessionDebugPolling", () => {
   it("sessionId 与 workspacePath 齐全才启动", () => {
-    assert.equal(
-      shouldStartSessionDebugPolling({ sessionId: "s", workspacePath: "/w" }),
-      true,
-    );
+    assert.equal(shouldStartSessionDebugPolling({ sessionId: "s", workspacePath: "/w" }), true);
   });
   it("workspacePath 缺席（缺陷 ② 回归：调用点未传 props 时轮询恒不启动）", () => {
-    assert.equal(shouldStartSessionDebugPolling({ sessionId: "s", workspacePath: undefined }), false);
+    assert.equal(
+      shouldStartSessionDebugPolling({ sessionId: "s", workspacePath: undefined }),
+      false,
+    );
   });
   it("sessionId 缺席不启动", () => {
     assert.equal(shouldStartSessionDebugPolling({ sessionId: null, workspacePath: "/w" }), false);

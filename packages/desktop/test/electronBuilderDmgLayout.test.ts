@@ -82,8 +82,14 @@ describe("macOS DMG 安装布局", () => {
     assert.deepEqual(applicationsEntry, { x: 470, y: 120, type: "link", path: "/Applications" });
 
     // electron-builder 的默认布局正好落在背景文字上，显式禁止再次出现。
-    assert.equal(contents.some((item) => item.x === 130 && item.y === 220), false);
-    assert.equal(contents.some((item) => item.x === 410 && item.y === 220), false);
+    assert.equal(
+      contents.some((item) => item.x === 130 && item.y === 220),
+      false,
+    );
+    assert.equal(
+      contents.some((item) => item.x === 410 && item.y === 220),
+      false,
+    );
   });
 
   it("两个解除拦截说明文件随 DMG 分发，并落在背景箭头指向的位置", () => {

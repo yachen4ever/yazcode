@@ -3,8 +3,14 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
-import { parseStorageGetRequest, parseStorageSetRequest } from "../src/main/userscripts/userscriptIpcContract.js";
-import { createUserscriptService, type UserscriptRequestContext } from "../src/main/userscripts/userscriptService.js";
+import {
+  parseStorageGetRequest,
+  parseStorageSetRequest,
+} from "../src/main/userscripts/userscriptIpcContract.js";
+import {
+  createUserscriptService,
+  type UserscriptRequestContext,
+} from "../src/main/userscripts/userscriptService.js";
 import { createUserscriptFiles } from "../src/main/userscripts/userscriptFiles.js";
 import { createUserscriptStorage } from "../src/main/userscripts/userscriptStorage.js";
 import type { UserscriptManifestPort } from "../src/main/userscripts/userscriptStore.js";
@@ -24,9 +30,21 @@ async function makeService(manifest: Record<string, { enabled: boolean; sha256?:
   const scriptsDir = join(root, "userscripts");
   const storageRootDir = join(root, "storage");
   await mkdir(scriptsDir, { recursive: true });
-  await writeFile(join(scriptsDir, "svc.user.js"), scriptWithGrant("https://svc.test/*", "GM_getValue GM_setValue GM_deleteValue GM_listValues GM_addStyle"));
-  await writeFile(join(scriptsDir, "sub.user.js"), scriptWithGrant("https://svc.test/sub*", "GM_addStyle"));
-  await writeFile(join(scriptsDir, "rejected.user.js"), scriptWithGrant("https://svc.test/*", "GM_xmlhttpRequest"));
+  await writeFile(
+    join(scriptsDir, "svc.user.js"),
+    scriptWithGrant(
+      "https://svc.test/*",
+      "GM_getValue GM_setValue GM_deleteValue GM_listValues GM_addStyle",
+    ),
+  );
+  await writeFile(
+    join(scriptsDir, "sub.user.js"),
+    scriptWithGrant("https://svc.test/sub*", "GM_addStyle"),
+  );
+  await writeFile(
+    join(scriptsDir, "rejected.user.js"),
+    scriptWithGrant("https://svc.test/*", "GM_xmlhttpRequest"),
+  );
   const service = createUserscriptService({
     scriptsDir,
     storageRootDir,
@@ -75,11 +93,11 @@ describe("userscriptService.match", () => {
   });
 
   it("@match 过滤生效；grant 拒载脚本不出现", async () => {
-    const response = await ctx.service.match({ url: "https://svc.test/sub-page" }, mainFrameContext);
-    assert.deepEqual(
-      response.scripts.map((item) => item.scriptId).sort(),
-      ["sub", "svc"],
+    const response = await ctx.service.match(
+      { url: "https://svc.test/sub-page" },
+      mainFrameContext,
     );
+    assert.deepEqual(response.scripts.map((item) => item.scriptId).sort(), ["sub", "svc"]);
     assert.ok(!response.scripts.some((item) => item.scriptId === "rejected"));
   });
 
@@ -105,10 +123,18 @@ describe("userscriptService.get/set 守卫与存储", () => {
 
   it("set → get 回读一致；listValues 返回现存键；deleteValue 幂等", async () => {
     assert.equal(
-      (await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "token", value: "abc" }, mainFrameContext)).ok,
+      (
+        await ctx.service.setStorage(
+          { kind: "put", scriptId: "svc", key: "token", value: "abc" },
+          mainFrameContext,
+        )
+      ).ok,
       true,
     );
-    const got = await ctx.service.getStorage({ kind: "get", scriptId: "svc", key: "token" }, mainFrameContext);
+    const got = await ctx.service.getStorage(
+      { kind: "get", scriptId: "svc", key: "token" },
+      mainFrameContext,
+    );
     assert.equal(got.ok, true);
     assert.equal(got.value, "abc");
 
@@ -116,22 +142,38 @@ describe("userscriptService.get/set 守卫与存储", () => {
     assert.deepEqual(list.keys, ["token"]);
 
     assert.equal(
-      (await ctx.service.setStorage({ kind: "delete", scriptId: "svc", key: "token" }, mainFrameContext)).ok,
+      (
+        await ctx.service.setStorage(
+          { kind: "delete", scriptId: "svc", key: "token" },
+          mainFrameContext,
+        )
+      ).ok,
       true,
     );
-    const gone = await ctx.service.getStorage({ kind: "get", scriptId: "svc", key: "token" }, mainFrameContext);
+    const gone = await ctx.service.getStorage(
+      { kind: "get", scriptId: "svc", key: "token" },
+      mainFrameContext,
+    );
     assert.equal(got.ok, true);
     assert.equal("value" in gone, false);
 
     // key 缺失时 delete 也成功（幂等）。
     assert.equal(
-      (await ctx.service.setStorage({ kind: "delete", scriptId: "svc", key: "token" }, mainFrameContext)).ok,
+      (
+        await ctx.service.setStorage(
+          { kind: "delete", scriptId: "svc", key: "token" },
+          mainFrameContext,
+        )
+      ).ok,
       true,
     );
   });
 
   it("get 缺 key 返回 ok 且不带 value（调用方取默认值语义）", async () => {
-    const result = await ctx.service.getStorage({ kind: "get", scriptId: "svc", key: "missing" }, mainFrameContext);
+    const result = await ctx.service.getStorage(
+      { kind: "get", scriptId: "svc", key: "missing" },
+      mainFrameContext,
+    );
     assert.equal(result.ok, true);
     assert.equal("value" in result, false);
   });
@@ -167,26 +209,45 @@ describe("userscriptService.get/set 守卫与存储", () => {
     const longKey = "k".repeat(513);
     assert.ok(parseStorageSetRequest({ kind: "put", scriptId: "svc", key: longKey, value: 1 }));
     assert.equal(
-      (await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: longKey, value: 1 }, mainFrameContext)).error,
+      (
+        await ctx.service.setStorage(
+          { kind: "put", scriptId: "svc", key: longKey, value: 1 },
+          mainFrameContext,
+        )
+      ).error,
       "invalid_key",
     );
     assert.equal(
-      (await ctx.service.getStorage({ kind: "get", scriptId: "svc", key: longKey }, mainFrameContext)).error,
+      (
+        await ctx.service.getStorage(
+          { kind: "get", scriptId: "svc", key: longKey },
+          mainFrameContext,
+        )
+      ).error,
       "invalid_key",
     );
     assert.ok(parseStorageGetRequest({ kind: "get", scriptId: "svc", key: "" }) === null);
     assert.equal(
-      (await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "k", value: undefined }, mainFrameContext))
-        .error,
+      (
+        await ctx.service.setStorage(
+          { kind: "put", scriptId: "svc", key: "k", value: undefined },
+          mainFrameContext,
+        )
+      ).error,
       "invalid_request",
     );
     assert.equal(
-      (await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "k", value: () => 1 }, mainFrameContext))
-        .error,
+      (
+        await ctx.service.setStorage(
+          { kind: "put", scriptId: "svc", key: "k", value: () => 1 },
+          mainFrameContext,
+        )
+      ).error,
       "invalid_request",
     );
     assert.equal(
-      (await ctx.service.getStorage({ kind: "get", scriptId: "nope", key: "k" }, mainFrameContext)).error,
+      (await ctx.service.getStorage({ kind: "get", scriptId: "nope", key: "k" }, mainFrameContext))
+        .error,
       "unknown_script",
     );
   });
@@ -206,8 +267,14 @@ describe("userscriptService.get/set 守卫与存储", () => {
 
   it("并发 set 按 scriptId 串行化，两个更新都落盘", async () => {
     const results = await Promise.all([
-      ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "a", value: 1 }, mainFrameContext),
-      ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "b", value: 2 }, mainFrameContext),
+      ctx.service.setStorage(
+        { kind: "put", scriptId: "svc", key: "a", value: 1 },
+        mainFrameContext,
+      ),
+      ctx.service.setStorage(
+        { kind: "put", scriptId: "svc", key: "b", value: 2 },
+        mainFrameContext,
+      ),
     ]);
     assert.ok(results.every((result) => result.ok));
     const list = await ctx.service.getStorage({ kind: "list", scriptId: "svc" }, mainFrameContext);
@@ -216,7 +283,12 @@ describe("userscriptService.get/set 守卫与存储", () => {
 
   it("单脚本存储超 2MB 拒绝（storage_limit），原内容不受影响", async () => {
     assert.equal(
-      (await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "a", value: "x" }, mainFrameContext)).ok,
+      (
+        await ctx.service.setStorage(
+          { kind: "put", scriptId: "svc", key: "a", value: "x" },
+          mainFrameContext,
+        )
+      ).ok,
       true,
     );
     const oversized = "y".repeat(3 * 1024 * 1024);
@@ -231,8 +303,14 @@ describe("userscriptService.get/set 守卫与存储", () => {
   });
 
   it("存储落盘为按 scriptId 命名空间的 JSON 文件", async () => {
-    await ctx.service.setStorage({ kind: "put", scriptId: "svc", key: "json", value: { nested: [1, 2] } }, mainFrameContext);
-    const raw = JSON.parse(await readFile(join(ctx.storageRootDir, "svc.json"), "utf8")) as Record<string, unknown>;
+    await ctx.service.setStorage(
+      { kind: "put", scriptId: "svc", key: "json", value: { nested: [1, 2] } },
+      mainFrameContext,
+    );
+    const raw = JSON.parse(await readFile(join(ctx.storageRootDir, "svc.json"), "utf8")) as Record<
+      string,
+      unknown
+    >;
     assert.deepEqual(raw.json, { nested: [1, 2] });
   });
 });
@@ -374,7 +452,9 @@ describe("userscriptService.lastInjectedAt", () => {
  * - 编辑已批准脚本：manifest 不变（仍 enabled + 旧 sha），扫描自然落 hash_mismatch。
  */
 describe("userscriptService P4 落盘 ≠ 批准", () => {
-  async function makeWritableService(manifest: Record<string, { enabled: boolean; sha256?: string }>) {
+  async function makeWritableService(
+    manifest: Record<string, { enabled: boolean; sha256?: string }>,
+  ) {
     const root = await mkdtemp(join(tmpdir(), "yazcode-userscript-p4-"));
     const scriptsDir = join(root, "userscripts");
     const storageRootDir = join(root, "storage");
@@ -396,7 +476,10 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
       manifestPort,
       logger: { info: () => {}, warn: () => {} },
     });
-    const storage = createUserscriptStorage({ rootDir: storageRootDir, logger: { warn: () => {} } });
+    const storage = createUserscriptStorage({
+      rootDir: storageRootDir,
+      logger: { warn: () => {} },
+    });
     const files = createUserscriptFiles({
       scriptsDir,
       storage,
@@ -443,9 +526,12 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
         (item) => item.scriptId === "fresh",
       );
       assert.equal(statusAfterPatch?.status, "pending_approval");
-      assert.deepEqual(await ctx.service.match({ url: "https://fresh.test/page" }, mainFrameContext), {
-        scripts: [],
-      });
+      assert.deepEqual(
+        await ctx.service.match({ url: "https://fresh.test/page" }, mainFrameContext),
+        {
+          scripts: [],
+        },
+      );
 
       // 用户批准（钉住所见 sha）→ 下次扫描 serving。
       const seen = statusAfterPatch?.sha256 ?? "";
@@ -484,11 +570,7 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
       // 编辑保存（overwrite:true）：断言 manifest 无新写入（保存动作永不写 sha）。
       const savesBefore = ctx.saved.length;
       const editedContent = scriptWithGrant("https://edit.test/*", "GM_addStyle");
-      const write = await ctx.files.writeScript(
-        "edited",
-        `${editedContent}\n// touched\n`,
-        true,
-      );
+      const write = await ctx.files.writeScript("edited", `${editedContent}\n// touched\n`, true);
       assert.equal(write.ok, true);
       assert.equal(ctx.saved.length, savesBefore, "写盘通道不得写 manifest");
 
@@ -498,9 +580,12 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
       const entry = (await ctx.manifestPort.getManifest()).edited;
       assert.deepEqual(entry, { enabled: true, sha256: anchoredSha });
       // 不服务（未确认内容不被执行）。
-      assert.deepEqual(await ctx.service.match({ url: "https://edit.test/page" }, mainFrameContext), {
-        scripts: [],
-      });
+      assert.deepEqual(
+        await ctx.service.match({ url: "https://edit.test/page" }, mainFrameContext),
+        {
+          scripts: [],
+        },
+      );
 
       // 重新批准（钉住新内容 sha）→ serving。
       await ctx.manifestPort.saveManifest({
@@ -519,7 +604,11 @@ describe("userscriptService P4 落盘 ≠ 批准", () => {
     const ctx = await makeWritableService({ svc: { enabled: true, sha256: "" } });
     try {
       // 脚本文件在盘上才有状态行（inspect 以目录扫描为准）。
-      const write = await ctx.files.writeScript("svc", scriptWithGrant("https://svc.test/*"), false);
+      const write = await ctx.files.writeScript(
+        "svc",
+        scriptWithGrant("https://svc.test/*"),
+        false,
+      );
       assert.equal(write.ok, true);
       // 无存储文件：storageHealth 缺席（不是伪造的 ok）。
       const withoutStorage = await ctx.service.statusOverview();
@@ -564,7 +653,10 @@ describe("userscriptService.recordExecutionReport（26.5.4 S1 执行回执）", 
       });
       const failed = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
       assert.equal(failed?.lastExecution?.ok, false);
-      assert.equal(failed.lastExecution?.message, "Cannot read properties of null (reading 'appendChild')");
+      assert.equal(
+        failed.lastExecution?.message,
+        "Cannot read properties of null (reading 'appendChild')",
+      );
 
       ctx.service.recordExecutionReport({ kind: "executed", scriptId: "svc" });
       const recovered = (await ctx.service.listStatus()).find((item) => item.scriptId === "svc");
@@ -609,9 +701,7 @@ describe("userscriptService.recordExecutionReport（26.5.4 S1 执行回执）", 
     const ctx = await makeService({ svc: { enabled: true } });
     try {
       ctx.service.recordExecutionReport({ kind: "executed", scriptId: "svc" });
-      assert.ok(
-        (await ctx.service.listStatus()).some((item) => "lastExecution" in item),
-      );
+      assert.ok((await ctx.service.listStatus()).some((item) => "lastExecution" in item));
       const fresh = await makeService({ svc: { enabled: true } });
       try {
         const rows = await fresh.service.listStatus();

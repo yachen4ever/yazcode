@@ -18,12 +18,7 @@ import { fileURLToPath } from "node:url";
 //
 // 契约见 docs/specs/test-gate-integration.md 的行为规则 2。
 
-const repositoryRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 const manifests = [
   "package.json",

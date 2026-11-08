@@ -77,7 +77,7 @@ stop）可直接作验收清单。
 
 - **不适用**：上游根因（打包 `app-update.yml` publish.url 为 `localhost:8081` 占位 +
   运行时漏 setFeedURL）本仓不存在——本仓 autoUpdater 走 `provider:"github",
-  owner:yachen4ever, repo:yazcode` 且 `allowPrerelease=true`（26.2.0 起发布全
+owner:yachen4ever, repo:yazcode` 且 `allowPrerelease=true`（26.2.0 起发布全
   prerelease，generic `/releases/latest` 会 404）；stable 锁定等价已有
   （`resolveUpdateReleaseChannel` 硬编码 stable）；mac 未签名手动安装引导与本仓
   真实签名/公证路线互斥（本仓有 identity/hardenedRuntime/两段式公证基建）。
@@ -119,19 +119,19 @@ PR #94/#96 合并时 maintainer 另补 AST/NodeNext 守卫、负夹具与 commit
 
 ## 判定汇总
 
-| # | 主题 | 判定 |
-| --- | --- | --- |
-| 1 | #108 macos-14 runner 退役 | **引入（高优）**：release.yml:300 下次发版即踩 |
-| 2 | 模型发现凭据脱敏 ac9dbd7e | **引入**：本仓同构泄露面，自包含补丁 |
-| 3 | #109 历史管理无模型控制面 | **backlog（引入候选）**：本仓同款缺陷成立，需 spec 先行立项 |
-| 4 | #77 托盘创建失败门禁 | **backlog（单点加固）**：本仓 hide 门禁缺失 |
-| 5 | #88 updater | **不适用**；备忘：契约 CI 参考 + 孤儿测试清理 |
-| 6 | Cheaper Inference 预设 | **不适用**（产品立场延续） |
-| 7 | catalog executor 装配归属 | **不适用**（功能等价） |
-| 8 | #99 归档设置入口 | **不适用**（架构不同） |
-| 9 | #104 文树标题栏 | **不适用**（本仓布局已避开） |
-| 10 | B1/B2 上游侧加固 | **备忘**（无回流项） |
-| — | zai-org 3.17.x sync | **登记观察**：官方线演化要点与 #77/#109 互证 |
+| #   | 主题                      | 判定                                                        |
+| --- | ------------------------- | ----------------------------------------------------------- |
+| 1   | #108 macos-14 runner 退役 | **引入（高优）**：release.yml:300 下次发版即踩              |
+| 2   | 模型发现凭据脱敏 ac9dbd7e | **引入**：本仓同构泄露面，自包含补丁                        |
+| 3   | #109 历史管理无模型控制面 | **backlog（引入候选）**：本仓同款缺陷成立，需 spec 先行立项 |
+| 4   | #77 托盘创建失败门禁      | **backlog（单点加固）**：本仓 hide 门禁缺失                 |
+| 5   | #88 updater               | **不适用**；备忘：契约 CI 参考 + 孤儿测试清理               |
+| 6   | Cheaper Inference 预设    | **不适用**（产品立场延续）                                  |
+| 7   | catalog executor 装配归属 | **不适用**（功能等价）                                      |
+| 8   | #99 归档设置入口          | **不适用**（架构不同）                                      |
+| 9   | #104 文树标题栏           | **不适用**（本仓布局已避开）                                |
+| 10  | B1/B2 上游侧加固          | **备忘**（无回流项）                                        |
+| —   | zai-org 3.17.x sync       | **登记观察**：官方线演化要点与 #77/#109 互证                |
 
 ## 反向贡献状态
 

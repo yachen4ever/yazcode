@@ -118,10 +118,7 @@ export function useSessionDebug({
     [active, scopeKey, taskId, workspaceIdentity, workspacePath, zcodeAgentService],
   );
 
-  const getSnapshot = useCallback(
-    () => sharedLoops.get(scopeKey)?.view ?? EMPTY_VIEW,
-    [scopeKey],
-  );
+  const getSnapshot = useCallback(() => sharedLoops.get(scopeKey)?.view ?? EMPTY_VIEW, [scopeKey]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }

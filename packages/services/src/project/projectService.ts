@@ -1,9 +1,6 @@
 import { stat } from "node:fs/promises";
 import { ProjectRepository } from "../session/projectRepository.js";
-import {
-  assertRemoteTaskDirectories,
-  isRemoteProjectHostId,
-} from "../session/remotePolicy.js";
+import { assertRemoteTaskDirectories, isRemoteProjectHostId } from "../session/remotePolicy.js";
 import type {
   IProjectService,
   PreparedProjectSession,
@@ -29,7 +26,9 @@ async function assertDirectoryExists(path: string): Promise<void> {
  * - 数组 → 过滤非字符串与 trim 后为空的项，空数组原样返回（固化了「显式空」）；
  * - 接受两种输入形态：列原始 JSON 文本（string）与 taskIndexRepo 已解析的 meta 数组。
  */
-function parseExecutionDirectories(raw: string | readonly string[] | null | undefined): string[] | null {
+function parseExecutionDirectories(
+  raw: string | readonly string[] | null | undefined,
+): string[] | null {
   if (raw === null || raw === undefined) return null;
   if (typeof raw !== "string") {
     return raw.filter((item): item is string => typeof item === "string" && item.trim() !== "");

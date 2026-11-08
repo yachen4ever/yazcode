@@ -25,20 +25,21 @@ function fakeView(
   } as ControlledView & { _sent: { method: string; params: unknown }[] };
 }
 
-const done =
-  (partial: Omit<import("@zcode/shared").BrowserCommandResult, "elapsedMs">) => partial;
+const done = (partial: Omit<import("@zcode/shared").BrowserCommandResult, "elapsedMs">) => partial;
 
 describe("handleCookies", () => {
   it("get 返回 Storage.getCookies 的 cookies 数组", async () => {
     const cookies = [
-      { name: "_AIOPS_SESSION_", value: "abc", domain: "oa.example.com", path: "/", httpOnly: true },
+      {
+        name: "_AIOPS_SESSION_",
+        value: "abc",
+        domain: "oa.example.com",
+        path: "/",
+        httpOnly: true,
+      },
     ];
     const view = fakeView(new Map([["Storage.getCookies", { cookies }]]));
-    const result = await handleCookies(
-      view,
-      { method: "cookies", action: { name: "get" } },
-      done,
-    );
+    const result = await handleCookies(view, { method: "cookies", action: { name: "get" } }, done);
     assert.equal(result.ok, true);
     assert.deepEqual((result as { value?: { cookies: unknown[] } }).value?.cookies, cookies);
   });

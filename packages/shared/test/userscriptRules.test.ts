@@ -89,9 +89,7 @@ describe("validateUserscriptHeaderDraft（编辑器草稿校验）", () => {
   });
 
   it("缺元数据块 / 缺 @match / 端口 pattern 分别成问题", () => {
-    assert.deepEqual(validateUserscriptHeaderDraft("void 0;"), [
-      { kind: "metadata_missing" },
-    ]);
+    assert.deepEqual(validateUserscriptHeaderDraft("void 0;"), [{ kind: "metadata_missing" }]);
     assert.deepEqual(validateUserscriptHeaderDraft("// ==UserScript==\n// ==/UserScript=="), [
       { kind: "match_missing" },
     ]);

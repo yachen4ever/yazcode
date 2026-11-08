@@ -135,11 +135,15 @@ export function useDraftConfigControl(params: {
   const loadedScope = useMemo(
     () => ({
       scopeKey,
-      draft:
-        readV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, draftScopeProjectId) ?? {
-          text: "",
-          updatedAt: 0,
-        },
+      draft: readV4ComposerDraft(
+        workspacePath,
+        workspaceIdentity,
+        scopeId,
+        draftScopeProjectId,
+      ) ?? {
+        text: "",
+        updatedAt: 0,
+      },
     }),
     [scopeKey],
   );
@@ -206,13 +210,7 @@ export function useDraftConfigControl(params: {
       stateRef.current.draft === draft &&
       stateRef.current.scopeKey === scopeKey
     ) {
-      persistV4ComposerDraft(
-        workspacePath,
-        workspaceIdentity,
-        scopeId,
-        draft,
-        draftScopeProjectId,
-      );
+      persistV4ComposerDraft(workspacePath, workspaceIdentity, scopeId, draft, draftScopeProjectId);
       lastPersistedDraftRef.current = draft;
     }
   }, [draft, scopeKey]);

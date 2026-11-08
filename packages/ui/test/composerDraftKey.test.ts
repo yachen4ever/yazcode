@@ -29,10 +29,7 @@ describe("buildV4ComposerDraftStorageKey", () => {
     const projectB = buildV4ComposerDraftStorageKey("/repos/alpha", undefined, "proj_b");
     assert.notEqual(projectA, projectB);
     assert.notEqual(projectA, base);
-    assert.equal(
-      projectA,
-      buildV4ComposerDraftStorageKey("/repos/alpha", undefined, "proj_a"),
-    );
+    assert.equal(projectA, buildV4ComposerDraftStorageKey("/repos/alpha", undefined, "proj_a"));
     assert.equal(projectA, "zcode-v4-composer-drafts:v1:%2Frepos%2Falpha#p:proj_a");
   });
 

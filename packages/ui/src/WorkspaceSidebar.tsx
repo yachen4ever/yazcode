@@ -409,9 +409,7 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
     const remoteCreate = new Map<string, () => void>();
     for (const tab of projectWorkspaceTabs) {
       const project = resolveProjectForWorkspacePath(projects, tab.workspacePath);
-      const isRemoteTab = Boolean(
-        tab.remoteSessionId || tab.remoteTarget || tab.workspaceIdentity,
-      );
+      const isRemoteTab = Boolean(tab.remoteSessionId || tab.remoteTarget || tab.workspaceIdentity);
       const entry = projectEditorEntryForTab(Boolean(project), isRemoteTab);
       if (entry === "create-remote" && tab.remoteTarget) {
         const remoteTarget = tab.remoteTarget;
@@ -1628,16 +1626,15 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                                             }
                                             onReconnectRemoteWorkspace={onReconnectRemoteWorkspace}
                                             onOpenFileTree={handleOpenWorkspaceFileTree}
-                                            projectPresentation={
-                                              projectPresentationByTabId.get(tab.id)
-                                            }
+                                            projectPresentation={projectPresentationByTabId.get(
+                                              tab.id,
+                                            )}
                                             onEditProject={
-                                              projectPresentationByTabId.get(tab.id)
-                                                ?.onEditProject
+                                              projectPresentationByTabId.get(tab.id)?.onEditProject
                                             }
-                                            onCreateRemoteProject={
-                                              remoteProjectCreateByTabId.get(tab.id)
-                                            }
+                                            onCreateRemoteProject={remoteProjectCreateByTabId.get(
+                                              tab.id,
+                                            )}
                                           />
                                         );
                                       })}

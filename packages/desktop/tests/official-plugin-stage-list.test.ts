@@ -64,9 +64,9 @@ test("every listed (marketplace-visible) definition is staged or explicitly exem
   }
   // 豁免表不能指向不存在的定义，防止清理定义后豁免变成摆设。
   const listedNames = new Set(
-    OFFICIAL_PLUGIN_DEFINITIONS
-      .filter((definition) => definition.listing !== undefined)
-      .map((definition) => definition.name),
+    OFFICIAL_PLUGIN_DEFINITIONS.filter((definition) => definition.listing !== undefined).map(
+      (definition) => definition.name,
+    ),
   );
   for (const exempt of LISTED_BUT_RUNTIME_INSTALL_ONLY) {
     assert.ok(

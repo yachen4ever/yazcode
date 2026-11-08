@@ -93,7 +93,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   退避）把毫秒级失败拖满 40s+（**10s 只是 UI race 观感，60s abort 才是真实上限**）。
   修法：`ModelRetryBudget.Single`（总尝试数 1，真发请求不变、fail-closed 不变）+
   探测专属 10s abort + 修「调用级预算被 taskType 缺省压掉」的隐藏前提。实测：连接拒绝
-  >40s → **15ms**，黑洞 5.0s。
+  > 40s → **15ms**，黑洞 5.0s。
 - **SSH 主机密钥 TOFU 校验**（issue #16，移植 axiom-desu/ZCodium@1575a769，Apache-2.0）：
   本仓 `buildSSHConnectConfig` 原无 `hostVerifier`/`hostKeys`/`known_hosts`——ssh2 默认接受
   任意主机密钥，MITM 可冒充目标主机骗取密码/私钥（远端 Agent 部署链路会执行任意命令，

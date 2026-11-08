@@ -5,10 +5,6 @@
   "description": "ZCode Computer Use runtime adapter over @trycua/cua-driver. Without an injected driver client the runtime stays fail-closed.",
   "license": "Apache-2.0",
   "type": "module",
-  "scripts": {
-    "test": "node --test \"test/**/*.test.mjs\"",
-    "install:gnome-extension": "node compatible/helper/install-extension.mjs"
-  },
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -78,6 +74,10 @@
       "types": "./broker-helper-health.d.ts",
       "import": "./broker-helper-health.js"
     }
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "install:gnome-extension": "node compatible/helper/install-extension.mjs"
   },
   "dependencies": {
     "@trycua/cua-driver": "0.28.2"

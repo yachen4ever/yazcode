@@ -320,7 +320,9 @@ export function ToastMessageView({
       className={cn(
         "rounded-2xl border bg-toast/60 text-ui-base shadow-lg backdrop-blur-xl transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] motion-reduce:transform-none motion-reduce:transition-opacity",
         // 进入动画用 CSS keyframes（挂载即见，帧恢复时自然播放），不再经 rAF 翻转可见态。
-        !leaving && !isUpdate && "motion-safe:animate-[zcode-toast-in_200ms_cubic-bezier(0.77,0,0.175,1)_both]",
+        !leaving &&
+          !isUpdate &&
+          "motion-safe:animate-[zcode-toast-in_200ms_cubic-bezier(0.77,0,0.175,1)_both]",
         isUpdate
           ? "origin-bottom-left w-[min(300px,calc(100vw-1rem))] max-w-[min(300px,calc(100vw-1rem))] border-popover-border text-foreground shadow-lg"
           : isNotice

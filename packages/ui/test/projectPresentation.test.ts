@@ -14,7 +14,9 @@ import {
 
 /** 多目录项目 P3a 呈现层纯函数（packages/ui/test 无组件渲染基建，测纯函数层）。 */
 
-function project(overrides: Partial<ProjectRecord> & { roots?: ProjectRecord["roots"] }): ProjectRecord {
+function project(
+  overrides: Partial<ProjectRecord> & { roots?: ProjectRecord["roots"] },
+): ProjectRecord {
   return {
     projectId: overrides.projectId ?? "proj_a",
     hostId: "local",
@@ -73,10 +75,19 @@ describe("primaryRootOf / additionalRootsOf / orderedRootsOf", () => {
 });
 
 describe("resolveProjectForWorkspacePath", () => {
-  const alpha = project({ projectId: "proj_a", roots: [{ rootPath: "/repos/alpha", position: 0, isPrimary: true }] });
-  const beta = project({ projectId: "proj_b", roots: [{ rootPath: "/repos/alpha", position: 0, isPrimary: true }] });
+  const alpha = project({
+    projectId: "proj_a",
+    roots: [{ rootPath: "/repos/alpha", position: 0, isPrimary: true }],
+  });
+  const beta = project({
+    projectId: "proj_b",
+    roots: [{ rootPath: "/repos/alpha", position: 0, isPrimary: true }],
+  });
   const pinnedBeta = { ...beta, pinned: true };
-  const gamma = project({ projectId: "proj_c", roots: [{ rootPath: "/repos/gamma", position: 0, isPrimary: true }] });
+  const gamma = project({
+    projectId: "proj_c",
+    roots: [{ rootPath: "/repos/gamma", position: 0, isPrimary: true }],
+  });
 
   it("按 primary root 匹配唯一项目", () => {
     assert.equal(resolveProjectForWorkspacePath([alpha, gamma], "/repos/alpha"), alpha);
@@ -99,10 +110,7 @@ describe("projectDisplayName / leafNameOf / rootsBadgeCount", () => {
   it("显示名优先 name，缺省回落 defaultName 与路径 leaf", () => {
     assert.equal(projectDisplayName(project({ name: "Alpha", defaultName: "alpha" })), "Alpha");
     assert.equal(projectDisplayName(project({ name: "", defaultName: "alpha" })), "alpha");
-    assert.equal(
-      projectDisplayName(project({ name: "", defaultName: null })),
-      "alpha",
-    );
+    assert.equal(projectDisplayName(project({ name: "", defaultName: null })), "alpha");
   });
 
   it("leafNameOf 兼容两种分隔符与尾斜线", () => {

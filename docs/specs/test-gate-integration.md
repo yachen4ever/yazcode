@@ -76,32 +76,32 @@ devDependency 既不会把 `tsx` 装进该包目录，也不会把它放进嵌�
    顶层测试 import 兄弟包的**发布入口**（`@zcode/contracts` 等），其 `exports` 指向
    `dist/`，不构建则报 `ERR_MODULE_NOT_FOUND`。
    - 测试够用的最小构建集（约 16s）：`shared-types → contracts → dynamic-workflow →
-     dynamic-workflow-runtime`，由 `test:build:cli` 承担，使 `pnpm test` 单独可跑。
+dynamic-workflow-runtime`，由 `test:build:cli` 承担，使 `pnpm test` 单独可跑。
    - `typecheck:cli` 需要更多（`adapters`、`core`、`i18n`、`bootstrap`、`tui` 等），
      实测须构建**全部** CLI 包，故 `verify:pre-push` 前置 `build:cli`（约 76s）。
    - **这是既有事实**：`typecheck:cli` 在未构建的干净检出上同样失败——门禁不是新引入
      的问题，但把它显式化后，新检出不再依赖「本机碰巧构建过」。
-4. **各包 test 脚本的 glob 必须真实命中**。`tsx --test test/**/*.test.ts` 在
+5. **各包 test 脚本的 glob 必须真实命中**。`tsx --test test/**/*.test.ts` 在
    bash/zsh 下依赖 glob 展开，`**` 不递归时只会匹配一层；脚本必须能在实际 shell 下
    命中全部测试文件。**正确写法是引号形式**（`"test/**/*.test.ts"`），交给 node 自己
    递归展开——实测 shell 展开漏掉深层测试文件（探针：15 例 vs 16 例）。
-5. **跨平台路径断言不得硬编码 Windows 路径**。路径测试用 `node:path` 的
+6. **跨平台路径断言不得硬编码 Windows 路径**。路径测试用 `node:path` 的
    `resolve`/`join` 构造当前平台的绝对路径，不写死盘符。`path.isAbsolute("C:\\...")`
    在 POSIX 上为 `false`。
-6. **CLI 顶层测试（`apps/zcode-cli/tests/*.test.mjs`）需要 tsx loader**。它们 import
+7. **CLI 顶层测试（`apps/zcode-cli/tests/*.test.mjs`）需要 tsx loader**。它们 import
    `packages/shared/src/**` 的 `.ts` 源文件，必须以 `node --import tsx --test` 运行，
    否则 `.js` 扩展名解析不到编译产物而报 `ERR_MODULE_NOT_FOUND`。
-7. **测试失败即门禁失败**，不得跳过、不得标注「已知失败」后放行。
+8. **测试失败即门禁失败**，不得跳过、不得标注「已知失败」后放行。
 
 ## 状态所有者
 
-| 事实 | 所有者 |
-| --- | --- |
-| 门禁组成与执行入口 | 根 `package.json` 的 `test` / `verify:pre-push` |
-| 各包测试脚本与 glob | 各包 `package.json` |
-| 测试运行时的引入方式（模块解析 vs PATH） | 各包 `package.json` 的 `test` 脚本写法 |
-| CI 中测试的触发 | `.github/workflows/tests.yml` |
-| 路径构造的平台无关写法 | 各测试文件自身 |
+| 事实                                     | 所有者                                          |
+| ---------------------------------------- | ----------------------------------------------- |
+| 门禁组成与执行入口                       | 根 `package.json` 的 `test` / `verify:pre-push` |
+| 各包测试脚本与 glob                      | 各包 `package.json`                             |
+| 测试运行时的引入方式（模块解析 vs PATH） | 各包 `package.json` 的 `test` 脚本写法          |
+| CI 中测试的触发                          | `.github/workflows/tests.yml`                   |
+| 路径构造的平台无关写法                   | 各测试文件自身                                  |
 
 ## 明确不做
 
@@ -122,7 +122,7 @@ P1b-1（94542675）给 `IServiceAccessor` 加必填字段后，client/server 的
 
 1. **从根跑通**：根 `pnpm test` 一次执行完所有有测试的包，全绿。
 2. **从嵌套 workspace 也能跑通**（不变式 2 的验收）：`cd apps/zcode-cli && pnpm --filter
-   @zcode/core test` 不再报 `tsx: command not found`，用例正常执行（15/15 通过）；
+@zcode/core test` 不再报 `tsx: command not found`，用例正常执行（15/15 通过）；
    `@zcode/adapters` 同理（20/20 通过）。这是本次修复的核心验收项——从
    「已知上下文限制」变为「成立」。
 3. **加载器引入方式统一**：全仓各包的 `test` 脚本均为 `node --import tsx --test`

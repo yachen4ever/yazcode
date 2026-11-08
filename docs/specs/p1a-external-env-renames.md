@@ -1,4 +1,4 @@
-# Spec：P1a 对外契约环境变量改名 ZCODE_ → YAZCODE_（旧名兼容一版）
+# Spec：P1a 对外契约环境变量改名 ZCODE* → YAZCODE*（旧名兼容一版）
 
 ## 范围
 

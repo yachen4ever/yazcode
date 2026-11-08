@@ -1071,12 +1071,11 @@ export function ModelProviderSection({
           // 手动刷新设置页时也要同时刷新 Z.ai / BigModel Team Plan 快照；
           // 原来只刷新 BigModel，Z.ai Team Plan 购买或订阅变化后会继续显示旧项目。
           refreshTeamPlanProducts: refreshAuthenticatedEnterpriseProducts,
-        })
-          .then((ok) => {
-            if (!ok) {
-              toast(intl.formatMessage({ id: "settings.modelProvider.refreshFailed" }));
-            }
-          });
+        }).then((ok) => {
+          if (!ok) {
+            toast(intl.formatMessage({ id: "settings.modelProvider.refreshFailed" }));
+          }
+        });
         // 连通性复核（26.5.5 发现 1，spec §3）：refresh 只重读本地设置视图、
         // 从不产生网络失败——「刷新=重测端点连接」的用户预期由探测承接。
         // 失败集驱动绿点「最近连接失败」标注 + 失败 toast；全部成功静默。
@@ -1087,9 +1086,7 @@ export function ModelProviderSection({
           .then((failedProviderIds) => {
             setConnectivityFailedProviderIds(failedProviderIds);
             if (failedProviderIds.size > 0) {
-              toast(
-                intl.formatMessage({ id: "settings.modelProvider.connectivityCheckFailed" }),
-              );
+              toast(intl.formatMessage({ id: "settings.modelProvider.connectivityCheckFailed" }));
             }
           })
           .catch((error) => {
@@ -1143,7 +1140,8 @@ export function ModelProviderSection({
         />
       ) : (
         <ModelProviderSectionDetail
-          providerListEmpty={!loading && navigationItems.length === 0}          connectionSelections={effectiveConnectionSelections}
+          providerListEmpty={!loading && navigationItems.length === 0}
+          connectionSelections={effectiveConnectionSelections}
           providerSettingsView={providerSettingsView}
           selectedNavItem={selectedNavItem}
           navigationItems={navigationItems}

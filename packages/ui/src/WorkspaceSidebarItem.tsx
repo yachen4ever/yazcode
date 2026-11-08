@@ -765,10 +765,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       </div>
       {projectPresentation?.rootsBadgeCount ? (
         <ControlHintTooltip
-          title={
-            projectPresentation.rootsTooltip ??
-            projectPresentation.displayName
-          }
+          title={projectPresentation.rootsTooltip ?? projectPresentation.displayName}
           side="right"
           align="center"
         >

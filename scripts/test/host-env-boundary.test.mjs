@@ -16,7 +16,8 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const HOST_INJECTED = {
   ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/host/runtime/provider/endpoint-a/zcode-builtin.json",
   YAZCODE_BUILTIN_PROVIDER_CONFIG_FILE: "/host/runtime/provider/endpoint-a/zcode-builtin.json",
-  ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE: "/host/runtime/provider/endpoint-b/zcode-builtin.json",
+  ZCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE:
+    "/host/runtime/provider/endpoint-b/zcode-builtin.json",
   ZCODIUM_BUILTIN_PROVIDER_CONFIG_FILE: "/host/runtime/provider/endpoint-c/zcode-builtin.json",
   ZCODE_APP_VERSION: "3.17.2",
   ZCODE_ENV: "production",

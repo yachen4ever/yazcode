@@ -30,7 +30,10 @@ describe("userscriptRuntime 静态契约", () => {
         `非法导入: ${specifier}`,
       );
     }
-    assert.ok(!/require\(/.test(runtimeSource.replace(/\*[^]*?\*\//g, " ")), "不得出现运行时 require");
+    assert.ok(
+      !/require\(/.test(runtimeSource.replace(/\*[^]*?\*\//g, " ")),
+      "不得出现运行时 require",
+    );
   });
 
   it("不暴露 contextBridge：页面主世界不得获得任何由 runtime 注册的全局桥", () => {
@@ -58,7 +61,14 @@ describe("userscriptRuntime 静态契约", () => {
   });
 
   it("GM 六函数以 new Function 参数注入，存储走 sendSync（Tampermonkey 同步语义）", () => {
-    for (const gmName of ["GM_info", "GM_addStyle", "GM_getValue", "GM_setValue", "GM_deleteValue", "GM_listValues"]) {
+    for (const gmName of [
+      "GM_info",
+      "GM_addStyle",
+      "GM_getValue",
+      "GM_setValue",
+      "GM_deleteValue",
+      "GM_listValues",
+    ]) {
       assert.ok(runtimeSource.includes(`"${gmName}"`), gmName);
     }
     assert.ok(runtimeSource.includes("ipcRenderer.sendSync"));

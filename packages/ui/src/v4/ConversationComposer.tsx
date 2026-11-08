@@ -541,7 +541,7 @@ function ConversationComposerImpl({
     // 非数组（无固化值）回落项目当前 roots。
     const solidified = cachedTaskMeta?.executionDirectories;
     const projectRoots = composerProjectContext.mentionRoots;
-    const candidates = Array.isArray(solidified) ? solidified : projectRoots ?? [];
+    const candidates = Array.isArray(solidified) ? solidified : (projectRoots ?? []);
     const deduped = [...new Set(candidates.map((root) => root.trim()).filter(Boolean))];
     return deduped.filter((root) => root !== workspacePath);
   }, [cachedTaskMeta, composerProjectContext, workspacePath]);
