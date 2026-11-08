@@ -2148,6 +2148,11 @@ export const zcodeProviderTestModelConnectivityParamsSchema = z
   .object({
     workspace: zcodeWorkspaceRefSchema,
     selection: modelSelectionSchema,
+    // 本次探测前 Host 是否实际推送了 account config（26.5.8 前缀段去重，spec
+    // probe-registry-refresh-dedup.md）：true = CLI 接收 handler 已刷新 registry，
+    // 探测 handler 跳过二次刷新；缺省/缺字段 = false，照旧刷新（旧 Host/旧 CLI
+    // 的 fail-open 方向落在「多刷新一次」的安全侧）。
+    accountConfigPushed: z.boolean().optional(),
   })
   .strict();
 export const zcodeProviderTestModelConnectivityResultSchema = z
