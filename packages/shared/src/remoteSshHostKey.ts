@@ -121,6 +121,11 @@ function resolveSshAuthKind(target: SshRemoteHostKeyTarget): "agent" | "password
 /**
  * 构造窗口内 SSH Remote Host 的共享身份。
  * 密码和私钥口令只用于建连，禁止进入共享键或日志。
+ *
+ * 注意语义边界：这是**连接身份键**（UI 识别同一远程目标 / 跨窗口共享），不是主机密钥
+ * 信任记录。主机密钥 TOFU 信任判定在 packages/server/src/remote/sshKnownHosts.ts
+ * （docs/specs/ssh-remote-hardening.md）——它复用本键做 known_hosts 的存储键，两者
+ * 命名相近但语义不同，勿混用。
  */
 export function buildSshRemoteHostKey(target: SshRemoteHostKeyTarget): string {
   return JSON.stringify([
