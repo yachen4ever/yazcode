@@ -17,7 +17,20 @@ import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import pkg, { CancellationToken } from "electron-updater";
 import semver from "semver";
 import { logger } from "./logger.js";
-const { autoUpdater } = pkg;
+// electron-updater 的 autoUpdater 是惰性 getter：解构即当场构造平台 updater 实例
+// 并校验 app.getVersion() 的 semver。dev（未打包）下 desktop 包无 version 字段，
+// app.getVersion() 为 "0.0"——启动期 Uncaught Exception（App version "0.0" not
+// semver）直接打断主进程初始化。打包产物由 electron-builder 注入真实版本
+// （electron-builder.config.js version: buildMetadata.appVersion），不受影响。
+// 修复（26.5.8 评估批）：改为首次真实使用时才构造。dev 下 initAutoUpdater 走
+// enabled:false / canUseAutoUpdaterInCurrentRuntime 门禁不触碰实例（恢复该门禁
+// 的设计意图）；escape hatch（ZCODE_AUTO_UPDATE_DEV）路径构造后由
+// applyDevAutoUpdateRuntimeOverrides 覆盖 currentVersion 为产品版本。
+let autoUpdaterInstance: (typeof pkg)["autoUpdater"] | undefined;
+function getAutoUpdaterInstance(): (typeof pkg)["autoUpdater"] {
+  autoUpdaterInstance ??= pkg.autoUpdater;
+  return autoUpdaterInstance;
+}
 
 export const CHECK_FOR_UPDATE_MENU_ID = "check-for-update";
 const AUTO_UPDATE_POLL_INTERVAL_MS = 60 * 60 * 1000;
@@ -462,7 +475,7 @@ async function quitAndInstallUpdate(rejectUnavailable = false) {
     // 3.3.0 的 Windows 自定义 PowerShell delayed launcher 在 detached/hidden
     // 模式下可能只创建 powershell.exe，却没有稳定执行到安装器启动，用户看到应用关闭但版本不变。
     // 这里恢复 electron-updater 原生安装入口，避免把“launcher 进程创建成功”误当成更新已接管。
-    autoUpdater.quitAndInstall();
+    getAutoUpdaterInstance().quitAndInstall();
   } finally {
     quitAndInstallInFlight = false;
   }
@@ -733,7 +746,7 @@ function applyUpdateProvider(options: InitAutoUpdaterOptions): void {
   const customUrl = options.updateFeedSource?.url.trim();
   if (customUrl) {
     // 测试/开发的自定义 feed 覆盖保持 generic 行为。
-    autoUpdater.setFeedURL({
+    getAutoUpdaterInstance().setFeedURL({
       provider: "generic",
       url: customUrl,
       channel: "latest",
@@ -746,8 +759,8 @@ function applyUpdateProvider(options: InitAutoUpdaterOptions): void {
   }
   // 我们所有发布（audit.x）都是 GitHub Pre-release：generic 的 /releases/latest 会 404。
   // 这里改用 GitHub provider 走 Releases API（列表包含 Pre-release），并允许预发布版本。
-  autoUpdater.allowPrerelease = true;
-  autoUpdater.setFeedURL({
+  getAutoUpdaterInstance().allowPrerelease = true;
+  getAutoUpdaterInstance().setFeedURL({
     provider: "github",
     owner: "yachen4ever",
     repo: "yazcode",
@@ -1479,12 +1492,12 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
   // 已下载旧版本后，feed 继续推进到更高版本时，主进程必须先比较远端版本和 ready 版本，
   // 再决定是否下载。若继续让 electron-updater 自动下载，它只会按当前 app 版本判断，
   // 导致 `3.1.2` 已 ready `3.1.3` 时每次轮询都可能重复下载 `3.1.3`。
-  autoUpdater.autoDownload = false;
+  getAutoUpdaterInstance().autoDownload = false;
   // Windows/NSIS 在窗口关闭后会异步启动安装；如果用户紧接着关机，安装器可能被系统中断，
   // 留下半更新状态并导致下次启动失败。
   // 这里仅在 Windows 关闭“退出即自动安装”，要求用户显式点更新；其他平台保持原有行为，避免改动既有升级链路。
-  autoUpdater.autoInstallOnAppQuit = process.platform !== "win32";
-  autoUpdater.logger = logger;
+  getAutoUpdaterInstance().autoInstallOnAppQuit = process.platform !== "win32";
+  getAutoUpdaterInstance().logger = logger;
   applyUpdateProvider(options);
 
   const triggerCheckForUpdates = (reason: string) => {
@@ -1506,9 +1519,9 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
     const checkForUpdatesPromise = options.settingService
       ? (async () => {
           await syncAutoUpdateCheckChannelFromSettings(checkId, options.settingService, reason);
-          await autoUpdater.checkForUpdates();
+          await getAutoUpdaterInstance().checkForUpdates();
         })()
-      : autoUpdater.checkForUpdates();
+      : getAutoUpdaterInstance().checkForUpdates();
 
     checkForUpdatesPromise
       .catch((err) => {
@@ -1521,12 +1534,12 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
       });
   };
 
-  autoUpdater.on("checking-for-update", () => {
+  getAutoUpdaterInstance().on("checking-for-update", () => {
     logger.info("[auto-update] checking for update...");
     setAutoUpdaterMenuState({ kind: "checking", enabled: false });
   });
 
-  autoUpdater.on("update-available", (info: UpdateDownloadedInfoLike) => {
+  getAutoUpdaterInstance().on("update-available", (info: UpdateDownloadedInfoLike) => {
     logger.info(`[auto-update] new version available: ${info.version}`);
     const infoChannel = readUpdateInfoReleaseChannel(info);
     if (shouldIgnoreStaleAvailableUpdate(infoChannel)) {
@@ -1598,7 +1611,7 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
     });
   });
 
-  autoUpdater.on("update-not-available", (info) => {
+  getAutoUpdaterInstance().on("update-not-available", (info) => {
     void settleAutoUpdateCheckResult("update not available", () => {
       logger.info(
         `[auto-update] already up to date (local=${getCurrentAppVersionForUpdate()}, remote=${info.version})`,
@@ -1624,7 +1637,7 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
     });
   });
 
-  autoUpdater.on("download-progress", (progress) => {
+  getAutoUpdaterInstance().on("download-progress", (progress) => {
     // 用户快速取消下载后，electron-updater 可能还会补发旧下载流的 progress。
     // 如果继续接收这个陈旧事件，UI 会从“可更新”被重新推回“下载中”，看起来像取消后卡住。
     if (!downloadCancellationToken || downloadCancellationToken.cancelled) {
@@ -1656,7 +1669,7 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
     });
   });
 
-  autoUpdater.on("update-downloaded", (info: UpdateDownloadedInfoLike) => {
+  getAutoUpdaterInstance().on("update-downloaded", (info: UpdateDownloadedInfoLike) => {
     readyUpdateVersion = info.version;
     readyUpdateRestoredFromPendingReleaseNotes = false;
     readyUpdateChannel = downloadingUpdateChannel ?? availableUpdateChannel;
@@ -1698,7 +1711,7 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
     }
   });
 
-  autoUpdater.on("error", (err) => {
+  getAutoUpdaterInstance().on("error", (err) => {
     if (shouldIgnoreCancelledDownloadError(err)) {
       // electron-updater 在取消下载后可能异步补发 error("cancelled")。
       // 用户取消已经把状态恢复到可重试的 update-available，迟到取消事件不能再清空入口。
@@ -1826,7 +1839,7 @@ export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
   const checkId = beginAutoUpdateCheck();
   void (async () => {
     await clearSkippedUpdateVersionForManualCheck(manualCheckChannel, autoUpdaterSettingService);
-    await autoUpdater.checkForUpdates();
+    await getAutoUpdaterInstance().checkForUpdates();
   })()
     .catch((err) => {
       logger.error("[auto-update] manual check failed:", err);
