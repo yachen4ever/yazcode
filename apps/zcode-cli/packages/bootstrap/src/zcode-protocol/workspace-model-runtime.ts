@@ -91,10 +91,17 @@ export async function testProviderModelConnectivity(
   const params = parseParams(zcodeProviderTestModelConnectivityParamsSchema, rawParams);
   // 旧 Personal Config 跨进程 watcher 可能永久漏掉原子写事件；连接测试若不先
   // 主动刷新，会反复查询旧 Registry。这里复用正式 Registry refresh，不旁路创建配置事实。
-  // 例外（26.5.8 前缀段去重）：本次探测前 Host 已实际推送 account config——接收
-  // handler 内的 registryService.refresh("host-account-config") 已经覆盖本探测，
-  // 再刷一次是重复功；字段缺省/缺字段（旧 Host）照旧刷新，fail-open 落在安全侧。
-  if (params.accountConfigPushed !== true) {
+  // 去重收紧（26.5.9 修复批，spec probe-registry-refresh-dedup.md）：26.5.8 曾仅凭
+  // 「Host 已推送 account config」就跳过本刷新——该假设在 Base URL（personal 侧）维度
+  // 不成立：推送路径的 refresh 可能发生在 personal 文件落盘之前，跳过会读到旧 Base
+  // URL（#29 八轮实测退化）。修正后要求两项同时成立才允许跳过：
+  //   1) Host 本探测前确实推送了 account config（接收 handler 已刷新一次）；
+  //   2) 该次 refresh 自证覆盖当前 config 源（builtin+personal）——即此后 config 源
+  //      没有再变化（registry-refresh-freshness）。任一不成立/无法自证 → 照旧刷新，
+  //      fail-open 落在「多刷新一次」的安全侧。
+  const canReusePushedRefresh =
+    params.accountConfigPushed === true && context.deps.isRegistryRefreshCurrent?.() === true;
+  if (!canReusePushedRefresh) {
     await context.deps.refreshProviderRegistry?.("provider-connectivity");
   }
   const store = probeAppStoreFor(context);

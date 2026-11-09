@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it, mock } from "node:test";
 import { testProviderModelConnectivity } from "./workspace-model-runtime.js";
+import { createRegistryRefreshFreshness } from "./registry-refresh-freshness.js";
 import type { ZCodeApp } from "../app/types.js";
 import type { ZCodeProtocolAgentServerContext } from "./server-types.js";
 
@@ -45,7 +46,12 @@ type Harness = {
   sessions: Map<string, { app: ZCodeApp; workspace: { workspaceKey: string } }>;
 };
 
-function makeHarness(): Harness {
+function makeHarness(
+  options: {
+    registryRefreshCurrent?: boolean;
+    freshness?: import("./registry-refresh-freshness.js").RegistryRefreshFreshness;
+  } = {},
+): Harness {
   const apps: FakeApp[] = [];
   const createZCodeApp = mock.fn(async () => {
     const fake = makeFakeApp();
@@ -61,6 +67,11 @@ function makeHarness(): Harness {
       version: "test",
       createZCodeApp,
       refreshProviderRegistry,
+      ...(options.freshness
+        ? { isRegistryRefreshCurrent: () => options.freshness!.isCurrent() }
+        : options.registryRefreshCurrent === undefined
+          ? {}
+          : { isRegistryRefreshCurrent: () => options.registryRefreshCurrent === true }),
     },
     sessions,
   } as unknown as ZCodeProtocolAgentServerContext;
@@ -84,13 +95,43 @@ function withFakeTimers(run: () => Promise<void>): Promise<void> {
 }
 
 describe("testProviderModelConnectivity 前缀段", () => {
-  it("accountConfigPushed=true：跳过 registry refresh（去重）", async () => {
+  it("pushed=true 且刷新自证新鲜：跳过 registry refresh（去重成立）", async () => {
     await withFakeTimers(async () => {
-      const h = makeHarness();
+      const h = makeHarness({ registryRefreshCurrent: true });
       await testProviderModelConnectivity(h.context, probeParams(true));
       assert.equal(h.refreshProviderRegistry.mock.callCount(), 0);
       assert.equal(h.createZCodeApp.mock.callCount(), 1);
       assert.equal(h.apps[0]?.testModelConnectivity.mock.callCount(), 1);
+    });
+  });
+
+  it("pushed=true 但刷新不新鲜：照旧刷新（26.5.8 退化形态回归守卫）", async () => {
+    await withFakeTimers(async () => {
+      const h = makeHarness({ registryRefreshCurrent: false });
+      await testProviderModelConnectivity(h.context, probeParams(true));
+      assert.equal(h.refreshProviderRegistry.mock.callCount(), 1);
+    });
+  });
+
+  it("保存落盘晚于推送刷新：config 变更后探测必须自行刷新（#29 竞态回归）", async () => {
+    await withFakeTimers(async () => {
+      const freshness = createRegistryRefreshFreshness();
+      const h = makeHarness({ freshness });
+      // 推送 handler 的 refresh A 完成（基于旧 personal）→ 记为已覆盖
+      freshness.markRefreshCurrent();
+      // 保存 Base URL 落盘 → config 源变更（新的 personal 尚未被任何 refresh 覆盖）
+      freshness.noteConfigChange();
+      await testProviderModelConnectivity(h.context, probeParams(true));
+      // 自证不成立 → 必须执行刷新 B，否则会读到旧 Base URL（26.5.8 退化形态）
+      assert.equal(h.refreshProviderRegistry.mock.callCount(), 1);
+    });
+  });
+
+  it("pushed=true 且未装配自证：照旧刷新（fail-open 安全侧）", async () => {
+    await withFakeTimers(async () => {
+      const h = makeHarness();
+      await testProviderModelConnectivity(h.context, probeParams(true));
+      assert.equal(h.refreshProviderRegistry.mock.callCount(), 1);
     });
   });
 

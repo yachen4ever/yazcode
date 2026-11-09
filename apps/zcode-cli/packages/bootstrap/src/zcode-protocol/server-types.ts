@@ -64,6 +64,13 @@ export interface ZCodeProtocolAgentDependencies {
   syncAccountProviderConfig?: (snapshot: AccountProviderConfigSnapshot) => Promise<boolean>;
   /** 连接测试前主动重读当前进程的 Config Source 并等待 Registry 发布。 */
   refreshProviderRegistry?: (reason: string) => Promise<void>;
+  /**
+   * 最近一次 registry refresh 是否已覆盖当前 config 源（builtin+personal）状态
+   * （26.5.9 修复批，spec probe-registry-refresh-dedup.md）：探测 handler 仅在
+   * 该自证成立且 host 已推送 account config 时才允许跳过自身刷新。缺省/未装配
+   * 视为「无法自证」→ 照旧刷新（fail-open 安全侧）。
+   */
+  isRegistryRefreshCurrent?: () => boolean;
 }
 
 export type ZCodeProtocolAgentResolvedDependencies = ZCodeProtocolAgentDependencies & {
