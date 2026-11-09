@@ -95,6 +95,13 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   bundle 打断主进程初始化（**dev:desktop 自开源首提交起即不可用**，非 26.5.x 回归）。改惰性
   构造器（首次真实使用才构造），恢复 `enabled`/`canUseAutoUpdaterInCurrentRuntime` 门禁的
   设计意图；**生产路径零改动，未用假版本兜底**。
+- **探针去重自证修正**（issue #29）：26.5.8 的去重假设「推送侧 `refresh("host-account-config")` 已覆盖
+  探测所需数据」在 **Base URL（personal config 侧）** 不成立——推送路径的 refresh 可能发生在
+  personal 文件落盘**之前**（保存/刷新竞态），跳过探测侧刷新会读到旧 Base URL。改为**双条件
+  才跳过**：宿主确已推送 account config **且** 刷新新鲜度自证「最近一次 refresh 完成后 config
+  源（builtin+personal）未再变化」（config 源变化即 epoch+1、refresh 完成打快照，相等才新鲜；
+  从未刷新时 epoch=-1 永不新鲜 → 必刷新，fail-open 落在「多刷新一次」安全侧）。spec
+  `probe-registry-refresh-dedup.md` 按修正语义重写；推送路径刷新次数 2→1，去重收益保留。
 
 ### 验收结论（2026-11-09，workwin 实机 + 双盲回归）
 
