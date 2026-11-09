@@ -1222,7 +1222,7 @@ export function createZCodeAgentService(
     }
     waitingWorkspaceStartups.clear();
   }
-  const accountConfigSyncByClient = new WeakMap<ZCodeProtocolClient, Promise<void>>();
+  const accountConfigSyncByClient = new WeakMap<ZCodeProtocolClient, Promise<boolean>>();
   // 此缓存只去重已交付的账号快照，不表示 Worker 的 Registry 已应用该版本。
   const accountConfigReceivedRevisionByClient = new WeakMap<ZCodeProtocolClient, string>();
   const sessionTraceIdBySessionKey = new Map<string, TraceId>();
@@ -1410,9 +1410,13 @@ export function createZCodeAgentService(
   async function syncAccountProviderConfigToClient(params: {
     client: ZCodeProtocolClient;
     reason: string;
-  }): Promise<void> {
-    if (!accountProviderConfigSource) return;
-    const previous = accountConfigSyncByClient.get(params.client) ?? Promise.resolve();
+  }): Promise<{ pushed: boolean }> {
+    // pushed = 本次调用实际执行了 account config 推送 RPC（26.5.8 前缀段去重，spec
+    // probe-registry-refresh-dedup.md）：CLI 接收 handler 在推送路径上总是刷新
+    // registry，探测链路据此跳过自身的第二次刷新；revision 未变（跳过推送）时
+    // 返回 false，探测链路照旧自行刷新（保住 personal config watcher 漏事件防线）。
+    if (!accountProviderConfigSource) return { pushed: false };
+    const previous = accountConfigSyncByClient.get(params.client) ?? Promise.resolve(false);
     const current = previous
       .catch(() => {
         // 前一次失败不能阻断后续较新的 Account Config；当前调用会重新尝试。
@@ -1421,7 +1425,8 @@ export function createZCodeAgentService(
         // 排队前异步读取可能晚返回，把旧结果排在新结果之后。读取与交付
         // 共用现有 Client 串行队列；不新增发送屏障，也不按内容 revision 猜测时间先后。
         const snapshot = await accountProviderConfigSource.read();
-        if (accountConfigReceivedRevisionByClient.get(params.client) === snapshot.revision) return;
+        if (accountConfigReceivedRevisionByClient.get(params.client) === snapshot.revision)
+          return false;
         const result = await params.client.request(
           zcodeProtocolMethods.providerUpdateAccountConfig,
           {
@@ -1448,10 +1453,11 @@ export function createZCodeAgentService(
           receivedRevision: result.receivedRevision,
           status: result.status,
         });
+        return true;
       });
     accountConfigSyncByClient.set(params.client, current);
     try {
-      await current;
+      return { pushed: await current };
     } finally {
       if (accountConfigSyncByClient.get(params.client) === current) {
         accountConfigSyncByClient.delete(params.client);
@@ -1463,8 +1469,8 @@ export function createZCodeAgentService(
     client: ZCodeProtocolClient;
     reason: string;
     workspace: ZCodeAgentWorkspaceTarget;
-  }): Promise<void> {
-    await syncAccountProviderConfigToClient({
+  }): Promise<{ pushed: boolean }> {
+    return syncAccountProviderConfigToClient({
       client: params.client,
       reason: params.reason,
     });
@@ -4470,7 +4476,7 @@ export function createZCodeAgentService(
 
     async testModelConnectivity(params: ZCodeAgentTestModelConnectivityParams) {
       const client = await getClient(params);
-      await ensureAccountProviderConfigSynced({
+      const { pushed } = await ensureAccountProviderConfigSynced({
         client,
         reason: "provider_test_model_connectivity",
         workspace: params,
@@ -4480,6 +4486,9 @@ export function createZCodeAgentService(
         {
           workspace: buildWorkspaceRef(params),
           selection: params.selection,
+          // 26.5.8 前缀段去重（spec probe-registry-refresh-dedup.md）：推送路径上
+          // CLI 接收 handler 已刷新 registry，探测侧跳过第二次刷新。
+          accountConfigPushed: pushed,
         },
         zcodeProviderTestModelConnectivityResultSchema,
         { signal: params.signal },

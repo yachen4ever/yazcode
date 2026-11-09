@@ -4,6 +4,7 @@ import type { ModelSelection } from "@zcode/contracts";
 import {
   zcodeProviderTestModelConnectivityParamsSchema,
   zcodeWorkspaceReadPresentationParamsSchema,
+  type ZCodeProviderTestModelConnectivityParams,
   type ZCodeWorkspaceRef,
 } from "@zcode/shared";
 import type { ZCodeApp, ZCodeAppOptions } from "../app/types.js";
@@ -34,6 +35,54 @@ export async function readWorkspacePresentation(
   };
 }
 
+/**
+ * 无活跃会话时探测创建的 app 按工作区键缓存复用（26.5.8 前缀段优化，spec
+ * probe-registry-refresh-dedup.md）：设置页连续探测不再反复冷启+即拆。
+ * app 的探针选择绑定读共享 registry 的调用时活视图（session-facade 的
+ * completeAuxiliaryRegistryModelSelection），refresh 后缓存 app 天然看到新配置。
+ * TTL 到期关闭兜底资源生命周期；连接断开最多延迟一个 TTL，进程退出由 OS 兜底。
+ */
+const PROBE_APP_TTL_MS = 60_000;
+
+interface ProbeAppCacheEntry {
+  app: ZCodeApp;
+  closeTimer: ReturnType<typeof setTimeout>;
+}
+
+interface ProbeAppStore {
+  cache: Map<string, ProbeAppCacheEntry>;
+  inFlight: Map<string, Promise<ZCodeApp>>;
+}
+
+const probeAppStores = new WeakMap<ZCodeProtocolAgentServerContext, ProbeAppStore>();
+
+function probeAppStoreFor(context: ZCodeProtocolAgentServerContext): ProbeAppStore {
+  let store = probeAppStores.get(context);
+  if (!store) {
+    store = { cache: new Map(), inFlight: new Map() };
+    probeAppStores.set(context, store);
+  }
+  return store;
+}
+
+function armProbeAppEviction(
+  store: ProbeAppStore,
+  key: string,
+  app: ZCodeApp,
+): void {
+  // 同键覆盖（并发探测先后收尾）：清掉旧条目的 timer，避免旧 timer 到期时
+  // 把新条目从缓存里误删。
+  const previous = store.cache.get(key);
+  if (previous) clearTimeout(previous.closeTimer);
+  const closeTimer = setTimeout(() => {
+    // 身份核对：期间若条目已被 checkout/覆盖，不得误删或重复关闭。
+    const current = store.cache.get(key);
+    if (current?.app === app) store.cache.delete(key);
+    void app.close?.();
+  }, PROBE_APP_TTL_MS);
+  store.cache.set(key, { app, closeTimer });
+}
+
 export async function testProviderModelConnectivity(
   context: ZCodeProtocolAgentServerContext,
   rawParams: unknown,
@@ -42,19 +91,36 @@ export async function testProviderModelConnectivity(
   const params = parseParams(zcodeProviderTestModelConnectivityParamsSchema, rawParams);
   // 旧 Personal Config 跨进程 watcher 可能永久漏掉原子写事件；连接测试若不先
   // 主动刷新，会反复查询旧 Registry。这里复用正式 Registry refresh，不旁路创建配置事实。
-  await context.deps.refreshProviderRegistry?.("provider-connectivity");
+  // 例外（26.5.8 前缀段去重）：本次探测前 Host 已实际推送 account config——接收
+  // handler 内的 registryService.refresh("host-account-config") 已经覆盖本探测，
+  // 再刷一次是重复功；字段缺省/缺字段（旧 Host）照旧刷新，fail-open 落在安全侧。
+  if (params.accountConfigPushed !== true) {
+    await context.deps.refreshProviderRegistry?.("provider-connectivity");
+  }
+  const store = probeAppStoreFor(context);
+  const workspaceKey = params.workspace.workspaceKey;
   const active = Array.from(context.sessions.values()).find(
-    (record) => record.workspace.workspaceKey === params.workspace.workspaceKey,
+    (record) => record.workspace.workspaceKey === workspaceKey,
   );
-  const app =
-    active?.app ??
-    (await createWorkspaceZCodeApp(context, params.workspace, {
-      env: context.deps.env,
-      eventStore: createInMemorySessionEventStore(),
-      runtimeConfig: { workingDirectory: params.workspace.workspacePath },
-      sessionStore: context.deps.sessionStore,
-      version: context.deps.version,
-    }));
+  if (active) {
+    // 活跃会话优先用会话自己的 app；缓存条目（如有）闲置由 TTL 自然出清。
+    await active.app.testModelConnectivity(
+      { selection: params.selection as ModelSelection },
+      { abortSignal },
+    );
+    return { success: true as const };
+  }
+  const cached = store.cache.get(workspaceKey);
+  let app: ZCodeApp;
+  if (cached) {
+    // checked-out：探测期间取消 TTL 回收，探测结束重新武装——长探测（黑洞档
+    // 10s、挂起环境更久）不会被 60s 定时器中途关闭。
+    clearTimeout(cached.closeTimer);
+    store.cache.delete(workspaceKey);
+    app = cached.app;
+  } else {
+    app = await acquireProbeApp(context, store, workspaceKey, params);
+  }
   try {
     await app.testModelConnectivity(
       { selection: params.selection as ModelSelection },
@@ -62,8 +128,38 @@ export async function testProviderModelConnectivity(
     );
     return { success: true as const };
   } finally {
-    if (!active) await app.close?.();
+    // 用后重新武装 TTL：缓存的 app 在连续探测间复用，到期才关闭。
+    armProbeAppEviction(store, workspaceKey, app);
   }
+}
+
+async function acquireProbeApp(
+  context: ZCodeProtocolAgentServerContext,
+  store: ProbeAppStore,
+  workspaceKey: string,
+  params: ZCodeProviderTestModelConnectivityParams,
+): Promise<ZCodeApp> {
+  const inFlight = store.inFlight.get(workspaceKey);
+  if (inFlight) return inFlight;
+  const created = createWorkspaceZCodeApp(context, params.workspace, {
+    env: context.deps.env,
+    eventStore: createInMemorySessionEventStore(),
+    runtimeConfig: { workingDirectory: params.workspace.workspacePath },
+    sessionStore: context.deps.sessionStore,
+    version: context.deps.version,
+  });
+  const tracked = created.then(
+    (app) => {
+      store.inFlight.delete(workspaceKey);
+      return app;
+    },
+    (error: unknown) => {
+      store.inFlight.delete(workspaceKey);
+      throw error;
+    },
+  );
+  store.inFlight.set(workspaceKey, tracked);
+  return tracked;
 }
 
 export async function createWorkspaceZCodeApp(
