@@ -1,70 +1,76 @@
-# Spec：探针链路前缀段优化——registry refresh 去重与 probe app 复用（26.5.8 修复项 ①）
+# Spec：探针链路前缀段优化——registry refresh 去重与 probe app 复用（26.5.8 引入，26.5.9 修正去重条件）
 
-来源：issue #12 定界回执遗留 1（y430p 分段测量：S2 同步 RPC 内含一次 registry
-refresh + S4 每探测无条件 refresh + S5 无活跃会话时每探测冷启 app 后即拆——
-0.5s 量级的前缀段方差）。
+来源：issue #12 定界回执遗留 1（前缀段方差：S2 同步 RPC 内含一次 registry refresh +
+S4 每探测无条件 refresh + S5 无活跃会话冷启 app 后即拆）。
+**26.5.9 修正背景（issue #29，八轮误报与实测复盘的最终结论）**：26.5.8 的去重条件
+仅凭「Host 已推送 account config」就跳过探测侧 refresh。该假设在 **Base URL
+（personal config 侧）维度不成立**——推送路径的 refresh 可能发生在 personal 文件落盘
+之前（保存/刷新竞态），跳过之后探测读到旧 Base URL。
 
-## 现状与语义盘点
+> 澄清（#29 复盘）：八轮报告「保存后不再自动探测」中的「26.5.7 保存即探测」实为
+> 对七轮报告的误读回溯（七轮原文的每次实测均包含点击「刷新」步骤；产品从未存在
+> 「保存后自动探测」行为）。真实的确定缺陷是**保存+刷新竞态下探测读旧 personal
+> config**，其形态与 m5air 代码定位一致，本 spec 按修正语义重写。
 
-一次 `testModelConnectivity`（UI 探针 / agent 侧同一能力）的前缀段：
+## 现状链路
 
 ```
 Host: S2 ensureAccountProviderConfigSynced
-        └─ syncAccountProviderConfigToClient
-             ├─ revision 未变 → 跳过推送（无刷新）
-             └─ revision 变了/首轮 → push RPC providerUpdateAccountConfig
-                  └─ CLI 接收 handler: syncAccountProviderConfig
-                       └─ registryService.refresh("host-account-config")   ← 刷新 A（总是发生，含 changed=false）
+        └─ syncAccountProviderConfigToClient（按 account revision 去重推送）
+             └─ CLI 接收 handler: syncAccountProviderConfig
+                  └─ registryService.refresh("host-account-config")   ← 刷新 A
 CLI: S4 testProviderModelConnectivity
-        └─ registryService.refresh("provider-connectivity")               ← 刷新 B（无条件）
-     S5 active?.app ?? createWorkspaceZCodeApp(...); finally close(!active)
+        └─ registryService.refresh("provider-connectivity")          ← 刷新 B
+     S5 active?.app ?? probe app 缓存（26.5.8 引入）
 ```
 
-- S4 的无条件 refresh 是**保命语义**：旧 Personal Config 跨进程 watcher 可能漏掉
-  原子写事件，探测必须先刷新才能看到用户刚保存的端点编辑（不可删除）；
-- 刷新 A 与 B 作用于**同一个 registryService**，同一次探测内背靠背发生时是重复功；
-- S5 的冷启+即拆发生在「无活跃会话」时——设置页探针正是该形态，连续刷新被反复
-  冷启付费。
+- `registryService.refresh` 是**全量读**（config 源 = builtin + personal，account 源）；
+- 保存 Base URL → personal 文件原子落盘 → config 源 onDidChange → account 源 resolve
+  可能随 revision 变化触发刷新 A；但刷新 A 与文件落盘的先后顺序不确定；
+- S4 的无条件 refresh 是保命语义：旧 Personal Config 跨进程 watcher 可能漏掉原子写
+  事件，探测必须先刷新才能看到用户刚保存的端点编辑（**不可删除，只能有条件跳过**）。
 
-## 行为规则
+## 行为规则（26.5.9 修正后）
 
-### 1. registry refresh 去重（契约面）
+### 1. registry refresh 去重：双条件收紧
 
-`providerTestModelConnectivity` RPC params 新增**可选**字段
-`accountConfigPushed?: boolean`（缺省/缺字段 = false）：
+`providerTestModelConnectivity` RPC params 的可选字段 `accountConfigPushed` 保留，
+但**只有同时满足**才跳过探测侧刷新 B：
 
-- **pushed=true**（host 在本次探测内实际推送了 account config，CLI 接收 handler
-  已执行刷新 A）→ CLI handler **跳过刷新 B**——同一次探测的 registry refresh 恰好
-  一次；
-- **pushed=false / 缺省**（revision 未变，host 未推送）→ CLI handler **照旧执行
-  刷新 B**——保住 personal config watcher 漏事件防线；
-- **fail-open 方向**：旧 CLI 忽略新字段（照旧刷新）、旧 Host 不带字段（CLI 照旧
-  刷新）——缺省永远落在「多刷新一次」的安全侧，不会落在「跳过刷新」侧；
-- 语义不变量：探测仍**真发请求**到 provider；fail-closed 三方判定与 10s Single
-  档上限不变；凭据边界不变。
+1. `accountConfigPushed === true`（Host 本探测前确实推送了 account config，刷新 A
+   已在接收 handler 内完成）；
+2. **CLI 侧自证**「最近一次 registry refresh 已完成于当前 config 源状态之后」
+   （`registry-refresh-freshness`：config 源每次 onDidChange 让 epoch +1，refresh
+   完成时记录已覆盖 epoch，比较相等才算新鲜）。
 
-### 2. probe app 复用（CLI 内部，无契约面）
+任一不满足、或自证能力未装配（旧 CLI/测试嵌入）→ **照旧执行刷新 B**——fail-open
+永远落在「多刷新一次」的安全侧。
 
-`testProviderModelConnectivity` 无活跃会话时创建的 app 由「即拆」改为「按工作区
-键缓存复用」：
+- 保存+刷新竞态场景（26.5.8 退化形态）：保存落盘触发 config 源变更 → 刷新 A 先于
+  该变更完成 → epoch 不相等 → 刷新 B 执行 → 探测读**新** Base URL ✓；
+- 无 personal 变更的推送场景：刷新 A 后 config 源无变化 → epoch 相等 → 跳过刷新 B
+  → 每探测 registry refresh 次数从 2（26.5.7：推送刷新 + 探测刷新）降到 **1** ✓；
+- 未推送场景（revision 未变）：与 26.5.7 相同，探测侧照旧刷新（watcher 漏事件防线）✓。
 
-- **键** = `workspace.workspaceKey`（workspacePath/identity 已含在键语义内）；
-- **in-flight 去重**：同键并发探测共享同一次创建（后到者等前者物化）；
-- **TTL**：最后一次使用后 60s 关闭并出缓存（timer 恒生效，连接断开也只延迟关闭
-  ≤60s，进程退出由 OS 兜底）；
-- **新鲜度**：app 的探针选择绑定读共享 registry 的**调用时活视图**
-  （session-facade `completeAuxiliaryRegistryModelSelection`），刷新后的 registry
-  对缓存 app 立即可见——复用不影响「探测看到最新配置」；
-- **优先级**：有活跃会话时仍优先 `active.app`（缓存条目闲置到期自然出清）；
-- app 实例的关闭语义（`app.close?.()`）不变，只是从「每探测一次」变为「TTL 到期
-  一次」。
+### 2. probe app 复用（26.5.8 引入，保持）
+
+无活跃会话的探测 app 按工作区键缓存（in-flight 去重 + TTL 60s + checked-out 防长探测
+被打断 + 身份核对防误删）；app 探针选择读共享 registry 调用时活视图，刷新后天然新鲜；
+有活跃会话仍优先会话 app。本项与去重解耦——即使去重条件收紧，app 复用收益（冷启
+~0.4-0.5s/次）不受影响。
+
+### 3. 硬约束不变量（两版一致）
+
+- 探测仍**真发请求**到 provider（fail-closed 三方判定与 10s Single 档不变）；
+- 凭据边界不变（known_hosts 只存指纹、凭据不入盘不入日志）；
+- **不得为省时间跳过探测**（跳过刷新的条件必须自证覆盖，且永不跳过探测本身）。
 
 ## 验收
 
-1. 首轮探测（host 推送）→ registry refresh 恰一次（push handler 内），探测 RPC
-   携带 `accountConfigPushed: true` 且 handler 跳过刷新 B；
-2. 重复探测（revision 未变）→ 刷新 B 照旧执行；
-3. 无活跃会话连续两次探测 → 第二次复用缓存 app（`createZCodeApp` 只调一次），
-   TTL 到期后 `app.close` 恰一次；
-4. 时延端到端对比（拒绝档 127.0.0.1:9，10 样本）不劣化失败判定；
-5. 既有单测（retry-budget 档位等）不回退。
+- **A**：保存 Base URL 后点刷新（或 26.5.7 时代的等价位序列）→ 状态点/失败 toast
+  反映**新** Base URL 的判定（保存+刷新竞态不再读旧值）；
+- **B**：推送场景下 registry 刷新计数 2（26.5.7）→ 1（26.5.9）；连续纯刷新场景
+  维持 1（不变）；给出计数对比；
+- **C**：pushed=false 路径（watcher 漏事件防线）照旧自刷新，行为不变；
+- **D**：本 spec 即 D 项交付（修正后语义）；实现含 `registry-refresh-freshness`
+  单测 4 例 + 探测侧 skip/refresh 矩阵 3 例（pushed×自证）回归守卫。

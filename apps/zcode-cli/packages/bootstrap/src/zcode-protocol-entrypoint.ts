@@ -28,6 +28,7 @@ import {
 } from "./zcode-protocol/storage-startup.js";
 import { closeSessionStore, getSessionDbPath } from "./app/session-store.js";
 import { startProcessProviderRegistryRuntime } from "./app/process-provider-registry-runtime.js";
+import type { AccountProviderConfigSnapshot } from "@zcode/provider";
 import { scheduleStartupLogRetentionCleanup } from "./log-retention.js";
 import { StartupTimer, startupNow } from "./startup-logging.js";
 import { installZCodeProtocolAiSdkWarningLogger } from "./zcode-protocol/ai-sdk-warning-logger.js";
@@ -46,6 +47,7 @@ import {
 import { ZCodeProtocolAgentServer } from "./zcode-protocol/server.js";
 import { ZCodeProtocolNdjsonConnection } from "./zcode-protocol/transport.js";
 import { cleanupProtocolRuntime } from "./zcode-protocol/runtime-cleanup.js";
+import { createRegistryRefreshFreshness } from "./zcode-protocol/registry-refresh-freshness.js";
 import { startProtocolResourceSampler } from "./zcode-protocol/resource-sampler.js";
 import { acquireProtocolStartupResource } from "./zcode-protocol/startup-resource.js";
 import type { ZCodeProcessResourceSampler } from "./process-resource-sampler.js";
@@ -127,6 +129,7 @@ export async function runZCodeProtocolAgent(
 
   let sessionStore: SqliteSessionStore | undefined;
   let serverForCleanup: ZCodeProtocolAgentServer | undefined;
+  let disposeRegistryConfigListener: (() => void) | undefined;
   let nodeReplBrowserBroker: NodeReplBrowserBroker | undefined;
   let mcpConnectionPool: McpConnectionPool | undefined;
   let mcpPort: McpPort | undefined;
@@ -164,6 +167,16 @@ export async function runZCodeProtocolAgent(
       disposeLate: (runtime) => runtime.dispose(),
     });
     options.lifecycle?.signal.throwIfAborted();
+    // 26.5.9 修复批（#29，spec probe-registry-refresh-dedup.md）：探测去重必须
+    // 自证「最近一次 registry refresh 已覆盖当前 config 源」。config 源（builtin+
+    // personal）任一变即让此前 refresh 不再新鲜——保存 Base URL 落盘后若 refresh
+    // 先于该变更完成，探测侧必须照旧自行刷新（26.5.8 的跳过假设由此修正）。
+    const registryRefreshFreshness = createRegistryRefreshFreshness();
+    disposeRegistryConfigListener = providerRegistryRuntime.runtime.configService.onDidChange(
+      () => {
+        registryRefreshFreshness.noteConfigChange();
+      },
+    );
     logger.info("Worker Provider Registry 已就绪", {
       accountRevision: providerRegistryRuntime.snapshot.sourceRevisions.account,
       configRevision: providerRegistryRuntime.snapshot.sourceRevisions.config,
@@ -277,10 +290,20 @@ export async function runZCodeProtocolAgent(
       mcpPort,
       mcpTelemetry: mcpTelemetryTracker,
       sessionStore,
-      syncAccountProviderConfig: activeProviderRegistryRuntime.syncAccountProviderConfig,
+      syncAccountProviderConfig: activeProviderRegistryRuntime.syncAccountProviderConfig
+        ? async (snapshot: AccountProviderConfigSnapshot) => {
+            const changed =
+              await activeProviderRegistryRuntime.syncAccountProviderConfig!(snapshot);
+            // 推送 handler 内的 registry refresh 已随接收完成 → 记为已覆盖。
+            registryRefreshFreshness.markRefreshCurrent();
+            return changed;
+          }
+        : undefined,
       refreshProviderRegistry: async (reason) => {
         await activeProviderRegistryRuntime.runtime.registryService.refresh(reason);
+        registryRefreshFreshness.markRefreshCurrent();
       },
+      isRegistryRefreshCurrent: () => registryRefreshFreshness.isCurrent(),
       version: options.version,
     }));
     officialMcpAuthContext = server.officialMcpAuthRequestContext;
@@ -345,6 +368,8 @@ export async function runZCodeProtocolAgent(
     throw error;
   } finally {
     options.lifecycle?.requestShutdown();
+    disposeRegistryConfigListener?.();
+    disposeRegistryConfigListener = undefined;
     await cleanupProtocolRuntime({
       logger,
       deadlineAt: options.lifecycle?.deadlineAt,
