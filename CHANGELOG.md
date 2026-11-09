@@ -73,6 +73,40 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **遗留转 26.5.6 修复批**（issue #10，已派 mintdev）：刷新失败 toast 缺失/黑洞超时
   反馈缺失/状态点回绿 + i18n key 泄露（`settings.browser.control.loadingHint`）。
 
+## 26.5.8 (2026-11-09)
+
+- **重试预算档位守卫 undefined 加固**（issue #22 ①）：`isSingleAttemptBudget` /
+  `isUnboundedRetryBudget` 原直接 `=== ModelRetryBudget.X`——陈旧 dist 或半新半旧依赖图下
+  枚举键解析为 undefined 时，**缺省预算会被误判**（Single → 静默变单次尝试；Unbounded →
+  静默放开重试），语义反转且无声。两处均加 undefined 前置排除，缺省恒 fail-open 到 default 侧；
+  新增「枚举键缺失」场景回归断言。
+- **门禁格式归一**（issue #22 ②）：`.gitattributes` catch-all 已在 26.5.4 落地（行尾伪影），
+  本批完成**内容级排版**归一——173 个存量文件的 oxfmt 漂移归零（vendor/ov-http 零触及；
+  语义恒等经 typecheck 编译期覆盖 + surface 17/17 执行级 + diff 抽查三路核验）。
+- **连通性探针前缀段优化**（issue #24 ①）：一次探测跨两跳 registry refresh（S2 同步 + S4
+  刷新）且无活跃会话时 app 冷启即拆——改刷新两跳去重（宿主 pushed 贯通 + CLI 侧 in-flight
+  去重）与**会话内 app 复用**（TTL 60s、探测期间 checked-out 保护、身份核对防误删）。
+  语义未弱化：仍真发请求、fail-closed 三方判定与 10s Single 档不变、未推送路径照旧刷新
+  （personal config watcher 漏事件防线保留）。新 spec
+  `docs/specs/probe-registry-refresh-dedup.md`。
+- **dev 启动不再被 updater 版本校验打断**（issue #24 ②，#10 遗留 4）：electron-updater 的
+  `autoUpdater` 是**惰性 getter**，模块顶层解构即当场构造实例并校验 `app.getVersion()` 的
+  semver——dev（未打包）下桌面包无 version 字段 → `0.0` → 启动期 Uncaught Exception 穿透
+  bundle 打断主进程初始化（**dev:desktop 自开源首提交起即不可用**，非 26.5.x 回归）。改惰性
+  构造器（首次真实使用才构造），恢复 `enabled`/`canUseAutoUpdaterInCurrentRuntime` 门禁的
+  设计意图；**生产路径零改动，未用假版本兜底**。
+
+### 验收结论（2026-11-09，workwin 实机 + 双盲回归）
+
+- workwin 实机（26.5.7 → 26.5.8）：保留基线全绿（hide-ai-copilot 哈希互证、GM 存储/
+  insecureCerts/locale 保留、setting.json 与备份逐字节相同）；A 基线模型配置可用；
+  B 验收（列表 / 新建→待批准→批准→服务中 / 注入实效 DOM 标记 / lastInjectedAt 写读链）。
+- 门禁：typecheck 0 错误 · lint 0 errors/95 warnings（=基线）· desktop 154 · ui 125 ·
+  `oxfmt --check .` 归零（3066 文件）· licenses 重生成幂等 diff 0。
+- 纯刷新路径失败 toast（#22 ③）**零改动收口**：定性为观测窗口边缘（toast ≈5.8s 出现、可见
+  3s，而既有观测窗 5.6s 恰在出现前 0.2s 结束）；去重抑制经代码级排除（去重为显式 opt-in，
+  三处相关 toast 均未传 dedupeKey）。复测口径随 26.5.8 验收包转双盲（窗口 ≥15s）。
+
 ## 26.5.7 (2026-11-08)
 
 - **全局 toast 反馈零 rAF 依赖**（26.5.6 批，issue #10）：`components/ui/toast.tsx`（全仓约 69 处消费）
