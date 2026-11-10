@@ -2455,6 +2455,8 @@ export function createLocalServices(options: {
   const sqliteReposToClose: Array<{ close(): void }> = [];
   // AstrBot 桥接 provider：官方 BotsService 的一个传输 provider，host 负责 attach loopback WS。
   const astrBotProvider = createAstrBotBotProvider();
+  // OV 集成实例：服务注册与启动对账共用同一实例（对账幂等、无网络，失败不影响启动）。
+  const openVikingService = createOpenVikingService();
   const services = new ServiceCollection()
     .register(IFileService, fileService)
     .register(IMediaPreviewService, mediaPreviewService)
@@ -2615,7 +2617,7 @@ export function createLocalServices(options: {
       }),
     )
     .register(IMemoryService, createMemoryService())
-    .register(IOpenVikingService, createOpenVikingService())
+    .register(IOpenVikingService, openVikingService)
     .register(IProjectService, projectService)
     .register(ISettingsSyncService, createSettingsSyncService({ settingService }))
     .register(
@@ -2685,6 +2687,13 @@ export function createLocalServices(options: {
   // 见 sharedSqliteRepos 声明处注释：登记全部 tasks-index sqlite 句柄，dispose 链统一关闭
   sqliteReposToClose.push(taskIndexRepo);
   sharedSqliteRepos.set(services, sqliteReposToClose);
+
+  // OV 启动对账（26.5.9）：CLI 配置里的插件根与当前包运行时不一致时重写——覆盖升级/换安装
+  // 目录后的路径失效、官方安装器改写与旧复制释放模式的存量配置。对账只做本地文件读写，
+  // fire-and-forget 不阻塞启动；未启用时 no-op。
+  void openVikingService.reconcileStartup().catch((error: unknown) => {
+    createServiceLogger("openviking").warn("启动对账失败", error);
+  });
   return services;
 }
 

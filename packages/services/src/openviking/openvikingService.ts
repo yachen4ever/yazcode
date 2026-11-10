@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createServiceLogger } from "../logger/serviceLogger.js";
 import {
   buildOpenVikingMcpServerConfig,
   INTEGRATION_ID,
@@ -13,22 +14,24 @@ import { type IOpenVikingService, type OpenVikingVerifyResult } from "./openviki
 /**
  * OpenViking 记忆集成服务（本地实现）。
  *
- * 运行时来源是安装包内置的 `vendor/openviking`（Apache-2.0），安装时释放到
- * <home>/.openviking/agent-integrations/。官方安装脚本 install.sh 只支持
- * macOS/Linux，且渲染的 hook 命令是 POSIX 内联赋值（`VAR='v' node script.mjs`），
- * Windows shell 无法执行，因此本服务自行装配并把命令改写为 Windows 形式。
+ * 运行时来源 = 安装包内置 `resources/openviking`（dev: 仓库 `vendor/openviking`），
+ * hooks 命令与 MCP server 直接指向包内绝对路径，**不再复制**到
+ * `<home>/.openviking/agent-integrations/`。26.5.9 前的「复制释放」模式有三个缺陷：
+ * ①仅 install 时释放，升级后运行时版本停滞（实测包内 0.5.29、运行时停在 0.5.23）；
+ * ②`agent-integrations` 是官方安装器共享目录，官方重跑会覆盖 vendored 适配；
+ * ③uninstall 会 rm 该共享目录，误删官方环境。改由启动幂等对账保证配置始终指向当前包路径。
+ *
+ * 官方安装脚本 install.sh 只支持 macOS/Linux，且渲染的 hook 命令是 POSIX 内联赋值
+ * （`VAR='v' node script.mjs`），Windows shell 无法执行，因此本服务自行装配并把命令
+ * 改写为 Windows 形式。
  */
 
-const AGENT_INTEGRATION_DIRS = ["zcode", "memory-plugin-shared"] as const;
 const HOOK_EVENTS = ["SessionStart", "UserPromptSubmit", "PreToolUse", "Stop"] as const;
 const VERIFY_TIMEOUT_MS = 8000;
+const logger = createServiceLogger("openviking");
 
 function openVikingHome(): string {
   return process.env.OPENVIKING_HOME?.trim() || path.join(os.homedir(), ".openviking");
-}
-
-function agentIntegrationsRoot(): string {
-  return path.join(openVikingHome(), "agent-integrations");
 }
 
 function connectionFilePath(): string {
@@ -46,7 +49,7 @@ function cliConfigPath(): string {
  * 生产环境由宿主给出 <resources>/openviking；开发态从 cwd 逐级上溯找仓库
  * vendor/openviking。这里刻意不用 __dirname / import.meta 推导：服务被 ESM 与
  * CJS 两种加载方式引用过，模块元数据在 top-level await 场景下不可用。
- * 两者都找不到时返回空串，由 releaseRuntime fail-closed 报错。
+ * 两者都找不到时返回空串，由调用方 fail-closed 报错或跳过对账。
  */
 function resolvePackagedRuntimeRoot(): string {
   const isRuntimeRoot = (candidate: string): boolean =>
@@ -69,42 +72,24 @@ function resolvePackagedRuntimeRoot(): string {
   return "";
 }
 
-function copyDir(source: string, destination: string): void {
-  fs.mkdirSync(destination, { recursive: true });
-  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === ".git") continue;
-    const from = path.join(source, entry.name);
-    const to = path.join(destination, entry.name);
-    if (entry.isDirectory()) copyDir(from, to);
-    else fs.copyFileSync(from, to);
-  }
-}
-
-/** 释放内置运行时。两个目录必须同级部署：adapter 以 ../../memory-plugin-shared 相对引用。 */
-function releaseRuntime(): void {
-  const source = resolvePackagedRuntimeRoot();
-  if (!source) {
+/** 包内 zcode host 目录（hooks/MCP 装配根）。缺失时抛错——install 与握手路径使用。 */
+function packagedHostRootOrThrow(): string {
+  const root = resolvePackagedRuntimeRoot();
+  if (!root) {
     throw new Error(
       "OpenViking 运行时缺失：安装包内未找到 vendor/openviking，无法启用该记忆提供方。",
     );
   }
-  const targetRoot = agentIntegrationsRoot();
-  for (const name of AGENT_INTEGRATION_DIRS) {
-    const from = path.join(source, name);
-    const to = path.join(targetRoot, name);
-    const staging = `${to}.tmp`;
-    fs.rmSync(staging, { recursive: true, force: true });
-    copyDir(from, staging);
-    // integration.json 记录本机安装时刻，随运行时一起落盘供 doctor 使用。
-    fs.writeFileSync(
-      path.join(staging, "integration.json"),
-      `${JSON.stringify({ installedAt: new Date().toISOString() }, null, 2)}\n`,
-      "utf8",
-    );
-    fs.rmSync(to, { recursive: true, force: true });
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    fs.renameSync(staging, to);
-  }
+  return path.join(root, "zcode");
+}
+
+/** 包内 integration.json 的版本锚点（与 vendored 版本一致，当前 0.5.31）。 */
+function readPackagedIntegrationVersion(runtimeRoot: string): string | undefined {
+  const integration = readJsonFile(
+    path.join(runtimeRoot, "zcode", "hosts", "zcode", "openviking.integration.json"),
+  );
+  const version = integration.version;
+  return typeof version === "string" ? version : undefined;
 }
 
 /** 引号感知切分：路径可能含空格，不能按空白硬拆。 */
@@ -153,11 +138,10 @@ function rewriteHookCommandForWindows(command: string): string {
   return setChain ? `${setChain} && ${parts.join(" ")}` : parts.join(" ");
 }
 
-/** 官方 host 模板：命令里的插件根与客户端 id 是占位符，安装时替换为绝对路径。 */
 /**
  * 官方 host 模板渲染。
  *
- * `__OPENVIKING_PLUGIN_ROOT__` 指的是 **zcode host 目录本身**（agent-integrations/zcode），
+ * `__OPENVIKING_PLUGIN_ROOT__` 指的是 **zcode host 目录本身**（<runtime>/zcode），
  * 不是 agent-integrations 根——官方 installer 就是这么传的。模板命令不带环境变量前缀，
  * 前缀由官方 write 阶段追加；这里按同样语义补上 POSIX 形式，再交给
  * rewriteHookCommandForWindows 转成 Windows 可执行形式。
@@ -219,12 +203,10 @@ function writeConnectionFile(params: { url: string; userKey: string }): void {
 }
 
 /** 合并 hooks 与 MCP 到 CLI 配置。官方 merge-zcode 的行为：置 hooks.enabled 并并入两段。 */
-function mergeCliConfig(hooks: Record<string, unknown>): void {
+function mergeCliConfig(hooks: Record<string, unknown>, hostRoot: string): void {
   const configPath = cliConfigPath();
   const config = readJsonFile(configPath);
-  const mcp = readJsonFile(
-    path.join(agentIntegrationsRoot(), "zcode", "hosts", "zcode", ".mcp.json"),
-  );
+  const mcp = readJsonFile(path.join(hostRoot, "hosts", "zcode", ".mcp.json"));
   const serverTemplate = (mcp.mcpServers ?? {}) as Record<string, Record<string, unknown>>;
   const openvikingServer = serverTemplate.openviking;
   if (!openvikingServer) {
@@ -235,7 +217,7 @@ function mergeCliConfig(hooks: Record<string, unknown>): void {
   const servers = (mcpSection.servers ?? {}) as Record<string, unknown>;
   servers.openviking = buildOpenVikingMcpServerConfig(
     process.execPath,
-    path.join(agentIntegrationsRoot(), "zcode", "servers", "mcp-proxy.mjs"),
+    path.join(hostRoot, "servers", "mcp-proxy.mjs"),
   );
   config.mcp = { ...mcpSection, servers };
 
@@ -245,6 +227,25 @@ function mergeCliConfig(hooks: Record<string, unknown>): void {
     events: hooks,
   };
   writeJsonFile(configPath, config);
+}
+
+/**
+ * CLI 配置里的 openviking 段是否指向给定 host 根。
+ * hooks 与 MCP 必须同时指向（spec 约束 4：二者同进同出，不允许半开状态）；
+ * 路径比较统一正斜杠（渲染时已把 Windows 反斜杠转正斜杠）。
+ */
+function configPointsAt(hostRoot: string): boolean {
+  const normalizedRoot = hostRoot.replace(/\\/gu, "/");
+  const config = readJsonFile(cliConfigPath());
+  const hooksText = JSON.stringify(config.hooks ?? {});
+  if (!hooksText.includes(normalizedRoot) || !hooksText.includes("openviking")) return false;
+  const servers = (config.mcp as { servers?: Record<string, OpenVikingMcpServerConfig> } | undefined)
+    ?.servers;
+  const entry = servers?.openviking;
+  if (!entry || !Array.isArray(entry.args)) return false;
+  const expected = path.join(hostRoot, "servers", "mcp-proxy.mjs").replace(/\\/gu, "/");
+  const actual = typeof entry.args[0] === "string" ? entry.args[0].replace(/\\/gu, "/") : "";
+  return actual === expected;
 }
 
 /** 读回 CLI 配置里落盘的 openviking MCP 条目——握手自检以磁盘真值为准。 */
@@ -324,11 +325,7 @@ async function fetchHealth(
   try {
     body = await response.json();
   } catch {
-    return {
-      ok: false,
-      reason: "not_openviking",
-      message: "该地址的 /health 响应不是 OpenViking 服务。",
-    };
+    return { ok: false, reason: "not_openviking", message: "该地址的 /health 响应不是 OpenViking 服务。" };
   }
   const payload = body as { healthy?: boolean; version?: string };
   if (!payload?.healthy) {
@@ -363,18 +360,6 @@ async function verifyDataAccess(url: string, userKey: string): Promise<OpenVikin
   }
 }
 
-function readInstalledVersion(): string | undefined {
-  try {
-    const integration = readJsonFile(
-      path.join(agentIntegrationsRoot(), "zcode", "integration.json"),
-    );
-    const version = integration.version ?? integration.integrationVersion;
-    return typeof version === "string" ? version : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export function createOpenVikingService(): IOpenVikingService {
   return {
     async verifyConnection({ url, userKey }) {
@@ -394,14 +379,13 @@ export function createOpenVikingService(): IOpenVikingService {
       if (!verification.ok) {
         throw new Error(verification.message ?? "OpenViking 连接校验未通过。");
       }
-      releaseRuntime();
-      const root = agentIntegrationsRoot();
+      const hostRoot = packagedHostRootOrThrow();
       writeConnectionFile({ url: url.trim(), userKey: userKey.trim() });
       // 半开态防线：写盘后用落盘的 command 真跑一次 MCP 握手；失败回滚 CLI 配置，
       // 不留「hooks 已写、代理拉不起」（2026-10-25 workwin 事故形态，见 spec）。
       const configPath = cliConfigPath();
       const previousConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : null;
-      mergeCliConfig(renderHooks(path.join(root, "zcode"), INTEGRATION_VERSION));
+      mergeCliConfig(renderHooks(hostRoot, INTEGRATION_VERSION), hostRoot);
       try {
         await verifyMcpProxyHandshake(readInstalledMcpServer());
       } catch (error) {
@@ -418,29 +402,49 @@ export function createOpenVikingService(): IOpenVikingService {
       if (!JSON.stringify(config).includes("openviking")) {
         throw new Error("OpenViking 配置未能写入 CLI 配置文件。");
       }
-      return { installed: true, version: readInstalledVersion(), source: "packaged" };
+      const runtimeRoot = resolvePackagedRuntimeRoot();
+      return {
+        installed: true,
+        version: runtimeRoot ? readPackagedIntegrationVersion(runtimeRoot) : INTEGRATION_VERSION,
+        source: "packaged",
+      };
     },
 
     async uninstall() {
+      // 只移除 CLI 配置段：~/.openviking/agent-integrations/ 归官方安装器域，不写不删；
+      // ovcli.conf 含用户凭据，卸载不删除，只解除配置引用。
       removeIntegrationFromCliConfig();
-      for (const name of AGENT_INTEGRATION_DIRS) {
-        fs.rmSync(path.join(agentIntegrationsRoot(), name), { recursive: true, force: true });
-      }
-      // ovcli.conf / ov.conf 含用户凭据，卸载不删除，只解除配置引用。
     },
 
     async getStatus() {
-      const entry = path.join(agentIntegrationsRoot(), "zcode", "scripts", "hook.mjs");
-      const manifest = path.join(
-        agentIntegrationsRoot(),
-        "memory-plugin-shared",
-        "lib",
-        "MANIFEST",
-      );
-      const installed = fs.existsSync(entry) && fs.existsSync(manifest);
-      return installed
-        ? { installed: true, version: readInstalledVersion(), source: "existing" }
-        : { installed: false };
+      const runtimeRoot = resolvePackagedRuntimeRoot();
+      if (!runtimeRoot) return { installed: false };
+      const hostRoot = path.join(runtimeRoot, "zcode");
+      if (!configPointsAt(hostRoot)) return { installed: false };
+      return {
+        installed: true,
+        version: readPackagedIntegrationVersion(runtimeRoot),
+        source: "packaged",
+      };
+    },
+
+    /**
+     * 启动幂等对账：CLI 配置存在 openviking 段但插件根不是当前包路径时重写。
+     * 覆盖三类漂移：升级/换安装目录后的路径失效、被官方安装器改写、旧复制释放模式的存量配置。
+     * 未启用（无 openviking 段）时 no-op；包内运行时缺失时拒绝改动（fail-closed：
+     * 宁可保留旧配置，也不把配置指向不存在的路径）。不握手——启动期不引子进程自检。
+     */
+    async reconcileStartup() {
+      const runtimeRoot = resolvePackagedRuntimeRoot();
+      if (!runtimeRoot) {
+        logger.warn("OpenViking 运行时缺失，跳过启动对账");
+        return;
+      }
+      const hostRoot = path.join(runtimeRoot, "zcode");
+      if (!isIntegrationConfigured()) return;
+      if (configPointsAt(hostRoot)) return;
+      mergeCliConfig(renderHooks(hostRoot, INTEGRATION_VERSION), hostRoot);
+      logger.info("OpenViking 集成已对账到包内运行时", { hostRoot });
     },
   };
 }

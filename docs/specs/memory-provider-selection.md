@@ -63,6 +63,29 @@
    即**回滚本次写入的 CLI 配置**并显式报错，不得留下「配置已写、代理拉不起」的半开
    态——该半开态正是核心约束 4 禁止的「hooks 装载但工具缺失」，且能存活数天不被发现。
 
+### 运行时来源与启动对账（26.5.9）
+
+**运行时唯一来源 = 发行包内置**（`<resources>/openviking`；dev 为仓库 `vendor/openviking`），
+不再复制到 `OPENVIKING_HOME/agent-integrations/`。理由：vendored 副本带有 yazcode 侧适配，
+官方安装器不认识 yazcode；共用目录会被官方重跑覆盖，且「仅安装时释放」导致升级后运行时
+版本漂移（实测：包内 0.5.29、运行时停在 0.5.23）。
+
+1. **零复制**：`install()` 不再释放运行时副本；hooks 命令与 MCP server 直接指向包内绝对
+   路径（`<root>/zcode/scripts/hook.mjs`、`<root>/zcode/servers/mcp-proxy.mjs`）。
+2. **启动幂等对账**（`reconcileStartup()`，host 启动时触发）：仅当 CLI 配置存在
+   `openviking` 段时动作——段内指向的插件根 ≠ 当前包路径则重写为包内路径；未启用时
+   no-op；包内运行时缺失时 `warn` 且不改配置（fail-closed，宁可保留旧配置也不指向坏路径）。
+   对账不握手（启动期不引入子进程自检），握手自检仍由 `install()` 承担。
+   该对账同时是升级/换安装目录后的自愈路径与被官方安装器改写后的自愈路径。
+3. **`uninstall()` 仅移除 CLI 配置段**（hooks 事件组 + MCP 条目），不删除任何目录：
+   `OPENVIKING_HOME/agent-integrations/` 归官方安装器域，yazcode 不写不删；`ovcli.conf`
+   等凭据文件保留原位。
+4. **`getStatus()` 的 installed 判定 = 包内运行时存在 且 CLI 配置指向当前包路径**；
+   `version` 读包内 `hosts/zcode/openviking.integration.json` 的 version（与 vendored
+   版本锚点一致），`source` 恒为 `packaged`。
+5. **状态所有者不变**：`packages/services` 仍是安装/卸载/校验/对账的唯一 owner；CLI 配置
+   是落盘事实，UI 只经服务读状态。
+
 ### 迁移
 
 存量设置中 `memoryEnabled: true` 一律映射为 `local`，`false` 映射为 `disable`。映射只发生一次，读到存量形状时归一化后写回新字段。
@@ -71,7 +94,9 @@
 
 - **取值定义与归一化**：`packages/shared`（设置 schema 唯一 owner）。
 - **`local` 档位的启用判定**：`apps/zcode-cli/packages/core/src/runtime/helpers/project-memory.ts` 的 `resolveEnabledProjectMemoryRoot()` —— 这是内置记忆层唯一的开关点，改为仅 `local` 返回非空。阈值策略、cut point、注入位置一律不动。
-- **集成运行时与配置写入**：`packages/services` 承担安装/卸载/校验；运行时（hooks + MCP proxy）落在 `OPENVIKING_HOME/agent-integrations/`，随发行包 vendored。
+- **集成运行时与配置写入**：`packages/services` 承担安装/卸载/校验与启动对账；运行时
+  （hooks + MCP proxy）直接取自发行包内置 `resources/openviking`（dev: `vendor/openviking`），
+  不再复制到 `OPENVIKING_HOME/agent-integrations/`（该目录归官方安装器域，yazcode 不写不删）。
 - **数据目录**：沿用现有数据根解析，本 spec 不引入新的目录概念。
 
 ## 不在本 spec 范围
@@ -87,3 +112,8 @@
 4. `openviking` + 服务不可达：会话可开，但界面显式报错说明 OV 不可达，**不得**出现 `MEMORY.md` 注入。
 5. 切换 provider 前后，原有记忆数据均未被删除。
 6. 存量 `memoryEnabled: true/false` 的设置加载后归一化为 `local`/`disable`，且不报错。
+7. 升级或安装目录变更后启动：CLI 配置的 openviking hooks/MCP 自动指向当前包内路径（启动对账）。
+8. 官方安装器重写 CLI 配置后，yazcode 下次启动自动指回包内运行时，不需要用户重新安装。
+9. `uninstall()` 后 `OPENVIKING_HOME/agent-integrations/` 目录原样保留，仅 CLI 配置段被移除。
+10. 包内运行时缺失（打包异常）时：`getStatus()` 报未安装、`install()` 显式报错、启动对账
+    不改动既有配置。
