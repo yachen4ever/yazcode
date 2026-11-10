@@ -73,6 +73,26 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **遗留转 26.5.6 修复批**（issue #10，已派 mintdev）：刷新失败 toast 缺失/黑洞超时
   反馈缺失/状态点回绿 + i18n key 泄露（`settings.browser.control.loadingHint`）。
 
+## 26.5.9 (2026-11-10)
+
+- **OV 运行时改为直接使用包内 vendored 插件**（kanzo #116）：`install()` 原先把 vendored
+  运行时**复制释放**到 `~/.openviking/agent-integrations/`（官方安装器共享目录），hooks/MCP
+  指向该副本——三个缺陷：①仅 install 时释放，升级后运行时版本停滞（实测包内 0.5.29、workwin
+  运行时停在 0.5.23）；②官方安装器重跑可覆盖 vendored 适配；③`uninstall()` 会 `rm -rf`
+  共享目录，误删官方环境。改法：hooks 命令与 MCP server 直接指向包内绝对路径（零复制）；
+  **启动幂等对账**（host 启动时）——已启用但插件根 ≠ 当前包路径即重写为包内路径，覆盖
+  升级/换安装目录、被官方安装器改写与旧复制释放模式的存量配置；`uninstall()` 只清 CLI 配置
+  段，不写不删 `agent-integrations`；`getStatus()` = 包内运行时存在**且**配置指向当前包路径，
+  version 读包内 integration.json。fail-closed：包内运行时缺失时 install 显式报错、启动对账
+  不动既有配置（宁可保留旧配置也不指向坏路径）。spec `memory-provider-selection.md` 增
+  「运行时来源与启动对账」节与 4 条验收场景。
+- **vendored OpenViking 同步 0.5.29 → 0.5.31**（上游 v0.5.4 `9dfa9017`，PR #33）：zcode 与
+  codebuddy host 的集成清单/插件清单版本锚点 0.5.31、config-schema（captureWithoutSession /
+  nativeAgents / magpie harness）、uri-guard（`read(uri=)` 指引示例）、新增
+  install/owned-skill；`ov-http.mjs` 与上游字节一致（v26.0.7 的 yazcode 本地 hardening 已被
+  上游吸收，provenance「同步不得覆盖」口径随之修正）。`check-vendor-openviking` 0 漂移。
+- **版本号说明**：26.5.9 只承载运行时来源改造与其前置 vendor 同步，无其他候选并入。
+
 ## 26.5.8 (2026-11-09)
 
 - **重试预算档位守卫 undefined 加固**（issue #22 ①）：`isSingleAttemptBudget` /
