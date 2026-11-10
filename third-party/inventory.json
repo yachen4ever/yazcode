@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "inputHashEncoding": "UTF-8 with CRLF normalized to LF; notice and source snapshot hashes remain byte-exact",
   "scope": "Production dependency union across current workspace projects, copied source/assets and native tools; not a per-installer SBOM or a certification of all licensing obligations.",
-  "noticesSha256": "6090e676a6aee36aef8c1b4a6fd5337692b8f0d954d9a1711315e24edd81174c",
+  "noticesSha256": "85c8f88bf1f94e60fdae322d3b831619debad1e04f2ec938135f7f4cdf111f9d",
   "inputs": {
     ".agents/skills/agent-browser/references/authentication.md": "e2c3b0f4a1dc1368dee821f03c000d818a48421d09f3872525dddffe73f2112b",
     ".agents/skills/agent-browser/references/commands.md": "17522fc56d742663f47231ff06c4811abc87e12c7f78e11f94d253ddd540a909",
@@ -3063,7 +3063,7 @@
     "scripts/license-texts/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "scripts/native-search-tools-config.mjs": "281d368464f61363fa2d8ab74f416962fe730dd0a0572db5564475f876bb65aa",
     "scripts/remote-native-search-tools-config.mjs": "472322a66f84c7452f96aa9e16e9c4e0600f7c2588a03dc6bc869229161b1cb2",
-    "third-party/copied-components.json": "420818afe4d5ade07950e73c9ea3be81863384c095d3d34ef9ad98c92e6b90a7",
+    "third-party/copied-components.json": "12be9bdfb9a6d3f48cc82fe140d62bd5bf20567230a151841905d57f437baa1e",
     "third-party/embedded-components.json": "9586ccca15897f56d4ca1d703dffe9e02880fedd766c1dff93f7ac1f52ea891a",
     "third-party/native-search/licenses/00373c9bf56a894b2ed67586596bc1e8b0630cabbaf1ab46c75fc754b6bcd1ce.txt": "00373c9bf56a894b2ed67586596bc1e8b0630cabbaf1ab46c75fc754b6bcd1ce",
     "third-party/native-search/licenses/01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f.txt": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f",
@@ -3267,7 +3267,7 @@
     "vendor/openviking/memory-plugin-shared/lib/async-writer.mjs": "2e5415193020cd4ea8b23f820acf0063d5393289b4f06b582205153888fffda6",
     "vendor/openviking/memory-plugin-shared/lib/batch-send.mjs": "2e5903703bb5c07a9d91fbd4e11020a7a5d8b677fd90f0c67170f17e9604a5bb",
     "vendor/openviking/memory-plugin-shared/lib/capture-utils.mjs": "b69e2707b16fb27441e047a7ffea79431863baa123fe712e37f9ab5b6ac73f4f",
-    "vendor/openviking/memory-plugin-shared/lib/config-schema.mjs": "11d33e53dd4afc3bb4ac10f54ef88ae231c9bcf21bb8d5f9d5f797ae5371d826",
+    "vendor/openviking/memory-plugin-shared/lib/config-schema.mjs": "4f9c94d725a447dded4820bc9e9172334ad7f20244a0e88ab0a9ccbb7b0ae40f",
     "vendor/openviking/memory-plugin-shared/lib/credentials.mjs": "a1a269319fc3d6b8a6079f05b9df4befce3c882ffcc2336814c5e567e768788f",
     "vendor/openviking/memory-plugin-shared/lib/debug-log.mjs": "dddcccd257f46f39fe2197890957ae6d69f0f4436a902fd03c2153db6a48d91d",
     "vendor/openviking/memory-plugin-shared/lib/doctor-core.mjs": "dd7f0aaed8f59460d8d4ee12019c5fd2823d0dda024f88d732affda77555ea6c",
@@ -3276,6 +3276,8 @@
     "vendor/openviking/memory-plugin-shared/lib/install/jsonc-edit.mjs": "b899177bd19fb023f9c2deebdeb3d003a4ed686e9052e170af47fc7216203c97",
     "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.mjs": "134c6c88b1475ff0be0d298ae7635b4d42a389fcb8b2445e0f3fcd52e80a1869",
     "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.test.mjs": "1a4ac6512581b9acf27f8f106adb775287edfef553681ab92bf301c7abd0b2ce",
+    "vendor/openviking/memory-plugin-shared/lib/install/owned-skill.mjs": "3b1b3caef2849f3c988d812602d4ce54b25639ed7968b4bd4b50a23c5a968894",
+    "vendor/openviking/memory-plugin-shared/lib/install/owned-skill.test.mjs": "34d656b3a0dadb0d88ee8d0606f15e282023f1bf4c622f1087faee14b16449b2",
     "vendor/openviking/memory-plugin-shared/lib/MANIFEST": "35b32f3c12bde25b0ccbf0269dcf791b4792ed700f411769a3f8555d54e9e4b6",
     "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-config.mjs": "1896a9998b9b884896a6d5b8e4fd2eb76a7ff90dbdea280942f3f6ea2b9516c4",
     "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-core.mjs": "53896627feadc84327ade0de8637fe3b60a2ad8635da23eb82c5df93c3184a69",
@@ -3287,7 +3289,7 @@
     "vendor/openviking/memory-plugin-shared/lib/recall-core.mjs": "7a830ca959101e273d8af7119a8611106555b80b4e44b67154c6a2bdd398a197",
     "vendor/openviking/memory-plugin-shared/lib/retryable.mjs": "e3e8b712d1d9930e102abf6d4f06324c886d690743babc10f23c34702c293fea",
     "vendor/openviking/memory-plugin-shared/lib/session-model.mjs": "4a1f5951662e4a6df70d659e77e0de784882059b28db549b87bb3941e3001660",
-    "vendor/openviking/memory-plugin-shared/lib/uri-guard.mjs": "1ac462f8a9e74e18332dd595fbd2a2683d2de69b68bc7ffcf99b81680deaea70",
+    "vendor/openviking/memory-plugin-shared/lib/uri-guard.mjs": "a1b404906a18f0ac0a99c727085524f98e53bfd584305b4f951313cae5fa502e",
     "vendor/openviking/memory-plugin-shared/lib/workspace-config.mjs": "afaaa9cdf715d51ccb78b2d0bd384ac71e0710ae36ad3ceb5e715477fc703c0a",
     "vendor/openviking/memory-plugin-shared/lib/workspace-identity.mjs": "8b4c2be78201300bd978c88c27f78d21dd982aae95331d78ceb20e7d80bd81b6",
     "vendor/openviking/memory-plugin-shared/lib/workspace-peer.mjs": "45e61fe33a4e3117130379fb0c2466f0a99e22f3d4c30debb118cd2504d9d1fd",
@@ -3298,10 +3300,11 @@
     "vendor/openviking/zcode/hosts/codebuddy/.mcp.json": "10a783188d69799c9211c6ec0711935df878011fa1b59f8ba88c9ac11ce046a5",
     "vendor/openviking/zcode/hosts/codebuddy/DESIGN.md": "52a80ae5f2b2434813a51230993a01e8a717a5a767aee5f2552c55fb09232d8b",
     "vendor/openviking/zcode/hosts/codebuddy/hooks.json": "8ef68f8e779b377aafc0217602f4940a500d889fbe38491eef3235af1ae1e8c4",
-    "vendor/openviking/zcode/hosts/codebuddy/plugin.json": "f384e588d2c74fba3d7d35f4ac524f444b95a88cde20c920a4db4888f6171272",
+    "vendor/openviking/zcode/hosts/codebuddy/plugin.json": "ff6d1ad21dd89eefbf553d7a628e774794b89206e93fed213859972e6dac1660",
     "vendor/openviking/zcode/hosts/codebuddy/runtime-index.mjs": "5ca657a2985b06c0bcf4f3266879a2e7b613f0f2b7609176f6716d69ab501228",
     "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-memory/SKILL.md": "7acc32358ba98c8bde8ae8a711feb32b68adc50baeaca205702d9c45565067bd",
-    "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-skills/SKILL.md": "e48e9776960ebb9aeca5a78df3d0661e4c4fb03f722cbf0b09b832f5df9e4207",
+    "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-rule-search/SKILL.md": "252cc2e0e36235ceefd50bddac94062bdc89ac1b74cc9bff516ce64b5b36026d",
+    "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-skills/SKILL.md": "83d4d71573b9a6fad48443d457421958c5109b0eb024a7a64efb5dcca1634890",
     "vendor/openviking/zcode/hosts/codebuddy/skills/ov-experience-memory/SKILL.md": "9490d86db2fcfa572e49bc0105f5916c1c4344f3691f74a0bc245a53045de7d8",
     "vendor/openviking/zcode/hosts/cursor-transcript.mjs": "c9e50a80742b2e440d9b7b8113b752214845b17c23ccf1c31edb375aae3a7c0d",
     "vendor/openviking/zcode/hosts/cursor.mjs": "a07d2566aa679c5decca3e23b2718af6770e3be42331bc3d2747dd0665e25896",
@@ -3316,8 +3319,8 @@
     "vendor/openviking/zcode/hosts/zcode.mjs": "91b6782b49ef7c67fa4cc7ab8b4c93b83cfcb91aa2a0499a9c3f769289c930ee",
     "vendor/openviking/zcode/hosts/zcode/.mcp.json": "13157f7faf76430a04bf17c8e6c5ea987d7794b7e30e3c500368d84a13cd3238",
     "vendor/openviking/zcode/hosts/zcode/hooks.json": "260335b0e520324458371902c48866719dd337ddf0ab4eaab5952ea5e3b489aa",
-    "vendor/openviking/zcode/hosts/zcode/openviking.integration.json": "156846daf79910f1746185bc9fb0da0b26cbf136795030e2d515f8aa5388fc4b",
-    "vendor/openviking/zcode/plugin.json": "9c56b9906fb2875fbd67949b76c7664e6e7205c311f5c3e55b07cc35341db0df",
+    "vendor/openviking/zcode/hosts/zcode/openviking.integration.json": "fb498c752add22b994eb363664a8742ad2627945f417f83fbb4739d46f6ea678",
+    "vendor/openviking/zcode/plugin.json": "d18cd5d0786efb4cdaf72c0d3043de9fbc4a2b9c12b0b213b99ed4fe83bc6801",
     "vendor/openviking/zcode/README_CN.md": "ba5b1ed76ea6c820acc05f7466e49bb4be4280386659ec9f29fff2503d89b10d",
     "vendor/openviking/zcode/README.md": "8104cb2f1ea20d8de32ff9dd98e44e5572efc5f38e0f4fb01532109600fed1a3",
     "vendor/openviking/zcode/scripts/hook.mjs": "737c89b01be6534127b797b3d67b1be8704edf78342db62163262b18242de678",
@@ -30950,13 +30953,13 @@
     },
     {
       "id": "openviking-client-integration",
-      "referenceRevision": "178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8",
-      "source": "https://raw.githubusercontent.com/volcengine/OpenViking/178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8/examples/LICENSE",
+      "referenceRevision": "9dfa9017a8c61abefcd239fe98fdba094a2de7f3",
+      "source": "https://raw.githubusercontent.com/volcengine/OpenViking/9dfa9017a8c61abefcd239fe98fdba094a2de7f3/examples/LICENSE",
       "file": "third-party/upstream/081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6.txt",
       "sha256": "081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6",
-      "importRevision": "178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8",
+      "importRevision": "9dfa9017a8c61abefcd239fe98fdba094a2de7f3",
       "license": "Apache-2.0",
-      "provenance": "Vendored from OpenViking examples/ at revision 178a8cdfb41b51e7d24c4bf79a13cc54981e0ee8 (upstream release v0.5.3, integration version 0.5.29): agent-hook-plugin plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim except lib/ov-http.mjs, which carries yazcode-local error-handling hardening introduced in v26.0.7 and must not be overwritten by upstream syncs; integration.json ships the upstream 0.5.29 template and is rewritten by the install service at deploy time.",
+      "provenance": "Vendored from OpenViking examples/ at revision 9dfa9017a8c61abefcd239fe98fdba094a2de7f3 (upstream release v0.5.4, integration version 0.5.31): agent-hook-plugin plus memory-plugin-shared/lib per its MANIFEST. OpenViking is dual-licensed: the server is AGPLv3, while examples/ is Apache-2.0 (stated in the upstream README component licence table), so this client integration is redistributable under Apache-2.0. Files are copied verbatim; lib/ov-http.mjs is currently byte-identical to upstream (the historical yazcode-local error-handling hardening from v26.0.7 has since been absorbed upstream — re-check before overwriting on future syncs); integration.json ships the upstream 0.5.31 template and is rewritten by the install service at deploy time.",
       "roots": [
         "vendor/openviking/zcode",
         "vendor/openviking/memory-plugin-shared"
@@ -30989,7 +30992,7 @@
         },
         {
           "file": "vendor/openviking/zcode/hosts/codebuddy/plugin.json",
-          "sha256": "f384e588d2c74fba3d7d35f4ac524f444b95a88cde20c920a4db4888f6171272"
+          "sha256": "ff6d1ad21dd89eefbf553d7a628e774794b89206e93fed213859972e6dac1660"
         },
         {
           "file": "vendor/openviking/zcode/hosts/codebuddy/runtime-index.mjs",
@@ -31000,8 +31003,12 @@
           "sha256": "7acc32358ba98c8bde8ae8a711feb32b68adc50baeaca205702d9c45565067bd"
         },
         {
+          "file": "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-rule-search/SKILL.md",
+          "sha256": "252cc2e0e36235ceefd50bddac94062bdc89ac1b74cc9bff516ce64b5b36026d"
+        },
+        {
           "file": "vendor/openviking/zcode/hosts/codebuddy/skills/openviking-skills/SKILL.md",
-          "sha256": "e48e9776960ebb9aeca5a78df3d0661e4c4fb03f722cbf0b09b832f5df9e4207"
+          "sha256": "83d4d71573b9a6fad48443d457421958c5109b0eb024a7a64efb5dcca1634890"
         },
         {
           "file": "vendor/openviking/zcode/hosts/codebuddy/skills/ov-experience-memory/SKILL.md",
@@ -31057,7 +31064,7 @@
         },
         {
           "file": "vendor/openviking/zcode/hosts/zcode/openviking.integration.json",
-          "sha256": "156846daf79910f1746185bc9fb0da0b26cbf136795030e2d515f8aa5388fc4b"
+          "sha256": "fb498c752add22b994eb363664a8742ad2627945f417f83fbb4739d46f6ea678"
         },
         {
           "file": "vendor/openviking/zcode/hosts/zcode-capture.mjs",
@@ -31073,7 +31080,7 @@
         },
         {
           "file": "vendor/openviking/zcode/plugin.json",
-          "sha256": "9c56b9906fb2875fbd67949b76c7664e6e7205c311f5c3e55b07cc35341db0df"
+          "sha256": "d18cd5d0786efb4cdaf72c0d3043de9fbc4a2b9c12b0b213b99ed4fe83bc6801"
         },
         {
           "file": "vendor/openviking/zcode/scripts/hook.mjs",
@@ -31153,7 +31160,7 @@
         },
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/config-schema.mjs",
-          "sha256": "11d33e53dd4afc3bb4ac10f54ef88ae231c9bcf21bb8d5f9d5f797ae5371d826"
+          "sha256": "4f9c94d725a447dded4820bc9e9172334ad7f20244a0e88ab0a9ccbb7b0ae40f"
         },
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/credentials.mjs",
@@ -31186,6 +31193,14 @@
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/install/kimicode-plugin.test.mjs",
           "sha256": "1a4ac6512581b9acf27f8f106adb775287edfef553681ab92bf301c7abd0b2ce"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/owned-skill.mjs",
+          "sha256": "3b1b3caef2849f3c988d812602d4ce54b25639ed7968b4bd4b50a23c5a968894"
+        },
+        {
+          "file": "vendor/openviking/memory-plugin-shared/lib/install/owned-skill.test.mjs",
+          "sha256": "34d656b3a0dadb0d88ee8d0606f15e282023f1bf4c622f1087faee14b16449b2"
         },
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/mcp-proxy-config.mjs",
@@ -31229,7 +31244,7 @@
         },
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/uri-guard.mjs",
-          "sha256": "1ac462f8a9e74e18332dd595fbd2a2683d2de69b68bc7ffcf99b81680deaea70"
+          "sha256": "a1b404906a18f0ac0a99c727085524f98e53bfd584305b4f951313cae5fa502e"
         },
         {
           "file": "vendor/openviking/memory-plugin-shared/lib/workspace-config.mjs",
