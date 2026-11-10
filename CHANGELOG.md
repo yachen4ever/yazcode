@@ -93,6 +93,25 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   上游吸收，provenance「同步不得覆盖」口径随之修正）。`check-vendor-openviking` 0 漂移。
 - **版本号说明**：26.5.9 只承载运行时来源改造与其前置 vendor 同步，无其他候选并入。
 
+### 验收结论（2026-11-10，workwin 实机 26.5.8 → 26.5.9）
+
+- 安装包**三端哈希一致**（`2d6b5760…`：GitHub 现挂 digest = m5air 下载副本 = workwin
+  Get-FileHash）；进程清零（12 实例，优雅关闭无效后终止，未硬杀在用实例）；setting.json
+  双备份（`40D2F467…` 三哈希一致）；NSIS `/S` 静默安装 DisplayVersion 26.5.9 /
+  ProductVersion 26.5.9.0。
+- **启动幂等对账实证（本版核心）**：安装后启动，CLI 配置 `~/.yazcode/cli/config.json` 的
+  openviking 段从旧复制释放形态（`~/.openviking/agent-integrations/zcode`，
+  `OPENVIKING_INTEGRATION_VERSION=0.5.23`）**自动重写为包内路径**
+  （`Programs\yazcode\resources\openviking\zcode`，版本 0.5.31），hooks 与 MCP 同步切换，
+  `contains_agent_integrations=False`——迁移零手动步骤。
+- **运行时实证**：包内 `mcp-proxy.mjs` 以 `ELECTRON_RUN_AS_NODE` 拉起并完成
+  initialize → tools/list 握手，**24 个工具**（与服务端 0.5.3 口径一致）。
+- 保留基线全绿：setting.json 与备份逐字节相同；hide-ai-copilot v1.1.0 哈希互证
+  （`0A538A70…`，mtime 10/28 未变）；无调试端口启动（9229 未监听）。
+- 门禁：typecheck 0 · lint 0 errors/95 warnings（=基线）· services 113/113（含新增 6 例
+  零复制/对账幂等/uninstall 保留/fail-closed 矩阵）· architecture 0 violations ·
+  `check-vendor-openviking` 0 漂移 · licenses 幂等。
+
 ## 26.5.8 (2026-11-09)
 
 - **重试预算档位守卫 undefined 加固**（issue #22 ①）：`isSingleAttemptBudget` /
