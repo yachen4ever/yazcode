@@ -103,16 +103,33 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   从未刷新时 epoch=-1 永不新鲜 → 必刷新，fail-open 落在「多刷新一次」安全侧）。spec
   `probe-registry-refresh-dedup.md` 按修正语义重写；推送路径刷新次数 2→1，去重收益保留。
 
-### 验收结论（2026-11-09，workwin 实机 + 双盲回归）
+### 验收结论（2026-11-10，minttest 九轮双盲 + workwin 实机 26.5.7 → 26.5.8）
 
-- workwin 实机（26.5.7 → 26.5.8）：保留基线全绿（hide-ai-copilot 哈希互证、GM 存储/
-  insecureCerts/locale 保留、setting.json 与备份逐字节相同）；A 基线模型配置可用；
-  B 验收（列表 / 新建→待批准→批准→服务中 / 注入实效 DOM 标记 / lastInjectedAt 写读链）。
-- 门禁：typecheck 0 错误 · lint 0 errors/95 warnings（=基线）· desktop 154 · ui 125 ·
+> 出包时（`70198df21`）本节按 26.5.7 记录预写占位；八轮双盲发现退化、#30 修复后重建，
+> 实际验收如下随部署完成回填。
+
+- **minttest 九轮双盲（11-10，#31 已闭合）**：八轮报「保存后不再自动探测」退化，经 #30
+  自证式修复（freshness 双条件跳过 + 初始 -1 fail-open）重建后，九轮竞态主测 **5/5 全过**
+  ——「blur+save 与点刷新并发」每次都出现失败 toast + 橙点、探测判定全部反映**新** Base URL
+  （时延 684–1589ms），无一例读到旧 URL 的缺陷表现；竞态对照 3/3 亚秒级（362–439ms）；
+  回归抽查全保持（纯刷新 toast 452ms / 黑洞 ≤10s / 正常静默 + 回绿 2309ms / S1 A/B /
+  F2 三段 / S2 端口提示 / 行开关 aria / 分态文案三语）。
+- **workwin 实机（26.5.7 → 26.5.8）**：安装包**三端哈希核对一致**（`b65f0019…`：GitHub
+  现挂 digest = 本地副本 = 远端 Get-FileHash）；进程清零（19 个无窗口残留实例，优雅关闭
+  无效后终止，未硬杀在用实例）；setting.json / provider_config.json 双备份；NSIS `/S`
+  静默安装 DisplayVersion 26.5.8 / ProductVersion 26.5.8.0。
+- **保留基线全绿**：setting.json 与备份逐字节相同（`40D2F467…`）；hide-ai-copilot
+  v1.1.0 服务中 + mtime 证据（10/28，未被安装器触碰）；insecureCerts / locale 保留。
+- **A3 竞态主场景 win 侧实证**：真实鼠标序列（focus → 输入拒连 URL → 点刷新）**2.6s**
+  出现失败 toast「部分接入端点连接失败，请检查端点配置与网络」、**3.0s** 状态点转「最近
+  连接失败」且精确落在被改端点（失败集仅 {ahdxit}）——判定基于新 URL，竞态修复跨平台
+  成立。恢复原 URL 落盘正确（mtime/值核对）；恢复后探测报失败系 workwin 当时公网 HTTPS
+  链路故障（curl 96s 超时）的如实网络事实，非回绿缺陷。
+- **门禁**：typecheck 0 错误 · lint 0 errors/95 warnings（=基线）· desktop 154 · ui 125 ·
   `oxfmt --check .` 归零（3066 文件）· licenses 重生成幂等 diff 0。
-- 纯刷新路径失败 toast（#22 ③）**零改动收口**：定性为观测窗口边缘（toast ≈5.8s 出现、可见
-  3s，而既有观测窗 5.6s 恰在出现前 0.2s 结束）；去重抑制经代码级排除（去重为显式 opt-in，
-  三处相关 toast 均未传 dedupeKey）。复测口径随 26.5.8 验收包转双盲（窗口 ≥15s）。
+- **纯刷新路径失败 toast（#22 ③）**：定性为观测窗口边缘（toast ≈5.8s 出现、可见 3s，既有
+  观测窗 5.6s 恰在出现前 0.2s 结束）；去重抑制经代码级排除（去重为显式 opt-in，三处相关
+  toast 均未传 dedupeKey）；九轮已按 ≥15s 窗口复测覆盖（纯刷新 toast 452ms，判为保持）。
 
 ## 26.5.7 (2026-11-08)
 
