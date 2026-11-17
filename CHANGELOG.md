@@ -11,6 +11,19 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.10 (2026-11-13)
+
+- **插件视觉验收子代理 model 硬编码修正（issue #34）**：documents / pdf / spreadsheets
+  三个官方插件的 `visual-judge` 子代理 frontmatter 均硬编码
+  `model: account:bigmodel-individual-coding-plan/GLM-5.3-Flash`——`account:` 前缀指向
+  官方 bigmodel 账号 provider，fork 环境（内网 newapi、未连接官方账号）下该账号不存在，
+  子代理启动报 `Cannot start subagent: Account connection unavailable
+  [reason=account-connection-unavailable]`（workwin 实测）。修正为 `model: inherit`
+  （继承主会话模型，`INHERIT_NAMES` 既有语义，解析代码零改动）；新增资产守卫
+  `scripts/test/agent-model-inherit.test.mjs`（扫描 `apps/zcode-cli/packages/*/agents/*.md`
+  的 frontmatter model 拒绝 `account:` 前缀 + visual-judge × 3 断言 `inherit`），防上游
+  同步把硬编码带回。
+
 ## 26.5.5 (2026-11-08)
 
 - **S1（严重）用户脚本「服务中」假成功消灭**（minttest 四轮双盲发现）：脚本缺省
