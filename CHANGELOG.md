@@ -23,6 +23,15 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   `scripts/test/agent-model-inherit.test.mjs`（扫描 `apps/zcode-cli/packages/*/agents/*.md`
   的 frontmatter model 拒绝 `account:` 前缀 + visual-judge × 3 断言 `inherit`），防上游
   同步把硬编码带回。
+- **Provider 自定义请求头支持会话占位符 + 保护头（issue #36）**：`api.headers` 值新增
+  `{{sessionId}}` 占位符——合并进请求前替换为当前会话 ID（口径同请求归因头：
+  `normalizeModelSessionIdForAttribution` strip `sess_`/`subagent_agent_` 内部前缀；
+  **每会话稳定**、非每请求随机，为上游 prompt 缓存命中提供前提）。经 new-api 网关等
+  自建 baseURL 时 `x-opencode-session` 由配置占位符补齐（官方 `opencode.ai` 域名仍走
+  归因自动注入，行为不变；归因头覆盖 provider 同名配置的优先级不变）。未知占位符原样
+  保留；`Authorization`/`Host`/`Content-Length`/`Content-Type`/`Content-Encoding`/
+  `Cookie` 出现在 `api.headers` 时丢弃并经 runner logger 告警（进程级去重，与 new-api
+  插件保护头名单对齐）。spec：`docs/specs/provider-custom-headers.md`。
 
 ## 26.5.5 (2026-11-08)
 

@@ -1,5 +1,5 @@
 import { Output, jsonSchema } from "ai";
-import type { ModelToolChoice } from "@zcode/contracts";
+import type { Logger, ModelToolChoice } from "@zcode/contracts";
 import type { EnvRecord } from "./model-execution.js";
 import { toAiSdkMessages } from "./transform.js";
 import { toAiSdkTools } from "./tool-transform.js";
@@ -10,6 +10,7 @@ import type {
   ResolvedAiSdkModel,
 } from "./runner-runtime.js";
 import { createModelRequestAttributionHeaders, type ModelStatusContext } from "./runner-status.js";
+import { resolveProviderRequestHeaders } from "./provider-request-headers.js";
 import { findMisplacedSystemPositions } from "./system-message-compat.js";
 
 type ExperimentalIncludeWithResponseBody = {
@@ -24,12 +25,38 @@ function shouldIncludeStreamResponseBody(resolved: ResolvedAiSdkModel): boolean 
   );
 }
 
+/** 保护头丢弃告警进程级去重：同一 header 名只 warn 一次，防每请求刷屏。 */
+const warnedProtectedProviderHeaders = new Set<string>();
+
+function warnDroppedProtectedProviderHeadersOnce(
+  logger: Logger | undefined,
+  droppedProtectedHeaders: readonly string[],
+): void {
+  for (const name of droppedProtectedHeaders) {
+    const key = name.trim().toLowerCase();
+    if (warnedProtectedProviderHeaders.has(key)) continue;
+    warnedProtectedProviderHeaders.add(key);
+    logger?.warn("Provider api.headers 中的保护头已丢弃（不得由配置覆盖鉴权/传输栈）", {
+      header: name,
+    });
+  }
+}
+
+/**
+ * Provider 自定义头（api.headers）先按占位符/保护头解析，再并入请求归因头
+ * （26.5.10，issue #36，spec provider-custom-headers.md）：归因头覆盖 provider
+ * 同名配置——内部归因不可被配置覆盖；provider 头只填补归因集合之外的键。
+ */
 function mergeRequestHeaders(
   providerHeaders: Record<string, string> | undefined,
   attributionHeaders: Record<string, string>,
+  statusContext: ModelStatusContext,
+  logger?: Logger,
 ): Record<string, string> {
+  const resolved = resolveProviderRequestHeaders(providerHeaders, statusContext);
+  warnDroppedProtectedProviderHeadersOnce(logger, resolved.droppedProtectedHeaders);
   return {
-    ...providerHeaders,
+    ...resolved.headers,
     ...attributionHeaders,
   };
 }
@@ -41,6 +68,8 @@ export function createGenerateTextOptions(input: {
   request: AiSdkModelTextRequest;
   resolved: ResolvedAiSdkModel;
   statusContext: ModelStatusContext;
+  /** 保护头丢弃告警通道（可选；缺省静默丢弃，安全性不变）。 */
+  logger?: Logger;
 }): AiSdkGenerateTextOptions {
   const providerOptions = mergeProviderOptions(
     input.resolved.providerOptions,
@@ -93,6 +122,8 @@ export function createGenerateTextOptions(input: {
     headers: mergeRequestHeaders(
       input.resolved.headers,
       createModelRequestAttributionHeaders(input.statusContext),
+      input.statusContext,
+      input.logger,
     ),
     // ZCode owns system-message construction in core/context. Keep AI SDK from
     // printing its generic system-message warning to process stderr.
@@ -114,6 +145,8 @@ export function createStreamTextOptions(input: {
   request: AiSdkModelTextRequest;
   resolved: ResolvedAiSdkModel;
   statusContext: ModelStatusContext;
+  /** 保护头丢弃告警通道（可选；缺省静默丢弃，安全性不变）。 */
+  logger?: Logger;
 }): AiSdkStreamTextOptions {
   const providerOptions = mergeProviderOptions(
     input.resolved.providerOptions,
@@ -157,6 +190,8 @@ export function createStreamTextOptions(input: {
     headers: mergeRequestHeaders(
       input.resolved.headers,
       createModelRequestAttributionHeaders(input.statusContext),
+      input.statusContext,
+      input.logger,
     ),
     // ZCode owns system-message construction in core/context. Keep AI SDK from
     // printing its generic system-message warning to process stderr.
