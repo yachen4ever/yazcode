@@ -183,6 +183,7 @@ export async function runGenerateText(input: {
         anthropicMetadataUserId,
         env: input.env,
         includeModelIO: recordModelIO,
+        logger: input.logger,
         request: attemptRequest,
         resolved,
         statusContext,
