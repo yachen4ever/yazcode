@@ -104,6 +104,27 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 - **遗留转 26.5.6 修复批**（issue #10，已派 mintdev）：刷新失败 toast 缺失/黑洞超时
   反馈缺失/状态点回绿 + i18n key 泄露（`settings.browser.control.loadingHint`）。
 
+### 验收结论（2026-11-19，minttest 针对性验证轮 + workwin 实机 26.5.9 → 26.5.10）
+
+- **minttest 验证轮（issue #40，AppImage `6d5c7abf…`）**：V1-V4 全 PASS——visual-judge 子代理可启动并产出
+  verdict（inherit 生效，0 次命中账号连接不可用，两轮实际运行稳定）；`{{sessionId}}` 占位符配置生效、
+  同会话两次请求正常；OV 连接对账脱钩后重启 ~15s 自动恢复且 `ovcli.conf` 全程未被写；回归全绿。
+- **workwin 实机**：安装包三端哈希一致（`95c483e9…`：GitHub digest = m5air = workwin Get-FileHash）；
+  setting.json / provider_config.json 双备份；NSIS `/S` 静默安装 DisplayVersion 26.5.10 /
+  ProductVersion 26.5.10.0。
+- **端到端三项全部实证**：①配 `api.headers: {"x-opencode-session": "{{sessionId}}"}` 后发起
+  og-ds41f 请求——**new-api consume log 记录 `"overridden": ["x-opencode-session"]`**（渠道占位符
+  被客户端头覆盖 = 会话真值已到网关；伴随 429→`billing_source: wallet` 系 Go 订阅 5h 窗口额度超限的
+  上游计费回落，与本验收无关）；②visual-judge 子代理实机启动运行并完成验收回合（0 次命中账号连接
+  不可用）；③OV 对账复测——注入无效 key 后启动 **8s 内自动恢复**（两源 EQUAL）+ 数据面 fs_ls=200。
+- **保留基线**：hide-ai-copilot v1.1.0 哈希互证（`0A538A70…`，mtime 10/28 未变）；locale zh-CN；
+  setting.json 与部署前差异仅两处且均可解释（`verifiedAt` 移除 = #38 对账预期语义「同步写回不携带旧
+  校验时间戳」；`lastActiveTabIndex` 为应用运行时状态）；provider_config.json 为有意配置变更（新增
+  `api.headers` 占位符，正式生效保留）。
+- **门禁**：typecheck 0 · lint 0 errors/95 warnings（=基线）· verify:pre-push 0 · services 128/128 ·
+  adapters 45/45（leader 本地抽查 #37 新测试 12/12）· architecture 0 violations · check-vendor 0 漂移。
+
+
 ## 26.5.9 (2026-11-10)
 
 - **OV 运行时改为直接使用包内 vendored 插件**（kanzo #116）：`install()` 原先把 vendored
