@@ -360,7 +360,68 @@ async function verifyDataAccess(url: string, userKey: string): Promise<OpenVikin
   }
 }
 
-export function createOpenVikingService(): IOpenVikingService {
+/**
+ * 连接配置对账的 settings 端口（26.5.10，issue #38，spec memory-provider-selection.md
+ * 「连接配置对账」节）。由 node.ts 装配处用 settingService 实现——services 不直接
+ * 依赖设置存储实现，便于测试注入。
+ */
+export interface OpenVikingConnectionSettingsPort {
+  /** 读设置表单事实源（setting.json 的 openvikingConnection）；未启用档位返回 undefined。 */
+  read(): Promise<{ url: string; userKey: string } | undefined>;
+  /** 以运行时事实源同步回设置表单（settingService 既有写通道）。 */
+  write(connection: { url: string; userKey: string }): Promise<void>;
+}
+
+export interface OpenVikingServiceOptions {
+  /** 缺省不注入 → 不做连接对账（既有嵌入调用与测试兼容）。 */
+  connectionSettings?: OpenVikingConnectionSettingsPort;
+}
+
+/** 读 ovcli.conf 的连接事实（只读；该文件归官方安装器域，绝不写）。 */
+function readConnectionFile(): { url: string; userKey: string } | undefined {
+  const file = readJsonFile(connectionFilePath());
+  const url = typeof file.url === "string" ? file.url.trim() : "";
+  const userKey = typeof file.api_key === "string" ? file.api_key.trim() : "";
+  if (!url || !userKey) return undefined;
+  return { url, userKey };
+}
+
+/**
+ * 连接配置对账（issue #38）：settings 表单事实源（openvikingConnection）与运行时
+ * 事实源（ovcli.conf）可能被外部 OV 安装器更新脱钩——表单残留旧 key → 设置页校验
+ * 401 假报「密钥无效」，而 MCP 运行时实际健康（mcp-proxy 读 ovcli.conf）。
+ *
+ * 规则：
+ * - settings 无 openvikingConnection（未启用档位）→ no-op；
+ * - ovcli.conf 缺失/不全 → no-op（设置页如实报错，真实状态无需掩盖）；
+ * - 两源一致 → no-op；
+ * - 不一致 → 用 ovcli key 打一次数据面校验（/api/v1/fs/ls，复用 verifyDataAccess 口径）：
+ *   - ovcli key 有效 → 以 ovcli 值同步回 settings（url + userKey，清除过期 verifiedAt）
+ *     并 warn 告警；UI 由此反映真实运行状态；
+ *   - ovcli key 也无效 → 保持现状（不掩盖真实错误）。
+ * 本对账与 runtime 路径对账独立，可同次执行；日志不写凭据与内部地址。
+ */
+async function reconcileConnectionConfig(
+  settings: OpenVikingConnectionSettingsPort | undefined,
+): Promise<void> {
+  if (!settings) return;
+  const formConnection = await settings.read();
+  if (!formConnection) return;
+  const runtimeConnection = readConnectionFile();
+  if (!runtimeConnection) return;
+  if (
+    formConnection.url.trim() === runtimeConnection.url &&
+    formConnection.userKey.trim() === runtimeConnection.userKey
+  ) {
+    return;
+  }
+  const access = await verifyDataAccess(runtimeConnection.url, runtimeConnection.userKey);
+  if (!access.ok) return;
+  await settings.write({ url: runtimeConnection.url, userKey: runtimeConnection.userKey });
+  logger.warn("检测到 OV 连接配置由外部安装器更新，已同步设置表单事实源");
+}
+
+export function createOpenVikingService(options: OpenVikingServiceOptions = {}): IOpenVikingService {
   return {
     async verifyConnection({ url, userKey }) {
       const trimmedUrl = url.trim();
@@ -429,12 +490,18 @@ export function createOpenVikingService(): IOpenVikingService {
     },
 
     /**
-     * 启动幂等对账：CLI 配置存在 openviking 段但插件根不是当前包路径时重写。
-     * 覆盖三类漂移：升级/换安装目录后的路径失效、被官方安装器改写、旧复制释放模式的存量配置。
-     * 未启用（无 openviking 段）时 no-op；包内运行时缺失时拒绝改动（fail-closed：
-     * 宁可保留旧配置，也不把配置指向不存在的路径）。不握手——启动期不引子进程自检。
+     * 启动幂等对账（两段独立，可同次执行）：
+     * ① 连接配置对账（26.5.10，issue #38）：settings 表单事实源与 ovcli.conf 运行时
+     *    事实源脱钩时，以 ovcli 值同步回 settings（仅 ovcli key 数据面校验有效时）；
+     * ② runtime 路径对账：CLI 配置存在 openviking 段但插件根不是当前包路径时重写。
+     *    覆盖三类漂移：升级/换安装目录后的路径失效、被官方安装器改写、旧复制释放模式
+     *    的存量配置。未启用（无 openviking 段）时 no-op；包内运行时缺失时拒绝改动
+     *    （fail-closed：宁可保留旧配置，也不把配置指向不存在的路径）。不握手——启动期
+     *    不引子进程自检。
+     * 连接对账不依赖包内运行时，先于 runtime 检查执行；fire-and-forget 调用方不感知失败。
      */
     async reconcileStartup() {
+      await reconcileConnectionConfig(options.connectionSettings);
       const runtimeRoot = resolvePackagedRuntimeRoot();
       if (!runtimeRoot) {
         logger.warn("OpenViking 运行时缺失，跳过启动对账");

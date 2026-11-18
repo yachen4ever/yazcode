@@ -32,6 +32,15 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   保留；`Authorization`/`Host`/`Content-Length`/`Content-Type`/`Content-Encoding`/
   `Cookie` 出现在 `api.headers` 时丢弃并经 runner logger 告警（进程级去重，与 new-api
   插件保护头名单对齐）。spec：`docs/specs/provider-custom-headers.md`。
+- **OV 连接配置对账——表单密钥与 ovcli.conf 脱钩自动同步（issue #38）**：workwin 实测
+  记忆设置页校验 401 假报「密钥无效」而 MCP 运行时实际健康——根因是双密钥源脱钩：
+  `setting.json` 的 `openvikingConnection` 与 `OPENVIKING_HOME/ovcli.conf` 可被外部 OV
+  安装器更新后不一致。启动对账（`reconcileStartup()` 首段，与 runtime 路径对账独立）
+  扩展连接对账：未启用档位/ovcli 缺失/两源一致时 no-op；不一致时以 ovcli key 打一次
+  数据面校验（`/api/v1/fs/ls`）——有效则以 ovcli 值同步回 settings 表单并告警（日志不含
+  凭据与地址），无效则保持现状（设置页如实报错）。只读 ovcli.conf（官方安装器域，
+  绝不写）；写回走既有 settingService 通道。spec：`docs/specs/memory-provider-selection.md`
+  「连接配置对账」节。
 
 ## 26.5.5 (2026-11-08)
 

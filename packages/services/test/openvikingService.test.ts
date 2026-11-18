@@ -75,7 +75,9 @@ interface Sandbox {
   url: string;
 }
 
-function startFakeOvServer(): Promise<{ url: string; close(): Promise<void> }> {
+function startFakeOvServer(
+  options: { rejectData?: boolean } = {},
+): Promise<{ url: string; close(): Promise<void> }> {
   const server = createServer((req, res) => {
     if (req.url === "/health") {
       res.writeHead(200, { "content-type": "application/json" });
@@ -83,6 +85,11 @@ function startFakeOvServer(): Promise<{ url: string; close(): Promise<void> }> {
       return;
     }
     if (req.url?.startsWith("/api/v1/fs/ls")) {
+      if (options.rejectData) {
+        res.writeHead(401, { "content-type": "application/json" });
+        res.end("{}");
+        return;
+      }
       res.writeHead(200, { "content-type": "application/json" });
       res.end("{}");
       return;
@@ -103,7 +110,7 @@ function startFakeOvServer(): Promise<{ url: string; close(): Promise<void> }> {
 
 async function withSandbox(
   fn: (sandbox: Sandbox) => Promise<void>,
-  options: { runtime?: boolean } = {},
+  options: { runtime?: boolean; rejectData?: boolean } = {},
 ): Promise<void> {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ov-svc-test-"));
   const resourcesDir = path.join(tmp, "resources");
@@ -113,7 +120,7 @@ async function withSandbox(
   const home = path.join(tmp, "home");
   fs.mkdirSync(home, { recursive: true });
   const ovHome = path.join(tmp, "ovhome");
-  const server = await startFakeOvServer();
+  const server = await startFakeOvServer({ rejectData: options.rejectData });
 
   const proc = process as { resourcesPath?: string };
   const prev = {
@@ -283,5 +290,102 @@ test("install：包内运行时缺失必须显式报错（fail-closed）", async
       assert.equal(fs.existsSync(sandbox.cliConfig), false);
     },
     { runtime: false },
+  );
+});
+
+// ── 连接配置对账（26.5.10，issue #38，spec memory-provider-selection.md）────────────
+// 双密钥源脱钩：settings 表单事实源（openvikingConnection）vs 运行时事实源
+// （ovcli.conf）。启动对账仅在「两源不一致且 ovcli key 数据面校验有效」时以
+// ovcli 值同步回表单；只读 ovcli.conf，写入走 settings 端口。
+
+function makeSettingsPort(connection?: { url: string; userKey: string }) {
+  const writes: Array<{ url: string; userKey: string }> = [];
+  return {
+    writes,
+    port: {
+      read: async () => connection,
+      write: async (next: { url: string; userKey: string }) => {
+        writes.push(next);
+      },
+    },
+  };
+}
+
+function writeOvcliConf(sandbox: Sandbox, connection: { url: string; apiKey: string }): void {
+  fs.mkdirSync(sandbox.ovHome, { recursive: true });
+  fs.writeFileSync(
+    path.join(sandbox.ovHome, "ovcli.conf"),
+    JSON.stringify({ url: connection.url, api_key: connection.apiKey }),
+  );
+}
+
+test("连接对账：两源一致 no-op（无写入、无网络校验）", async () => {
+  await withSandbox(
+    async (sandbox) => {
+      writeOvcliConf(sandbox, { url: sandbox.url, apiKey: "same-key" });
+      const settings = makeSettingsPort({ url: sandbox.url, userKey: "same-key" });
+      const service = createOpenVikingService({ connectionSettings: settings.port });
+      await service.reconcileStartup();
+      assert.equal(settings.writes.length, 0);
+    },
+    { runtime: false },
+  );
+});
+
+test("连接对账：未启用档位（无 openvikingConnection）no-op", async () => {
+  await withSandbox(
+    async (sandbox) => {
+      writeOvcliConf(sandbox, { url: sandbox.url, apiKey: "ovcli-key" });
+      const settings = makeSettingsPort(undefined);
+      const service = createOpenVikingService({ connectionSettings: settings.port });
+      await service.reconcileStartup();
+      assert.equal(settings.writes.length, 0);
+    },
+    { runtime: false },
+  );
+});
+
+test("连接对账：ovcli.conf 缺失 no-op（不掩盖设置页真实报错）", async () => {
+  await withSandbox(
+    async () => {
+      const settings = makeSettingsPort({ url: "http://stale:1933", userKey: "stale-key" });
+      const service = createOpenVikingService({ connectionSettings: settings.port });
+      await service.reconcileStartup();
+      assert.equal(settings.writes.length, 0);
+    },
+    { runtime: false },
+  );
+});
+
+test("连接对账：不一致且 ovcli key 有效 → 以 ovcli 值同步回 settings", async () => {
+  await withSandbox(
+    async (sandbox) => {
+      // workwin 实测形态：表单残留外部安装器更新前的旧 key（104 字符），ovcli 为新 key。
+      writeOvcliConf(sandbox, { url: sandbox.url, apiKey: "fresh-ovcli-key" });
+      const settings = makeSettingsPort({
+        url: "http://stale:1933",
+        userKey: "stale-form-key",
+      });
+      const service = createOpenVikingService({ connectionSettings: settings.port });
+      await service.reconcileStartup();
+      assert.deepEqual(settings.writes, [{ url: sandbox.url, userKey: "fresh-ovcli-key" }]);
+    },
+    { runtime: false },
+  );
+});
+
+test("连接对账：不一致但 ovcli key 也无效（401）→ 保持现状不写入", async () => {
+  await withSandbox(
+    async (sandbox) => {
+      writeOvcliConf(sandbox, { url: sandbox.url, apiKey: "invalid-ovcli-key" });
+      const settings = makeSettingsPort({
+        url: "http://stale:1933",
+        userKey: "stale-form-key",
+      });
+      const service = createOpenVikingService({ connectionSettings: settings.port });
+      await service.reconcileStartup();
+      assert.equal(settings.writes.length, 0);
+    },
+    { runtime: false, rejectData: true },
   );
 });

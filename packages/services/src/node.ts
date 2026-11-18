@@ -2455,8 +2455,22 @@ export function createLocalServices(options: {
   const sqliteReposToClose: Array<{ close(): void }> = [];
   // AstrBot 桥接 provider：官方 BotsService 的一个传输 provider，host 负责 attach loopback WS。
   const astrBotProvider = createAstrBotBotProvider();
-  // OV 集成实例：服务注册与启动对账共用同一实例（对账幂等、无网络，失败不影响启动）。
-  const openVikingService = createOpenVikingService();
+  // OV 集成实例：服务注册与启动对账共用同一实例（对账幂等、失败不影响启动）。
+  // 连接配置对账（26.5.10，issue #38）：settings 表单事实源与 ovcli.conf 运行时事实源
+  // 脱钩时（外部 OV 安装器更新绕过 install()）由启动对账以 ovcli 值同步回表单；
+  // 写入走 settingService 既有通道，读只读 ovcli.conf。
+  const openVikingService = createOpenVikingService({
+    connectionSettings: {
+      read: async () => {
+        const settings = await settingService.get();
+        const connection = settings.openvikingConnection;
+        return connection ? { url: connection.url, userKey: connection.userKey } : undefined;
+      },
+      write: async (connection) => {
+        await settingService.update({ openvikingConnection: connection });
+      },
+    },
+  });
   const services = new ServiceCollection()
     .register(IFileService, fileService)
     .register(IMediaPreviewService, mediaPreviewService)
