@@ -11,7 +11,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.10 (2026-11-13)
+## 26.5.10 (2026-11-18)
 
 - **插件视觉验收子代理 model 硬编码修正（issue #34）**：documents / pdf / spreadsheets
   三个官方插件的 `visual-judge` 子代理 frontmatter 均硬编码
