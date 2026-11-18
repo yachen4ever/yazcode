@@ -86,6 +86,30 @@
 5. **状态所有者不变**：`packages/services` 仍是安装/卸载/校验/对账的唯一 owner；CLI 配置
    是落盘事实，UI 只经服务读状态。
 
+### 连接配置对账（26.5.10，issue #38）
+
+**双密钥源脱钩**：settings 表单事实源（`setting.json` 的 `openvikingConnection`）与运行时
+事实源（`OPENVIKING_HOME/ovcli.conf` 的 `url/api_key`）可能不一致——外部 OV 安装器
+（账户迁移等）更新 ovcli.conf 绕过 yazcode `install()`，表单残留旧 key → 设置页校验
+401 假报「密钥无效」，而 MCP 运行时（mcp-proxy 读 ovcli.conf）实际健康。workwin 实测：
+表单 key 104 字符 `fs/ls=401`、ovcli key 108 字符 `fs/ls=200`。
+
+对账规则（挂在既有 `reconcileStartup()` 首段，与 runtime 路径对账**独立、可同次执行**；
+连接对账不依赖包内运行时，先于 runtime 根检查执行）：
+
+1. `settings` 无 `openvikingConnection`（未启用档位）→ no-op；
+2. `ovcli.conf` 缺失或 `url/api_key` 不全 → no-op（设置页如实报错，真实状态无需掩盖）；
+3. 两源 `url` + `userKey` 一致 → no-op；
+4. 不一致 → 用 ovcli key 打一次数据面校验（`/api/v1/fs/ls`，复用 `verifyDataAccess` 口径）：
+   - **ovcli key 有效** → 以 ovcli 值同步回 settings 的 `openvikingConnection`
+     （`url + userKey`，不携带旧 `verifiedAt`），`Logger.warn` 告警「检测到 OV 连接配置
+     由外部安装器更新，已同步」（日志不含凭据与内部地址）；
+   - **ovcli key 也无效** → 保持现状（设置页如实报错）。
+
+边界：**只读 ovcli.conf 绝不写**（官方安装器域）；settings 写回经既有 settingService
+通道（node.ts 装配注入 `OpenVikingConnectionSettingsPort`，services 不直接依赖设置存储
+实现）；对账失败（网络/写入异常）由 fire-and-forget 调用方吞掉并告警，不影响启动。
+
 ### 迁移
 
 存量设置中 `memoryEnabled: true` 一律映射为 `local`，`false` 映射为 `disable`。映射只发生一次，读到存量形状时归一化后写回新字段。
@@ -117,3 +141,6 @@
 9. `uninstall()` 后 `OPENVIKING_HOME/agent-integrations/` 目录原样保留，仅 CLI 配置段被移除。
 10. 包内运行时缺失（打包异常）时：`getStatus()` 报未安装、`install()` 显式报错、启动对账
     不改动既有配置。
+11. 外部安装器更新 `ovcli.conf` 后启动：表单 `openvikingConnection` 与 ovcli 不一致且
+    ovcli key 数据面校验有效 → 自动同步为 ovcli 值（设置页校验不再 401 假报）；ovcli key
+    也无效 → 保持原值（如实报错）；两源一致或未启用档位 → no-op。
