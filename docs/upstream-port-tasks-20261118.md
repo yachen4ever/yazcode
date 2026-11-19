@@ -3,7 +3,8 @@
 调研方式：只读 ref 比对（`git fetch --no-tags --filter=blob:none` 到
 `refs/remotes/{zcode,zcodium,axiom,zcoders}-readonly/*` + `git log/show/diff-tree`）
 + GitHub API 取证（compare / contents / issues，经 192.168.5.5:1080 代理）。未
-merge/pull/checkout，未动本仓工作区（本文档除外）。本仓基线：main `70198df2`，
+merge/pull/checkout，未动本仓工作区（本文档除外）。本仓基线：main `bafb4f130`
+（26.5.10 bump；撰写时 main HEAD `ceb257fc9`），
 **26.5.10 批已含**：visual-judge `model: inherit`（#34）、`{{sessionId}}` headers
 占位符 + 保护头（#36）、OV 连接配置对账（#38）——评估以之为新基线，防建议重复引入。
 
