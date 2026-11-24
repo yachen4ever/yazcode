@@ -20,11 +20,20 @@ OpenViking」档位使用。
 
 1. 在 OpenViking 仓库执行 `node examples/memory-plugin-shared/sync.mjs` 生成 `shared/`
 2. 用官方安装器装配到临时 HOME 后复制产物，或直接复制
-   `examples/agent-hook-plugin`（剔除 `hosts/` 下 cursor / trae / kimicode）
-   与 `examples/memory-plugin-shared/lib`
+   `examples/agent-hook-plugin` 与 `examples/memory-plugin-shared/lib`。
+   **白名单裁剪**（26.5.11 起与门禁 `isTrimmed` 严格一致）：
+   - 剔除非 zcode host：`hosts/` 下 cursor / trae / kimicode / antigravity / qoder
+     （含其 `hosts/<name>.mjs` / `hosts/<name>-turns.mjs` 入口）；
+   - 剔除 `tests/`、`DESIGN.md`、`README*.md` 与 `*.d.mts`；
+   - `memory-plugin-shared/lib` 按 `MANIFEST`（剔除 `setup-wizard.mjs` 与 `*.d.mts`）
 3. `openviking.integration.json` 上游已是纯模板（无机器信息），原样保留；
    安装服务以 `openvikingService.ts` 的 `INTEGRATION_VERSION` 常量保持版本对齐
-4. 校验无本机绝对路径、地址与凭据残留
+4. 同步后更新 `third-party/copied-components.json` 的 referenceRevision/importRevision
+   与 provenance（release / integration 版本）；`examples/LICENSE` 复制为
+   `vendor/openviking/LICENSE`（许可快照随行）
+5. 校验无本机绝对路径、地址与凭据残留；`node scripts/check-vendor-openviking.mjs`
+   以 `referenceRevision` 为祖先锚、按 integration 版本在 latest release 与 main HEAD
+   间选比对基准（见脚本头注释，issue #43 决策 b）——**0 漂移才绿，真实漂移必报**
 
 ## 为什么 vendor 而不是运行时下载
 

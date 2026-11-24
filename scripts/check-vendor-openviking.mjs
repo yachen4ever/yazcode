@@ -4,8 +4,11 @@
  *
  * 数据源：
  * - 同步基线：third-party/copied-components.json 的 openviking-client-integration.referenceRevision
- *   （仅用于展示 vendored 时的上游版本；内容比对以本地文件为基准）。
- * - 上游：volcengine/OpenViking 的 latest release tag（与「跟随 release 同步」策略一致）。
+ *   （同时作为祖先校验锚：必须位于上游 main 历史中，防任意 pin/伪造分支）。
+ * - 比对基准（26.5.11 适配，issue #43）：在「latest release」与「上游 main HEAD」之间，
+ *   取 integration 版本与本地 vendored integration.json 版本**一致**者优先（release 优先）；
+ *   两者都不一致（上游已前进到更新版本）→ 回退 latest release 并正常报告漂移（「上游有新版本」信号保留），
+ *   不得因版本不一致而放宽为永久绿。
  *
  * 比对语义（正向，对应 vendor/openviking/README.md 的同步与裁剪方式）：
  * - M：本地存在的文件内容与上游不同；
@@ -54,12 +57,17 @@ export function isTrimmed(upstreamPath) {
     "hosts/cursor",
     "hosts/trae",
     "hosts/kimicode",
+    "hosts/antigravity",
+    "hosts/qoder",
     "hosts/cursor.mjs",
     "hosts/cursor-transcript.mjs",
     "hosts/trae.mjs",
     "hosts/trae-turns.mjs",
     "hosts/kimicode.mjs",
     "hosts/kimicode-turns.mjs",
+    "hosts/antigravity.mjs",
+    "hosts/qoder.mjs",
+    "hosts/qoder-turns.mjs",
   ]) {
     if (upstreamPath.startsWith(`examples/agent-hook-plugin/${host}`)) return true;
   }
@@ -103,6 +111,60 @@ async function latestReleaseTagSha() {
     sha = tagObj.object.sha;
   }
   return { tagName, sha, url: release.html_url };
+}
+
+async function mainHeadSha() {
+  const ref = await ghApi(`/repos/${OWNER}/${REPO}/git/ref/heads/main`);
+  return ref.object?.sha;
+}
+
+/** 读指定 revision 的上游 integration 版本（小文件，单请求）。 */
+async function upstreamIntegrationVersion(sha) {
+  try {
+    const file = await ghApi(
+      `/repos/${OWNER}/${REPO}/contents/${UPSTREAM_BASE}/agent-hook-plugin/hosts/zcode/openviking.integration.json?ref=${sha}`,
+    );
+    const parsed = JSON.parse(Buffer.from(file.content ?? "", "base64").toString("utf8"));
+    return typeof parsed.version === "string" ? parsed.version : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 本地 vendored integration 版本（比对基准选择的依据）。 */
+export function readLocalIntegrationVersion() {
+  const file = join(process.cwd(), VENDOR_ROOT, "zcode/hosts/zcode/openviking.integration.json");
+  const parsed = JSON.parse(readFileSync(file, "utf8"));
+  if (typeof parsed.version !== "string" || !parsed.version.trim()) {
+    throw new Error(`vendored integration.json 缺少 version: ${file}`);
+  }
+  return parsed.version.trim();
+}
+
+/**
+ * 比对基准选择（纯函数，测试直测；issue #43 决策 b）：
+ * - candidates.release / candidates.main 各自带 integration 版本；
+ * - 与 localIntegrationVersion 一致者优先（release 优先——「跟随 release」语义不变）；
+ * - 均不一致 → 回退 release 并标记 upstreamAhead（上游已前进，正常报告漂移）；
+ * - main 版本一致而 release 不一致（main 已 bump 过后 release 未发）→ 选 main，
+ *   vendored 同步到 main HEAD 的轮次由此免于误报。
+ */
+export function pickComparisonTarget({ localIntegrationVersion, release, main }) {
+  const matches = (candidate) =>
+    candidate && candidate.integrationVersion === localIntegrationVersion;
+  if (matches(release)) return { ...release, kind: "release", upstreamAhead: false };
+  if (matches(main)) return { ...main, kind: "main", upstreamAhead: false };
+  return { ...release, kind: "release", upstreamAhead: true };
+}
+
+/** referenceRevision 必须位于上游 main 历史中（防任意 pin 到分支/未知提交）。 */
+async function assertBaselineIsAncestorOfMain(baselineRevision) {
+  const compare = await ghApi(`/repos/${OWNER}/${REPO}/compare/${baselineRevision}...main`);
+  if (compare.status !== "ahead" && compare.status !== "identical") {
+    throw new Error(
+      `referenceRevision ${baselineRevision.slice(0, 9)} 不在上游 main 历史中（status=${compare.status}）——禁止任意 pin`,
+    );
+  }
 }
 
 async function upstreamTree(sha) {
@@ -171,20 +233,47 @@ async function main() {
   const baselineRevision = component.referenceRevision;
   console.log(`vendored baseline revision: ${baselineRevision}`);
 
-  const { tagName, sha: latestSha, url } = await latestReleaseTagSha();
-  console.log(`upstream latest release: ${tagName} (${latestSha}) -> ${url}`);
-  if (latestSha === baselineRevision) {
-    const ok = `✅ 上游 latest release ${tagName} 即 vendored 基线，无需同步。`;
-    console.log(ok);
-    appendSummary(ok);
-    return;
-  }
+  await assertBaselineIsAncestorOfMain(baselineRevision);
+  const localIntegrationVersion = readLocalIntegrationVersion();
+  const release = await latestReleaseTagSha();
+  const mainSha = await mainHeadSha();
+  const releaseIntegrationVersion = await upstreamIntegrationVersion(release.sha);
+  const mainIntegrationVersion = await upstreamIntegrationVersion(mainSha);
+  const target = pickComparisonTarget({
+    localIntegrationVersion,
+    release: {
+      sha: release.sha,
+      tagName: release.tagName,
+      url: release.url,
+      integrationVersion: releaseIntegrationVersion,
+    },
+    main: {
+      sha: mainSha,
+      tagName: `main@${mainSha.slice(0, 9)}`,
+      url: `https://github.com/${OWNER}/${REPO}/commit/${mainSha}`,
+      integrationVersion: mainIntegrationVersion,
+    },
+  });
+  console.log(
+    `upstream latest release: ${release.tagName} (${release.sha}, integration ${release.integrationVersion ?? "?"})`,
+  );
+  console.log(`upstream main HEAD: ${mainSha.slice(0, 9)} (integration ${mainIntegrationVersion ?? "?"})`);
+  console.log(
+    `comparison target: ${target.kind} ${target.tagName} (${target.sha})——vendored integration ${localIntegrationVersion}${
+      target.upstreamAhead ? "；上游已是更新版本，vendored 需跟进" : ""
+    }`,
+  );
+  const { tagName, sha: latestSha, url } = target;
+  // 26.5.11 严格化（issue #43）：target==baseline 也做完整内容比对——原快速路径在
+  // 「上游仍停在 vendored 基线」时直接绿，不校验 vendored 内容与基线 tree 是否一致，
+  // 会让不完整同步/本地误改假绿。现在只有「内容确实与基线一致」才绿。
 
   const upstream = await upstreamTree(latestSha);
   const local = localBlobMap();
 
   const drift = [];
   for (const [rel, { blob, upstreamPath }] of local) {
+    if (isTrimmed(upstreamPath)) continue;
     const upstreamBlob = upstream.get(upstreamPath);
     if (upstreamBlob === undefined) {
       drift.push({ type: "D", path: upstreamPath });
@@ -201,7 +290,10 @@ async function main() {
   }
 
   if (drift.length === 0) {
-    const ok = `✅ 无漂移：vendor/openviking 的 vendored 文件与上游 ${tagName} 一致（基线 ${baselineRevision.slice(0, 9)}，上游有非 vendored 内容变化属正常）。`;
+    const ok =
+      latestSha === baselineRevision
+        ? `✅ 无漂移：上游 ${tagName} 即 vendored 基线（${baselineRevision.slice(0, 9)}），vendored 内容与基线一致。`
+        : `✅ 无漂移：vendor/openviking 的 vendored 文件与上游 ${tagName} 一致（基线 ${baselineRevision.slice(0, 9)}，上游有非 vendored 内容变化属正常）。`;
     console.log(ok);
     appendSummary(ok);
     return;

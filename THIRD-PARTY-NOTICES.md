@@ -2340,7 +2340,7 @@ The original import revisions of copied components are not recorded in the curre
 
 - minimax-code pdf skill (MIT): .agents/skills/pdf-ops. License reference: https://raw.githubusercontent.com/MiniMaxAI/minimax-code/564e9166d81f87b0b767b005e4779d4697b512be/LICENSE. Original import revision: 564e9166d81f87b0b767b005e4779d4697b512be.
 
-- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/9dfa9017a8c61abefcd239fe98fdba094a2de7f3/examples/LICENSE. Original import revision: 9dfa9017a8c61abefcd239fe98fdba094a2de7f3.
+- openviking-client-integration (Apache-2.0): vendor/openviking/zcode, vendor/openviking/memory-plugin-shared. License reference: https://raw.githubusercontent.com/volcengine/OpenViking/e13f0441eaf2a1beacba9002b5720aeb8bae970e/examples/LICENSE. Original import revision: e13f0441eaf2a1beacba9002b5720aeb8bae970e.
 
 - zai-pdf-plugin (Apache-2.0): apps/zcode-cli/packages/pdf-plugin. License reference: https://raw.githubusercontent.com/zai-org/ZCode/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/pdf-plugin/skills/pdf/LICENSE.txt. Original import revision: aac4755666d09fdcd70272fcf063c077a639015f.
 
@@ -4702,9 +4702,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 - @napi-rs/canvas-linux-arm64-gnu@0.1.100: https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE
 
+- @napi-rs/canvas-linux-arm64-musl@0.1.100: LICENSE
+
 - @napi-rs/canvas-linux-arm64-musl@0.1.100: https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE
 
 - @napi-rs/canvas-linux-x64-gnu@0.1.100: https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE
+
+- @napi-rs/canvas-linux-x64-musl@0.1.100: LICENSE
 
 - @napi-rs/canvas-linux-x64-musl@0.1.100: https://raw.githubusercontent.com/Brooooooklyn/canvas/db337893b9b53483050ca7b24c6d306e4da06741/LICENSE
 
@@ -6352,9 +6356,13 @@ SOFTWARE.
 
 - @ubjs/node-linux-arm64-gnu@0.31.0-3: https://raw.githubusercontent.com/jhugman/uniffi-bindgen-react-native/0.31.0-3/LICENSE
 
+- @ubjs/node-linux-arm64-musl@0.31.0-3: LICENSE
+
 - @ubjs/node-linux-arm64-musl@0.31.0-3: https://raw.githubusercontent.com/jhugman/uniffi-bindgen-react-native/0.31.0-3/LICENSE
 
 - @ubjs/node-linux-x64-gnu@0.31.0-3: https://raw.githubusercontent.com/jhugman/uniffi-bindgen-react-native/0.31.0-3/LICENSE
+
+- @ubjs/node-linux-x64-musl@0.31.0-3: LICENSE
 
 - @ubjs/node-linux-x64-musl@0.31.0-3: https://raw.githubusercontent.com/jhugman/uniffi-bindgen-react-native/0.31.0-3/LICENSE
 
@@ -37744,7 +37752,7 @@ SOFTWARE.
 
 ### Notice 081a54b68d890cdbcfdfb97b79f32504b4ed320f52d5f8abdae806e5cbee2ad6
 
-- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/9dfa9017a8c61abefcd239fe98fdba094a2de7f3/examples/LICENSE
+- openviking-client-integration: https://raw.githubusercontent.com/volcengine/OpenViking/e13f0441eaf2a1beacba9002b5720aeb8bae970e/examples/LICENSE
 
 
 
