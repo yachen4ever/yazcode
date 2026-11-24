@@ -11,7 +11,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.11 (2026-11-24)
+## 26.5.11 (2026-11-25)
 
 - **OpenViking vendored 同步 0.5.31 → 0.5.36（issue #43）**：上游 `volcengine/OpenViking`
   main HEAD `e13f0441`（release v0.5.6 的集成版本为 0.5.35，main 已在其后 bump 到
