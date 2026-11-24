@@ -11,6 +11,24 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.11 (2026-11-24)
+
+- **OpenViking vendored 同步 0.5.31 → 0.5.36（issue #43）**：上游 `volcengine/OpenViking`
+  main HEAD `e13f0441`（release v0.5.6 的集成版本为 0.5.35，main 已在其后 bump 到
+  0.5.36，以 main HEAD 为准）。三版本锚点推进（`openviking.integration.json` /
+  `plugin.json` / `INTEGRATION_VERSION`）、`copied-components.json` referenceRevision/
+  importRevision → `e13f0441`、provenance 更新（v0.5.6 / 0.5.36）。同步资产：共享运行时
+  4 模块更新、codebuddy/zcode host 内容更新、`zcode/hosts/zcode/skills/`（4 个官方
+  skills）与 `codebuddy/skills/ov-memory-doctor/` 新增；`lib/ov-http.mjs` 与上游字节
+  一致（历史加固已被上游吸收）。vendored 目录白名单化（剔除 5 个非 zcode host 与
+  tests/README/DESIGN 残留，与门禁 `isTrimmed` 严格一致）。
+- **vendor 漂移门禁适配（issue #43 决策 b）**：比对基准从「固定 latest release」改为
+  「按本地 vendored integration 版本，在 latest release 与 main HEAD 间选一致者
+  （release 优先；均不一致回退 release 并标记 upstreamAhead）」——main 先于 release
+  bump 的轮次不再误报；`referenceRevision` 增加「必须位于上游 main 历史」祖先校验
+  （防任意 pin）；**取消 target==baseline 的免比对快速路径**——上游停在基线的场景也
+  做完整内容比对，只有 0 漂移才绿，真实漂移必报（修复原快速路径的假绿漏洞）。
+
 ## 26.5.10 (2026-11-18)
 
 - **插件视觉验收子代理 model 硬编码修正（issue #34）**：documents / pdf / spreadsheets
