@@ -13,6 +13,12 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 ## 26.5.11 (2026-11-25)
 
+- **构建修复：Windows 解压改用 .NET ZipFile（`scripts/prebuilt-binary-extract.mjs`）**：GitHub
+  Actions windows-latest 镜像升级 PowerShell 7.5/.NET 10 后，`Expand-Archive`（内部三参数
+  `ExtractToDirectory` 重载已移除）解压失败 → win x64 构建炸（run 45454881153 实证，与本版
+  代码改动无关）。Windows 分支改为 `[System.IO.Compression.ZipFile]::ExtractToDirectory`
+  双参数静态方法（不依赖 PowerShell 模块版本），目标目录先清空以保持 `-Force` 覆盖语义。
+
 - **OpenViking vendored 同步 0.5.31 → 0.5.36（issue #43）**：上游 `volcengine/OpenViking`
   main HEAD `e13f0441`（release v0.5.6 的集成版本为 0.5.35，main 已在其后 bump 到
   0.5.36，以 main HEAD 为准）。三版本锚点推进（`openviking.integration.json` /

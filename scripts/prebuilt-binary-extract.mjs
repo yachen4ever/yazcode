@@ -39,13 +39,23 @@ export function extractPrebuiltArchive({ archivePath, archiveExt, extractDir, cw
   mkdirSync(extractDir, { recursive: true });
   if (archiveExt === "zip") {
     if (process.platform === "win32") {
+      // 26.5.11：改用 .NET ZipFile 静态解压，不再走 Expand-Archive。
+      // 原因：GitHub Actions windows-latest 镜像升级 PowerShell 7.5/.NET 10 后，
+      // Microsoft.PowerShell.Archive 模块内部调用三参数 ExtractToDirectory 重载
+      // （.NET 10 已移除该重载）→「Cannot find an overload for ExtractToDirectory
+      // and the argument count: 3」→ 解压失败、构建炸（run 45454881153 win job 实证，
+      // 与本仓代码改动无关）。ZipFile::ExtractToDirectory(string,string) 双参数重载
+      // 在 .NET Framework 4.5+ 与 .NET Core 均存在，且不依赖 PowerShell 模块版本。
+      // ExtractToDirectory 要求目标目录不存在或为空（等价 Expand-Archive -Force 的
+      // 覆盖语义需先清空）。
+      const psLiteral = (value) => `'${value.replaceAll("'", "''")}'`;
       runCommand("powershell.exe", [
         "-NoProfile",
         "-NonInteractive",
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        `Expand-Archive -LiteralPath '${archivePath.replaceAll("'", "''")}' -DestinationPath '${extractDir.replaceAll("'", "''")}' -Force`,
+        `if (Test-Path -LiteralPath ${psLiteral(extractDir)}) { Remove-Item -LiteralPath ${psLiteral(extractDir)} -Recurse -Force }; Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory(${psLiteral(archivePath)}, ${psLiteral(extractDir)})`,
       ]);
       return;
     }
