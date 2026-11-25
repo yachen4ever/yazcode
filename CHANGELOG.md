@@ -11,6 +11,24 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
+## 26.5.12 (2026-11-25)
+
+- **settings 写盘日志凭据脱敏（安全类，issue #46）**：`settingService` 写盘日志曾
+  `JSON.stringify(settings)` 整体序列化——`openvikingConnection.userKey`（OV 用户密钥）
+  与内部服务地址以明文进入 console（minttest 26.5.11 验证轮 #45 实测），违反仓库纪律
+  「不在日志、示例或提交中写入凭据、真实用户数据和内部服务地址」。新增
+  `redactSettingsForLog`（`packages/services/src/setting/redactSettingsForLog.ts`）：
+  凭据类键（userKey/apiKey/token/secret/password/passphrase/credential，大小写不敏感）
+  按既有 `maskAccessToken` 约定打码（≤8 位全长星号，否则前 4 + `...` + 后 4，换 key
+  排查仍可辨识）；地址类键（url/endpoint）只保留 `scheme://***`；非敏感字段保留调试
+  价值。同型排查：`grep -rn "JSON.stringify(settings"` 全仓仅此一处；同文件读取路径
+  `debugLog("read result:", JSON.stringify(...))`（仅 development 输出）属同类明文
+  暴露，一并处置。新增 `settingLogRedaction.test.ts` 6 例（纯函数 + 沙箱 HOME 集成：
+  捕获 console 断言输出无明文假 key 与地址、可见打码形态）。
+- **本批同时包含 26.5.11 已合入内容**：OpenViking vendored 0.5.36 同步 + vendor 漂移
+  门禁适配（issue #43）与 Windows 构建 ZIP 解压修复（详见 26.5.11 节；26.5.11 号段
+  空缺说明随发版 bump 补充）。
+
 ## 26.5.11 (2026-11-25)
 
 - **构建修复：Windows 解压改用 .NET ZipFile（`scripts/prebuilt-binary-extract.mjs`）**：GitHub
