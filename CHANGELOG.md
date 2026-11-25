@@ -11,7 +11,7 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
 
 每个版本的完整产物与说明见 [Releases](https://github.com/yachen4ever/yazcode/releases)。
 
-## 26.5.12 (2026-11-25)
+## 26.5.12 (2026-11-26)
 
 - **settings 写盘日志凭据脱敏（安全类，issue #46）**：`settingService` 写盘日志曾
   `JSON.stringify(settings)` 整体序列化——`openvikingConnection.userKey`（OV 用户密钥）
@@ -29,7 +29,11 @@ yazcode 使用年份号段 `26.y.z`（y = 引入上游变更的批次，z = 纯�
   门禁适配（issue #43）与 Windows 构建 ZIP 解压修复（详见 26.5.11 节；26.5.11 号段
   空缺说明随发版 bump 补充）。
 
-## 26.5.11 (2026-11-25)
+## 26.5.11（号段空缺，未发布）
+
+> draft 构建（44 资产）并经 minttest 针对性验证轮（#45）后，用户决定跳过 26.5.11 发布（draft 撤销），
+> 全部内容随 26.5.12 交付。以下为当版内容记录：
+
 
 - **构建修复：Windows 解压改用 .NET ZipFile（`scripts/prebuilt-binary-extract.mjs`）**：GitHub
   Actions windows-latest 镜像升级 PowerShell 7.5/.NET 10 后，`Expand-Archive`（内部三参数
